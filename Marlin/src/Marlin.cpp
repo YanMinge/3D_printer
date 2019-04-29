@@ -1146,6 +1146,9 @@ void loop() {
     #endif // SDSUPPORT
 
     if (commands_in_queue < BUFSIZE) get_available_commands();
+    // while(VirtualSerial.available_tx() > 0) {
+    //   char c = VirtualSerial.read_tx();
+    // }
     advance_command_queue();
     endstops.event_handler();
     idle();

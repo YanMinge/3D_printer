@@ -221,8 +221,6 @@ void CardReader::lsDive(const char *prepend, SdFile parent, const char * const m
           if (prepend) SERIAL_ECHO(prepend);
           SERIAL_ECHO(filename);
           SERIAL_CHAR(' ');
-		  SERIAL_ECHO(longFilename[0] ? longFilename : "???");
-          SERIAL_CHAR(' ');
           SERIAL_ECHOLN(p.fileSize);
           break;
 

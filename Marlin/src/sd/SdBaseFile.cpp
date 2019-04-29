@@ -1084,14 +1084,6 @@ int8_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
           n = (seq - 1) * (FILENAME_LENGTH);
           for (uint8_t i = 0; i < FILENAME_LENGTH; i++)
             longFilename[n + i] = (i < 5) ? VFAT->name1[i] : (i < 11) ? VFAT->name2[i - 5] : VFAT->name3[i - 11];
-
-          longFilename[n+FILENAME_LENGTH] = '\0';
-          SERIAL_ECHO("Yanminge");
-          SERIAL_CHAR(' ');
-		  SERIAL_PRINTF("%d", FILENAME_LENGTH);
-          SERIAL_CHAR(' ');
-          SERIAL_ECHO(longFilename[0] ? longFilename : "???");
-          SERIAL_CHAR(' ');
           // If this VFAT entry is the last one, add a NUL terminator at the end of the string
           if (VFAT->sequenceNumber & 0x40) longFilename[n + FILENAME_LENGTH] = '\0';
         }
