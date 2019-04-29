@@ -46,7 +46,7 @@
   }
 #endif
 
-#if (defined(SERIAL_PORT) && SERIAL_PORT == 3) || (defined(SERIAL_PORT_2) && SERIAL_PORT_2 == 3)
+#if (defined(SERIAL_PORT) && SERIAL_PORT == 3) || (defined(SERIAL_PORT_2) && SERIAL_PORT_2 == 3) || (defined(SERIAL_PORT_3) && SERIAL_PORT_3 == 3)
   MarlinSerial MSerial3(LPC_UART3);
   extern "C" void UART3_IRQHandler(void) {
     MSerial3.IRQHandler();

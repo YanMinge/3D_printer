@@ -106,6 +106,30 @@ extern "C" volatile millis_t _millis;
 #endif
 
 //
+// serial_port_3 for lcd communication
+//
+#ifdef SERIAL_PORT_3
+  #if !WITHIN(SERIAL_PORT_3, -1, 3)
+    #error "SERIAL_PORT_3 must be from -1 to 3"
+  #elif SERIAL_PORT_3 == SERIAL_PORT
+    #error "SERIAL_PORT_3 must be different than SERIAL_PORT"
+  #endif
+  #if SERIAL_PORT_3 == -1
+    #define MYSERIAL2 UsbSerial
+  #elif SERIAL_PORT_3 == 0
+    #define MYSERIAL2 MSerial
+  #elif SERIAL_PORT_3 == 1
+    #define MYSERIAL2 MSerial1
+  #elif SERIAL_PORT_3 == 2
+    #define MYSERIAL2 MSerial2
+  #elif SERIAL_PORT_3 == 3
+    #define MYSERIAL2 MSerial3
+  #elif SERIAL_PORT_2 == 4
+    #define MYSERIAL2 VirtualSerial
+  #endif
+#endif
+
+//
 // Interrupts
 //
 #define CRITICAL_SECTION_START  uint32_t primask = __get_PRIMASK(); __disable_irq()
