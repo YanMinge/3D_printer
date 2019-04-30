@@ -56,6 +56,10 @@
 #include "gcode/parser.h"
 #include "gcode/queue.h"
 
+#if ENABLED(USE_DWIN_LCD)
+  #include "gcode/lcd_queue.h"
+#endif
+
 #if ENABLED(HOST_ACTION_COMMANDS)
   #include "feature/host_actions.h"
 #endif
@@ -888,12 +892,20 @@ void setup() {
     #endif
   #endif
 
+  #ifdef SERIAL_PORT_3
+    MYSERIAL2.begin(BAUDRATE);
+  #endif
+
   #if NUM_SERIAL > 0
     uint32_t serial_connect_timeout = millis() + 1000UL;
     while (!MYSERIAL0 && PENDING(millis(), serial_connect_timeout)) { /*nada*/ }
     #if NUM_SERIAL > 1
       serial_connect_timeout = millis() + 1000UL;
       while (!MYSERIAL1 && PENDING(millis(), serial_connect_timeout)) { /*nada*/ }
+    #endif
+    #ifdef SERIAL_PORT_3
+      serial_connect_timeout = millis() + 1000UL;
+      while (!MYSERIAL2 && PENDING(millis(), serial_connect_timeout)) { /*nada*/ }
     #endif
   #endif
 
@@ -1149,6 +1161,8 @@ void loop() {
     // while(VirtualSerial.available_tx() > 0) {
     //   char c = VirtualSerial.read_tx();
     // }
+    get_lcd_commands();
+    processing_lcd_command();
     advance_command_queue();
     endstops.event_handler();
     idle();
