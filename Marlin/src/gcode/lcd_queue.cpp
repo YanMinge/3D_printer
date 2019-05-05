@@ -54,8 +54,59 @@ uint8_t lcd_command_queue[LCD_SIZE];
 uint8_t have_lcd_cmd = 0;
 static int serial_count = 0;
 
+static int PrintStatus = 0;
+static int StartStop = 0;
+
+
 const char command_ok[8]={0X5A, 0XA5, 0X05, 0X82, 0X4F, 0X4B, 0XA5, 0XEF};
 const char command_order[7]={0X5A, 0XA5, 0X08, 0X83, 0X10, 0X00, 0X01};
+
+/**
+ * send the font to display in lcd_pannel
+ */
+void lcd_font_init(void)
+{
+  send_lcd_commands_CRC16(PAGE1_0_1,10);
+  send_lcd_commands_CRC16(PAGE1_0_2,10);
+  send_lcd_commands_CRC16(PAGE1_0_3,10);
+
+  //send_lcd_commands_CRC16(PAGE1_1_1,10);
+  //send_lcd_commands_CRC16(PAGE1_1_2,10);
+
+  send_lcd_commands_CRC16(PAGE2_0_1,10);
+  send_lcd_commands_CRC16(PAGE2_0_2,10);
+  send_lcd_commands_CRC16(PAGE2_0_3,10);
+  send_lcd_commands_CRC16(PAGE2_0_4,10);
+  send_lcd_commands_CRC16(PAGE2_0_5,10);
+
+  send_lcd_commands_CRC16(PAGE2_1_1,10);
+  send_lcd_commands_CRC16(PAGE2_1_2,10);
+
+  //send_lcd_commands_CRC16(PAGE2_2_1,10);
+  //send_lcd_commands_CRC16(PAGE2_2_2,10);
+  //send_lcd_commands_CRC16(PAGE2_2_3,10);
+  //send_lcd_commands_CRC16(PAGE2_2_4,10);
+  //send_lcd_commands_CRC16(PAGE2_2_5,10);
+
+  send_lcd_commands_CRC16(PAGE2_4_1,10);
+  //send_lcd_commands_CRC16(PAGE2_4_1_1,10);
+  send_lcd_commands_CRC16(PAGE2_4_2,10);
+  send_lcd_commands_CRC16(PAGE2_4_3,10);
+  send_lcd_commands_CRC16(PAGE2_4_4,10);
+
+  send_lcd_commands_CRC16(PAGE2_5_1,10);
+  send_lcd_commands_CRC16(PAGE2_5_2,10);
+
+  send_lcd_commands_CRC16(PAGE2_7_1,10);
+
+  send_lcd_commands_CRC16(PAGE2_8_1,10);
+  send_lcd_commands_CRC16(PAGE2_8_2,10);
+  send_lcd_commands_CRC16(PAGE2_8_3,10);
+
+  send_lcd_commands_CRC16(PAGE2_9_1,10);
+  send_lcd_commands_CRC16(PAGE2_ALL_0,10);
+  send_lcd_commands_CRC16(PAGE2_ALL_1,10);
+}
 
 /**
  * Clear the dwin lcd command queue
@@ -219,6 +270,7 @@ uint8_t send_virtual_serial(char * str) {
     {
       if(OK_TYPE == get_vserial_command_type())
       {
+        clear_virtaul_command_queue();
         SERIAL_ECHOLNPGM(" ok ");
         return 1;
       }
@@ -304,6 +356,7 @@ CmdType get_command_type(void)
       {
         case 0x01:return EN_FONT_BT;break;
         case 0x02:return UK_FONT_BT;break;
+        case 0x03:return FONT_CHECK_BT;break;
         default:
         #if ENABLED(VIRTUAL_DEBUG)
         #endif
@@ -315,93 +368,40 @@ CmdType get_command_type(void)
     {
       switch (str[8])
       {
-        case 0x00:
-          return MAINPAGE_PRINT_BT;
-          break;
-        case 0x01:
-          return FILE_LIST1_DOWN_BT;
-          break;
-        case 0x02:
-          return FILE_LIST2_UP_BT;
-          break;
-        case 0x03:
-          return FILE_RETURN_BT;
-          break;
-        case 0x04:
-          return LIST1_FILE1_BT;
-          break;
-        case 0x05:
-          return LIST1_FILE2_BT;
-          break;
-        case 0x06:
-          return LIST1_FILE3_BT;
-          break;
-        case 0x07:
-          return LIST1_FILE4_BT;
-          break;
-        case 0x08:
-          return LIST2_FILE1_BT;
-          break;
-        case 0x09:
-          return LIST2_FILE2_BT;
-          break;
-        case 0x0A:
-          return LIST2_FILE3_BT;
-          break;
-        case 0x0B:
-          return LIST2_FILE4_BT;
-          break;
-        case 0x0C:
-          return LIST3_FILE1_BT;
-          break;
-        case 0x0D:
-          return LIST3_FILE2_BT;
-          break;
-        case 0x0E:
-          return LIST3_FILE3_BT;
-          break;
-        case 0x0F:
-          return LIST3_FILE4_BT;
-          break;
-        case 0x11:
-          return FILE_LIST2_DOWN_BT;
-          break;
-        case 0x12:
-          return FILE_LIST3_UP_BT;
-          break;
-        case 0x13:
-          return FILE_START_STOP_BT;
-          break;
-        case 0x14:
-          return LIGHT_BT;
-          break;
-        case 0x15:
-          return PRINT_RETURN_BT;
-          break;
-        case 0x16:
-          return LOAD_FILAMENT_BT;
-          break;
-        case 0x17:
-          return LOAD_HEAT_STOP_BT;
-          break;
-        case 0x18:
-          return UNLOAD_FILAMENT_BT;
-          break;
-        case 0x19:
-          return UNLOAD_HEAT_STOP_BT;
-          break;
-        case 0x1A:
-          return BUZZER_BT;
-          break;
-        case 0x1B:
-          return X_STEP_ADD_BT;
-          break;
-        case 0x1C:
-          return XYZ_HOME_BT;
-          break;
-        default:
-          return CMD_ERR;
-          break;
+        case 0x00:return MAINPAGE_PRINT_BT;break;
+        case 0x01:return FILE_LIST1_DOWN_BT;break;
+        case 0x02:return FILE_LIST2_UP_BT;break;
+        case 0x03:return FILE_RETURN_BT;break;
+        case 0x04:return LIST1_FILE1_BT;break;
+        case 0x05:return LIST1_FILE2_BT;break;
+        case 0x06:return LIST1_FILE3_BT;break;
+        case 0x07:return LIST1_FILE4_BT;break;
+        case 0x08:return LIST2_FILE1_BT;break;
+        case 0x09:return LIST2_FILE2_BT;break;
+        case 0x0A:return LIST2_FILE3_BT;break;
+        case 0x0B:return LIST2_FILE4_BT;break;
+        case 0x0C:return LIST3_FILE1_BT;break;
+        case 0x0D:return LIST3_FILE2_BT;break;
+        case 0x0E:return LIST3_FILE3_BT;break;
+        case 0x0F:return LIST3_FILE4_BT;break;
+        case 0x11:return FILE_LIST2_DOWN_BT;break;
+        case 0x12:return FILE_LIST3_UP_BT;break;
+        case 0x13:return FILE_START_STOP_BT;break;
+        case 0x14:return LIGHT_BT;break;
+        case 0x15:return PRINT_RETURN_BT;break;
+        case 0x16:return LOAD_FILAMENT_BT;break;
+        case 0x17:return LOAD_HEAT_STOP_BT;break;
+        case 0x18:return UNLOAD_FILAMENT_BT;break;
+        case 0x19:return UNLOAD_HEAT_STOP_BT;break;
+        case 0x1A:return BUZZER_BT;break;
+        case 0x1B:return X_STEP_ADD_BT;break;
+        case 0x1C:return X_STEP_MIN_BT;break;
+        case 0x1D:return Y_STEP_ADD_BT;break;
+        case 0x1E:return Y_STEP_MIN_BT;break;
+        case 0x1F:return Z_STEP_ADD_BT;break;
+        case 0x20:return Z_STEP_MIN_BT;break;
+        case 0x21:return XYZ_HOME_BT;break;
+        default:return CMD_ERR;break;
       }
     }
     else
@@ -424,11 +424,113 @@ void processing_lcd_command(void)
       case CMD_ERR:break;
       case OK_TYPE:break;
       case EN_FONT_BT:
-        SERIAL_ECHOLNPGM("start");
-        send_virtual_serial_cmd((uint8_t*)"G1 X100",5);
+        SERIAL_ECHOLNPGM("change page 2");
+        send_lcd_commands_CRC16(PAGE1_1_1,10);
+        send_lcd_commands_CRC16(PAGE1_1_2,10);
         send_lcd_commands_CRC16(CHANGE_PAGE_2,10);
         break;
       case UK_FONT_BT:break;
+      case FONT_CHECK_BT:
+        SERIAL_ECHOLNPGM("FONT_CHECK_BT");
+        send_lcd_commands_CRC16(CHANGE_PAGE_4,10);
+        break;
+
+
+      case MAINPAGE_PRINT_BT:
+        if(PrintStatus == 0)
+        {
+          send_lcd_commands_CRC16(CHANGE_PAGE_7,10);
+          PrintStatus = 1;
+        }
+        else
+        {
+          send_lcd_commands_CRC16(CHANGE_PAGE_8,10);
+          send_lcd_commands_CRC16(PAGE2_2_1,10);
+          send_lcd_commands_CRC16(PAGE2_2_2,10);
+          send_lcd_commands_CRC16(PAGE2_2_3,10);
+          send_lcd_commands_CRC16(PAGE2_2_4,10);
+          send_lcd_commands_CRC16(PAGE2_2_5,10);
+        }
+        break;
+
+      case LIST1_FILE1_BT:
+        PAGE2_4_2[11] = 0x31;
+        send_lcd_commands_CRC16(PAGE2_4_2,10);
+        send_lcd_commands_CRC16(CHANGE_PAGE_A,10);
+        break;
+      case LIST1_FILE2_BT:
+        PAGE2_4_2[11] = 0x32;
+        send_lcd_commands_CRC16(PAGE2_4_2,10);
+        send_lcd_commands_CRC16(CHANGE_PAGE_A,10);
+        break;
+      case LIST1_FILE3_BT:
+        PAGE2_4_2[11] = 0x33;
+        send_lcd_commands_CRC16(PAGE2_4_2,10);
+        send_lcd_commands_CRC16(CHANGE_PAGE_A,10);
+        break;
+      case LIST1_FILE4_BT:
+        PAGE2_4_2[11] = 0x34;
+        send_lcd_commands_CRC16(PAGE2_4_2,10);
+        send_lcd_commands_CRC16(CHANGE_PAGE_A,10);
+        break;
+
+      case FILE_START_STOP_BT:{
+        send_lcd_commands_CRC16(CHANGE_PAGE_E,10);
+        int i;
+        PAGE2_5_2[7] = 0X30;
+        CHANGE_ICON_1[7] = 0X00;
+        send_lcd_commands_CRC16(PAGE2_5_2,10);
+        for(i=0; i<9; i++)
+        {
+          PAGE2_5_2[7] += 1;
+          CHANGE_ICON_1[7] += 1;
+          send_lcd_commands_CRC16(PAGE2_5_2,10);
+          send_lcd_commands_CRC16(CHANGE_ICON_1,10);
+          uint32_t serial_timeout = millis() + 200UL;
+          while(PENDING(millis(), serial_timeout));
+        }
+        break;}
+      case X_STEP_ADD_BT:{
+        float dis_x = current_position[X_AXIS] + 2;
+        MYSERIAL0.printf_rx("G1 X%f\n",dis_x);
+        uint32_t serial_timeout = millis() + 10UL;
+        while(PENDING(millis(), serial_timeout)){
+          if (commands_in_queue < BUFSIZE) get_available_commands();
+          processing_lcd_command();
+          get_virtual_serial_cmd();
+          if(have_serial_cmd)
+          {
+            if(OK_TYPE == get_vserial_command_type())
+            {
+              SERIAL_ECHOLNPGM("x add bt");
+              clear_virtaul_command_queue();
+            }
+          }
+        }
+        break;}
+      case X_STEP_MIN_BT:{
+        float dis_x = current_position[X_AXIS] - 2;
+        MYSERIAL0.printf_rx("G1 X%f\n",dis_x);
+        break;}
+      case Y_STEP_ADD_BT:{
+        float dis_y = current_position[Y_AXIS] + 2;
+        MYSERIAL0.printf_rx("G1 Y%f\n",dis_y);
+        break;}
+      case Y_STEP_MIN_BT:{
+        float dis_y = current_position[Y_AXIS] - 2;
+        MYSERIAL0.printf_rx("G1 Y%f\n",dis_y);
+        break;}
+      case Z_STEP_ADD_BT:{
+        float dis_z = current_position[Z_AXIS] + 2;
+        MYSERIAL0.printf_rx("G1 Z%f\n",dis_z);
+        break;}
+      case Z_STEP_MIN_BT:{
+        float dis_z = current_position[Z_AXIS] - 2;
+        MYSERIAL0.printf_rx("G1 Z%f\n",dis_z);
+        break;}
+      case XYZ_HOME_BT:{
+        MYSERIAL0.printf_rx("G28\n");
+        break;}
       default:break;
     }
   }

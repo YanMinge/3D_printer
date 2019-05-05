@@ -35,10 +35,15 @@
  */
 extern uint8_t CHANGE_PAGE_2[];
 extern uint8_t CHANGE_PAGE_4[];
+extern uint8_t CHANGE_PAGE_7[];
+extern uint8_t CHANGE_PAGE_8[];
+
 extern uint8_t CHANGE_PAGE_A[];
-extern uint8_t CHANGE_PAGE_D[];
+extern uint8_t CHANGE_PAGE_E[];
 extern uint8_t CHANGE_PAGE_11[];
 extern uint8_t CHANGE_PAGE_12[];
+
+extern uint8_t CHANGE_ICON_1[];
 
 extern uint8_t PAGE1_0_1[];
 extern uint8_t PAGE1_0_2[];
@@ -78,6 +83,8 @@ extern uint8_t PAGE2_8_2[];
 extern uint8_t PAGE2_8_3[];
 
 extern uint8_t PAGE2_9_1[];
+extern uint8_t PAGE2_ALL_0[];
+extern uint8_t PAGE2_ALL_1[];
 
 /**
  * crc array

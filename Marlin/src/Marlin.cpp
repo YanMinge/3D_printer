@@ -909,6 +909,10 @@ void setup() {
     #endif
   #endif
 
+#if ENABLED(USE_DWIN_LCD)
+  lcd_font_init();
+  #endif
+
   SERIAL_ECHOLNPGM("start");
   SERIAL_ECHO_START();
 

@@ -49,6 +49,7 @@ enum CmdType : unsigned char {
   
   EN_FONT_BT,
   UK_FONT_BT,
+  FONT_CHECK_BT,
   
   MAINPAGE_PRINT_BT,
   FILE_LIST1_DOWN_BT,
@@ -104,9 +105,8 @@ extern uint8_t have_lcd_cmd;
 extern uint8_t virtua1_serial_buffer[VIRTUAL_SIZE];
 extern uint8_t have_serial_cmd;
 
-/**
- * Clear the Marlin command queue
- */
+void lcd_font_init(void);
+
 void clear_lcd_command_queue(void);
 void clear_virtaul_command_queue(void);
 void get_lcd_commands(void);
