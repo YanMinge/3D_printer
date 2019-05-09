@@ -39,7 +39,6 @@ extern "C" volatile millis_t _millis;
 
 #include <Arduino.h>
 #include <pinmapping.h>
-#include <CDCSerial.h>
 #include "virtual_serial.h"
 
 #include "../shared/math_32bit.h"

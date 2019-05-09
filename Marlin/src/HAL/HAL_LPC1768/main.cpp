@@ -1,15 +1,5 @@
 #ifdef TARGET_LPC1768
 
-#include <usb/usb.h>
-#include <usb/usbcfg.h>
-#include <usb/usbhw.h>
-#include <usb/usbcore.h>
-#include <usb/cdc.h>
-#include <usb/cdcuser.h>
-#include <usb/mscuser.h>
-#include <CDCSerial.h>
-#include <usb/mscuser.h>
-
 extern "C" {
   #include <debug_frmwrk.h>
 }
@@ -65,24 +55,14 @@ void HAL_init() {
     WRITE(ONBOARD_SD_CS, HIGH);
     SET_OUTPUT(ONBOARD_SD_CS);
   #endif
-
-  USB_Init();                               // USB Initialization
-  USB_Connect(FALSE);                       // USB clear connection
-  delay(1000);                              // Give OS time to notice
-  USB_Connect(TRUE);
+  //USB_Init();                               // USB Initialization
+  //USB_Connect(FALSE);                       // USB clear connection
+  delay(3000);                              // Give OS time to notice
+  //USB_Connect(TRUE);
 
   #if DISABLED(USB_SD_DISABLED)
     MSC_SD_Init(0);                         // Enable USB SD card access
   #endif
-
-  const millis_t usb_timeout = millis() + 2000;
-  while (!USB_Configuration && PENDING(millis(), usb_timeout)) {
-    delay(50);
-    HAL_idletask();
-    #if PIN_EXISTS(LED)
-      TOGGLE(LED_PIN);     // Flash quickly during USB initialization
-    #endif
-  }
 
   #if NUM_SERIAL > 0
     MYSERIAL0.begin(BAUDRATE);
@@ -112,7 +92,6 @@ void HAL_idletask(void) {
       MSC_Release_Lock();
   #endif
   // Perform USB stack housekeeping
-  MSC_RunDeferredCommands();
 }
 
 #endif // TARGET_LPC1768
