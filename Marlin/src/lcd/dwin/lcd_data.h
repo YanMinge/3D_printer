@@ -85,6 +85,12 @@ extern uint8_t PAGE2_8_3[];
 extern uint8_t PAGE2_9_1[];
 extern uint8_t PAGE2_ALL_0[];
 extern uint8_t PAGE2_ALL_1[];
+extern uint8_t TEST_0[];
+
+extern uint8_t PAGE2_4_0[];
+extern uint8_t PAGE2_5_0[];
+extern uint8_t PAGE2_9_0[];
+extern uint8_t PAGE2_7_0[];
 
 /**
  * crc array

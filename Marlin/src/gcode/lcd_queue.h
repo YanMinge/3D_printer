@@ -92,6 +92,16 @@ enum CmdType : unsigned char {
 
 };
 
+/**
+ * File status structure (FILINFO)
+ */
+typedef struct {
+  uint8_t type;       /* File type */
+	uint8_t	fsize;			/* File size */
+	char	fname[20];	/* file name*/
+} LCDFILINFO;
+extern LCDFILINFO lcd_file[20];
+
 
 /**
  * lcd Command Queue

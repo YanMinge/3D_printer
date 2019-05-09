@@ -56,7 +56,10 @@ static int serial_count = 0;
 
 static int PrintStatus = 0;
 static int StartStop = 0;
+static int HeatErr = 0;
+static int IsPrint = 0;
 
+LCDFILINFO lcd_file[20];
 
 const char command_ok[8]={0X5A, 0XA5, 0X05, 0X82, 0X4F, 0X4B, 0XA5, 0XEF};
 const char command_order[7]={0X5A, 0XA5, 0X08, 0X83, 0X10, 0X00, 0X01};
@@ -106,6 +109,13 @@ void lcd_font_init(void)
   send_lcd_commands_CRC16(PAGE2_9_1,10);
   send_lcd_commands_CRC16(PAGE2_ALL_0,10);
   send_lcd_commands_CRC16(PAGE2_ALL_1,10);
+  //send_lcd_commands_CRC16(TEST_0,10);
+
+  send_lcd_commands_CRC16(PAGE2_9_0,10);
+  send_lcd_commands_CRC16(PAGE2_5_0,10);
+  send_lcd_commands_CRC16(PAGE2_4_0,10);
+  send_lcd_commands_CRC16(PAGE2_7_0,10);
+  //send_lcd_commands_CRC16(PAGE2_2_1,10);
 }
 
 /**
@@ -191,6 +201,28 @@ void send_lcd_commands(uint8_t * str) {
   }
 }
 
+
+/**
+ * send string to dwin_lcd
+ * str:the data you need to send 
+ * take care the value of str[2] will plus 2 automatic
+ */
+void send_file_CRC16(uint8_t * str,uint8_t times) {
+  int j;
+  uint8_t str1[40];
+  str1[0] = 0x5A;
+  str1[1] = 0xA5;
+  str1[2] = strlen((const char *)str)+3;
+  str1[3] = 0x82;
+  str1[4] = 0x11;
+  str1[5] = 0xD0;
+  memcpy((str1+6),(char *)str,strlen((char *)str));
+  //memcpy(str1,str,40);
+  for(j=0;j<times;j++){
+    if(add_lcd_commands_CRC16(str1)==1)break;
+  }
+}
+
 /**
  * send string to dwin_lcd
  * str:the data you need to send 
@@ -198,8 +230,10 @@ void send_lcd_commands(uint8_t * str) {
  */
 void send_lcd_commands_CRC16(uint8_t * str,uint8_t times) {
   int j;
+  uint8_t str1[40];
+  memcpy(str1,str,40);
   for(j=0;j<times;j++){
-    if(add_lcd_commands_CRC16(str)==1)break;
+    if(add_lcd_commands_CRC16(str1)==1)break;
   }
 }
 /**
@@ -220,7 +254,11 @@ int add_lcd_commands_CRC16(uint8_t * str) {
        MYSERIAL2.write(str[i]);
     MYSERIAL2.write(low);
     MYSERIAL2.write(high);
-    uint32_t serial_timeout = millis() + 10UL;
+    for(i=0;i<str[2]+1;i++)
+       MYSERIAL1.write(str[i]);
+    MYSERIAL1.write(low);
+    MYSERIAL1.write(high);
+    uint32_t serial_timeout = millis() + 100UL;
     while(PENDING(millis(), serial_timeout)){
       get_lcd_commands();
       if(have_lcd_cmd)
@@ -330,7 +368,7 @@ CmdType get_command_type(void)
   uint8_t str[LCD_SIZE];
   memset(str,0,LCD_SIZE);
   memcpy((void*)str,(void*)lcd_command_queue,LCD_SIZE);
-  //virtual_serial_debug(str);
+  virtual_serial_debug(str);
   //virtual_serial_debug(lcd_command_queue);
   clear_lcd_command_queue();
   //if have a command
@@ -351,7 +389,7 @@ CmdType get_command_type(void)
   {
     if(str[7]== 0x00)
     {
-      SERIAL_ECHOLNPGM("cmd type");
+      //SERIAL_ECHOLNPGM("cmd type");
       switch (str[8])
       {
         case 0x01:return EN_FONT_BT;break;
@@ -424,7 +462,7 @@ void processing_lcd_command(void)
       case CMD_ERR:break;
       case OK_TYPE:break;
       case EN_FONT_BT:
-        SERIAL_ECHOLNPGM("change page 2");
+        //SERIAL_ECHOLNPGM("change page 2");
         send_lcd_commands_CRC16(PAGE1_1_1,10);
         send_lcd_commands_CRC16(PAGE1_1_2,10);
         send_lcd_commands_CRC16(CHANGE_PAGE_2,10);
@@ -437,6 +475,7 @@ void processing_lcd_command(void)
 
 
       case MAINPAGE_PRINT_BT:
+      {
         if(PrintStatus == 0)
         {
           send_lcd_commands_CRC16(CHANGE_PAGE_7,10);
@@ -444,14 +483,35 @@ void processing_lcd_command(void)
         }
         else
         {
-          send_lcd_commands_CRC16(CHANGE_PAGE_8,10);
-          send_lcd_commands_CRC16(PAGE2_2_1,10);
-          send_lcd_commands_CRC16(PAGE2_2_2,10);
-          send_lcd_commands_CRC16(PAGE2_2_3,10);
-          send_lcd_commands_CRC16(PAGE2_2_4,10);
-          send_lcd_commands_CRC16(PAGE2_2_5,10);
+          //send_lcd_commands_CRC16(CHANGE_PAGE_8,10);
+          //send_lcd_commands_CRC16(PAGE2_2_2,10);
+          //send_lcd_commands_CRC16(PAGE2_2_3,10);
+          //send_lcd_commands_CRC16(PAGE2_2_4,10);
+          //send_lcd_commands_CRC16(PAGE2_2_5,10);
+          //send_lcd_commands_CRC16(PAGE2_2_1,10);
+
+          //send M22
+          MYSERIAL0.printf_rx("M22\r\n");
+          memset(((void *)&lcd_file[0]), 0, sizeof(lcd_file[0]));
+          strcpy(lcd_file[0].fname ,"123.gcode");
+          uint32_t serial_timeout = millis() + 10UL;
+          while(PENDING(millis(), serial_timeout)){
+          if (commands_in_queue < BUFSIZE) get_available_commands();
+          processing_lcd_command();
+          get_virtual_serial_cmd();
+          if(have_serial_cmd)
+          {
+            if(OK_TYPE == get_vserial_command_type())
+            {
+              SERIAL_ECHOLNPGM("M22\r\n");
+              clear_virtaul_command_queue();
+            }
+          }
         }
-        break;
+          send_file_CRC16((uint8_t *)lcd_file[0].fname,1);
+          send_lcd_commands_CRC16(CHANGE_PAGE_8,10);
+        }
+        break;}
 
       case LIST1_FILE1_BT:
         PAGE2_4_2[11] = 0x31;
@@ -475,20 +535,40 @@ void processing_lcd_command(void)
         break;
 
       case FILE_START_STOP_BT:{
-        send_lcd_commands_CRC16(CHANGE_PAGE_E,10);
-        int i;
-        PAGE2_5_2[7] = 0X30;
-        CHANGE_ICON_1[7] = 0X00;
-        send_lcd_commands_CRC16(PAGE2_5_2,10);
-        for(i=0; i<9; i++)
+        if(StartStop == 0)
         {
-          PAGE2_5_2[7] += 1;
-          CHANGE_ICON_1[7] += 1;
+          if(HeatErr == 0)
+          {
+            send_lcd_commands_CRC16(CHANGE_PAGE_12,10);
+            HeatErr = 1;
+            break;
+          }
+          send_lcd_commands_CRC16(CHANGE_PAGE_E,10);
+          int i;
+          PAGE2_5_2[7] = 0X30;
+          CHANGE_ICON_1[7] = 0X00;
           send_lcd_commands_CRC16(PAGE2_5_2,10);
-          send_lcd_commands_CRC16(CHANGE_ICON_1,10);
-          uint32_t serial_timeout = millis() + 200UL;
-          while(PENDING(millis(), serial_timeout));
+          for(i=0; i<10; i++)
+          {
+            PAGE2_5_2[7] += 1;
+            CHANGE_ICON_1[7] += 1;
+            send_lcd_commands_CRC16(PAGE2_5_2,10);
+            send_lcd_commands_CRC16(CHANGE_ICON_1,10);
+            uint32_t serial_timeout = millis() + 100UL;
+            while(PENDING(millis(), serial_timeout));
+          }
+          send_lcd_commands_CRC16(PAGE2_4_1_1,10);
+          StartStop = 1;
+          IsPrint = 1;
+          send_lcd_commands_CRC16(CHANGE_PAGE_A,10);
         }
+        else
+        {
+          send_lcd_commands_CRC16(PAGE2_4_1,10);
+          StartStop = 0;
+          IsPrint = 0;
+        }
+        
         break;}
       case X_STEP_ADD_BT:{
         float dis_x = current_position[X_AXIS] + 2;
@@ -533,5 +613,18 @@ void processing_lcd_command(void)
         break;}
       default:break;
     }
+  }
+  if(IsPrint)
+  {
+    int i;
+    for(i=0; i<5; i++)
+    {
+      uint32_t serial_timeout = millis() + 200UL;
+      while(PENDING(millis(), serial_timeout));
+    }
+    send_lcd_commands_CRC16(PAGE2_4_1,10);
+    send_lcd_commands_CRC16(CHANGE_PAGE_11,10);
+    IsPrint = 0;
+    StartStop = 0;
   }
 }
