@@ -115,6 +115,17 @@
  */
 #define SERIAL_PORT_2 2
 
+#define USE_DWIN_LCD
+#ifdef USE_DWIN_LCD
+/**
+ * Select a secondary serial port on the board to use for communication with the lcd.
+ * Serial port -1 is the USB emulated serial port, if available.
+ *
+ * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
+ */
+  #define SERIAL_PORT_3 3
+#endif
+
 /**
  * This setting determines the communication speed of the printer.
  *
