@@ -176,6 +176,10 @@
   #include "libs/L6470/L6470_Marlin.h"
 #endif
 
+#if ENABLED(USBMSCSUPPORT)
+  #include "test.h"
+#endif
+
 bool Running = true;
 
 #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
@@ -819,6 +823,79 @@ void stop() {
   }
 }
 
+
+static uint8_t buffer[8 * 1024];
+STATIC FATFS fatFS;	/* File system object */
+STATIC FIL fileObj;	/* File object */
+void usb_read_test(void)
+{
+	FRESULT rc;		/* Result code */
+	int i;
+	UINT bw, br;
+	uint8_t *ptr;
+	char debugBuf[64];
+	DIR dir;		/* Directory object */
+	FILINFO fno;	/* File information object */
+
+	f_mount(0, &fatFS);		/* Register volume work area (never fails) */
+
+	rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
+	if (rc) {
+		SERIAL_PRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
+		die(rc);
+	}
+	else {
+		SERIAL_PRINTF("Opened file MESSAGE.TXT from USB Disk. Printing contents...\r\n\r\n");
+		for (;; ) {
+			/* Read a chunk of file */
+			rc = f_read(&fileObj, buffer, sizeof buffer, &br);
+			if (rc || !br) {
+				break;					/* Error or end of file */
+			}
+			ptr = (uint8_t *) buffer;
+			for (i = 0; i < br; i++) {	/* Type the data */
+				SERIAL_PRINTF("%c", ptr[i]);
+			}
+		}
+		if (rc) {
+			die(rc);
+		}
+
+		SERIAL_PRINTF("\r\n\r\nClose the file.\r\n");
+		rc = f_close(&fileObj);
+		if (rc) {
+			die(rc);
+		}
+	}
+	SERIAL_PRINTF("\r\nOpen root directory.\r\n");
+	rc = f_opendir(&dir, "");
+	if (rc) {
+		die(rc);
+	}
+	else {
+		SERIAL_PRINTF("\r\nDirectory listing...\r\n");
+		for (;; ) {
+			/* Read a directory item */
+			rc = f_readdir(&dir, &fno);
+			if (rc || !fno.fname[0]) {
+				break;					/* Error or end of dir */
+			}
+			if (fno.fattrib & AM_DIR) {
+				sprintf(debugBuf, "   <dir>  %s\r\n", fno.fname);
+			}
+			else {
+				sprintf(debugBuf, "   %8lu  %s\r\n", fno.fsize, fno.fname);
+			}
+			SERIAL_PRINTF(debugBuf);
+		}
+		if (rc) {
+			die(rc);
+		}
+	}
+	SERIAL_PRINTF("\r\nTest completed.\r\n");
+}
+	
+
 /**
  * Marlin entry-point: Set up before the program loop
  *  - Set up the kill pin, filament runout, power hold
@@ -1110,6 +1187,13 @@ void setup() {
   #if ENABLED(PRUSA_MMU2)
     mmu2.init();
   #endif
+
+#if ENABLED(USBMSCSUPPORT)
+  SetupHardware();
+  SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
+  usb_read_test();
+  SERIAL_PRINTF("Example completed.\r\n");
+#endif
 }
 
 /**
