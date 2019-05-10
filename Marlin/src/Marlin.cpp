@@ -181,7 +181,10 @@
 #endif
 
 #if ENABLED(USBMSCSUPPORT)
+<<<<<<< HEAD
   //#include "test.h"
+=======
+>>>>>>> 47cf3c4898ec27221ec6621ef4a75e681931a59f
   #include "MassStorageLib.h"
 #endif
 
