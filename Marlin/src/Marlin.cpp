@@ -181,7 +181,8 @@
 #endif
 
 #if ENABLED(USBMSCSUPPORT)
-  #include "test.h"
+  //#include "test.h"
+  #include "MassStorageLib.h"
 #endif
 
 bool Running = true;
@@ -898,7 +899,80 @@ void usb_read_test(void)
 	}
 	SERIAL_PRINTF("\r\nTest completed.\r\n");
 }
-	
+
+void usb_read_test_lcd(void)
+{
+  //set memory
+  memset(lcd_file,0,sizeof(lcd_file));
+	FRESULT rc;		/* Result code */
+	int i;
+	uint8_t j=0;
+	UINT bw, br;
+	uint8_t *ptr;
+	char debugBuf[64];
+	DIR dir;		/* Directory object */
+	FILINFO fno;	/* File information object */
+
+	f_mount(0, &fatFS);		/* Register volume work area (never fails) */
+
+	rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
+	if (rc) {
+		SERIAL_PRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
+		die(rc);
+	}
+	else {
+		SERIAL_PRINTF("Opened file MESSAGE.TXT from USB Disk. Printing contents...\r\n\r\n");
+		for (;; ) {
+			/* Read a chunk of file */
+			rc = f_read(&fileObj, buffer, sizeof buffer, &br);
+			if (rc || !br) {
+				break;					/* Error or end of file */
+			}
+			ptr = (uint8_t *) buffer;
+			for (i = 0; i < br; i++) {	/* Type the data */
+				SERIAL_PRINTF("%c", lcd_file[i].type);
+			}
+		}
+		if (rc) {
+			die(rc);
+		}
+
+		SERIAL_PRINTF("\r\n\r\nClose the file.\r\n");
+		rc = f_close(&fileObj);
+		if (rc) {
+			die(rc);
+		}
+	}
+	SERIAL_PRINTF("\r\nOpen root directory.\r\n");
+	rc = f_opendir(&dir, "");
+	if (rc) {
+		die(rc);
+	}
+	else {
+		SERIAL_PRINTF("\r\nDirectory listing...\r\n");
+		for (;; ) {
+			/* Read a directory item */
+			rc = f_readdir(&dir, &fno);
+			if (rc || !fno.fname[0]) {
+				break;					/* Error or end of dir */
+			}
+			if (fno.fattrib & AM_DIR) {
+				sprintf(debugBuf, "   <dir>  %s\r\n", fno.fname);
+			}
+			else {
+				sprintf(debugBuf, "   %8lu  %s\r\n", fno.fsize, fno.fname);
+				sprintf(lcd_file[j].fname, "%s",fno.fname);
+				SERIAL_PRINTF("\r\..lcdfilenum%8lu = %s\r\n", j,lcd_file[j].fname);
+				j++;
+			}
+			SERIAL_PRINTF(debugBuf);
+		}
+		if (rc) {
+			die(rc);
+		}
+	}
+	SERIAL_PRINTF("\r\nTest completed.\r\n");
+}	
 
 /**
  * Marlin entry-point: Set up before the program loop
@@ -1250,7 +1324,7 @@ void loop() {
     //   char c = VirtualSerial.read_tx();
     // }
     get_lcd_commands();
-    processing_lcd_command();
+    parser_lcd_command();
     advance_command_queue();
     endstops.event_handler();
     idle();

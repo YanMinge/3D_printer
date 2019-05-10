@@ -41,13 +41,14 @@
  * language type can be update if you want have more language choices
  */
 enum CmdType : unsigned char {
-  NO_CMD = 0,
-  CMD_ERR,
-  CRC_ERR,
-  CRC_OK,
-  OK_TYPE,
-  
-  EN_FONT_BT,
+  CMD_CHECK_ERR,
+  CMD_CHECK_OK,
+  CMD_ERROR,
+  CMD_OK,
+
+  CMD_BUTTON_SET_CN,
+  CMD_BUTTON_SET_EN,
+  CMD_BUTTON_SET_CHECK,
   UK_FONT_BT,
   FONT_CHECK_BT,
   
@@ -109,18 +110,17 @@ extern LCDFILINFO lcd_file[20];
  *
  * Commands are copied into this buffer by the command injectors
  */
-extern uint8_t lcd_command_queue[LCD_SIZE];
-extern uint8_t have_lcd_cmd;
 
-extern uint8_t virtua1_serial_buffer[VIRTUAL_SIZE];
 extern uint8_t have_serial_cmd;
 
 void lcd_font_init(void);
 
 void clear_lcd_command_queue(void);
 void clear_virtaul_command_queue(void);
+
 void get_lcd_commands(void);
-CmdType check_lcd_cmd_crc(uint8_t * str);
+CmdType check_lcd_commands(uint8_t * str);
+
 void send_lcd_commands(uint8_t * str);
 void send_lcd_commands_CRC16(uint8_t * str,uint8_t times);
 int add_lcd_commands_CRC16(uint8_t * str);
@@ -133,4 +133,7 @@ CmdType get_vserial_command_type(void);
 
 
 CmdType get_command_type(void);
-void processing_lcd_command(void);
+void parser_lcd_command(void);
+
+extern void usb_read_test_lcd(void);
+

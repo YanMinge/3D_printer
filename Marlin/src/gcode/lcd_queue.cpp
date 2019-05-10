@@ -46,13 +46,12 @@
   #include "../feature/power_loss_recovery.h"
 #endif
 
-uint8_t virtua1_serial_buffer[VIRTUAL_SIZE];
+static uint8_t virtua1_serial_buffer[VIRTUAL_SIZE];
 uint8_t have_serial_cmd = 0;
 static int virtua_serial_count = 0;
 
-uint8_t lcd_command_queue[LCD_SIZE];
-uint8_t have_lcd_cmd = 0;
-static int serial_count = 0;
+static uint8_t lcd_command_queue[LCD_SIZE];
+static uint8_t have_lcd_cmd = 0;
 
 static int PrintStatus = 0;
 static int StartStop = 0;
@@ -123,7 +122,6 @@ void lcd_font_init(void)
  */
 void clear_lcd_command_queue() {
   memset(lcd_command_queue,0,LCD_SIZE);
-  serial_count = 0;
   have_lcd_cmd = 0;
 }
 
@@ -140,8 +138,9 @@ void clear_virtaul_command_queue() {
  * get the command from the lcd_serial
  */
 void get_lcd_commands() {
-  static char serial_command_queue[LCD_SIZE];
   char c;
+  static uint8_t serial_count = 0;
+  static char serial_command_queue[LCD_SIZE];
   // queue has space, serial has data
   while (MYSERIAL2.available()) {
     c = MYSERIAL2.read();
@@ -155,7 +154,7 @@ void get_lcd_commands() {
       memset(serial_command_queue,0,LCD_SIZE);
     }
   }
-  //data is error
+  //if data is error
   if(serial_command_queue[0]!=0x5A)
   {
     serial_count = 0;
@@ -168,22 +167,26 @@ void get_lcd_commands() {
  * str is the command 
  * if frame header is wrong return err
  * if crc is wrong return err
- * if right return CRC_OK
+ * if right return CMD_CHECK_OK
  */
-CmdType check_lcd_cmd_crc(uint8_t * str)
+CmdType check_lcd_commands(uint8_t * str)
 {
   if((str[0]==0x5A)&&(str[1]==0xA5)&&(str[2]!=0))
   {
     uint16_t crc = usMBCRC16((str+3),(uint32_t)str[2]-2);
-    if((str[str[2]+1]== (crc>>8))&&str[str[2]+2]== (crc&0x00FF))
+    if((str[str[2]+1]== (crc>>8))&&(str[str[2]+2]== (crc&0x00FF)))
     {
-      return CRC_OK;
+      return CMD_CHECK_OK;
     }
     else
-      return CRC_ERR;
+    {
+      return CMD_CHECK_ERR;
+    }
   }
   else
-    return CRC_ERR;
+  {
+    return CMD_CHECK_ERR;
+  }
 }
 
 /**
@@ -263,7 +266,7 @@ int add_lcd_commands_CRC16(uint8_t * str) {
       get_lcd_commands();
       if(have_lcd_cmd)
       {
-        if(OK_TYPE == get_command_type())return 1;
+        if(CMD_OK == get_command_type())return 1;
       }
     }
     return 0;
@@ -306,7 +309,7 @@ uint8_t send_virtual_serial(char * str) {
     get_virtual_serial_cmd();
     if(have_serial_cmd)
     {
-      if(OK_TYPE == get_vserial_command_type())
+      if(CMD_OK == get_vserial_command_type())
       {
         clear_virtaul_command_queue();
         SERIAL_ECHOLNPGM(" ok ");
@@ -353,10 +356,10 @@ CmdType get_vserial_command_type(void)
   //SERIAL_ECHOLNPGM("get type");
   if (strncmp((char *)str,"ok",2) == 0)
   {
-    return OK_TYPE;
+    return CMD_OK;
   }
   else 
-    return CMD_ERR;
+    return CMD_ERROR;
 }
 
 /**
@@ -365,109 +368,88 @@ CmdType get_vserial_command_type(void)
  */
 CmdType get_command_type(void)
 {
+  uint16_t num = 0;
   uint8_t str[LCD_SIZE];
   memset(str,0,LCD_SIZE);
   memcpy((void*)str,(void*)lcd_command_queue,LCD_SIZE);
-  virtual_serial_debug(str);
-  //virtual_serial_debug(lcd_command_queue);
   clear_lcd_command_queue();
-  //if have a command
-  //SERIAL_ECHOLNPGM("get type");
-  if (check_lcd_cmd_crc(str)==CRC_ERR)
+  SERIAL_PRINTF("\r\n..get type..\r\n");
+  if (CMD_CHECK_ERR == check_lcd_commands(str))
   {
-    SERIAL_ECHOLNPGM("crc err");
-    return CMD_ERR;
+    SERIAL_PRINTF("\r\ncrc err\r\n");
+    return CMD_ERROR;
   }
-  //ok_type
-  //SERIAL_ECHOLNPGM("crc ok");
-  if(strncmp((const char*)str,(const char*)command_ok,8)==0)
+  if(0 == strncmp((const char*)str,(const char*)command_ok,8))
   {
-    return OK_TYPE;
+    return CMD_OK;
   }
   //order
   else if(strncmp((const char*)str,(const char*)command_order,7)==0)
   {
-    if(str[7]== 0x00)
+    num = (((uint16_t)str[7] << 8)||str[8]);
+    switch (num)
     {
-      //SERIAL_ECHOLNPGM("cmd type");
-      switch (str[8])
-      {
-        case 0x01:return EN_FONT_BT;break;
-        case 0x02:return UK_FONT_BT;break;
-        case 0x03:return FONT_CHECK_BT;break;
-        default:
-        #if ENABLED(VIRTUAL_DEBUG)
-        #endif
-          return CMD_ERR;
-          break;
-      }
+      case 0x0001:return CMD_BUTTON_SET_CN;break;
+      case 0x0002:return CMD_BUTTON_SET_EN;break;
+      case 0x0003:return FONT_CHECK_BT;break;
+      case 0x0100:return MAINPAGE_PRINT_BT;break;
+      case 0x0101:return FILE_LIST1_DOWN_BT;break;
+      case 0x0102:return FILE_LIST2_UP_BT;break;
+      case 0x0103:return FILE_RETURN_BT;break;
+      case 0x0104:return LIST1_FILE1_BT;break;
+      case 0x0105:return LIST1_FILE2_BT;break;
+      case 0x0106:return LIST1_FILE3_BT;break;
+      case 0x0107:return LIST1_FILE4_BT;break;
+      case 0x0108:return LIST2_FILE1_BT;break;
+      case 0x0109:return LIST2_FILE2_BT;break;
+      case 0x010A:return LIST2_FILE3_BT;break;
+      case 0x010B:return LIST2_FILE4_BT;break;
+      case 0x010C:return LIST3_FILE1_BT;break;
+      case 0x010D:return LIST3_FILE2_BT;break;
+      case 0x010E:return LIST3_FILE3_BT;break;
+      case 0x010F:return LIST3_FILE4_BT;break;
+      case 0x0111:return FILE_LIST2_DOWN_BT;break;
+      case 0x0112:return FILE_LIST3_UP_BT;break;
+      case 0x0113:return FILE_START_STOP_BT;break;
+      case 0x0114:return LIGHT_BT;break;
+      case 0x0115:return PRINT_RETURN_BT;break;
+      case 0x0116:return LOAD_FILAMENT_BT;break;
+      case 0x0117:return LOAD_HEAT_STOP_BT;break;
+      case 0x0118:return UNLOAD_FILAMENT_BT;break;
+      case 0x0119:return UNLOAD_HEAT_STOP_BT;break;
+      case 0x011A:return BUZZER_BT;break;
+      case 0x011B:return X_STEP_ADD_BT;break;
+      case 0x011C:return X_STEP_MIN_BT;break;
+      case 0x011D:return Y_STEP_ADD_BT;break;
+      case 0x011E:return Y_STEP_MIN_BT;break;
+      case 0x011F:return Z_STEP_ADD_BT;break;
+      case 0x0120:return Z_STEP_MIN_BT;break;
+      case 0x0121:return XYZ_HOME_BT;break;
+      default:return CMD_ERROR;break;
     }
-    else if(str[7]== 0x01)
-    {
-      switch (str[8])
-      {
-        case 0x00:return MAINPAGE_PRINT_BT;break;
-        case 0x01:return FILE_LIST1_DOWN_BT;break;
-        case 0x02:return FILE_LIST2_UP_BT;break;
-        case 0x03:return FILE_RETURN_BT;break;
-        case 0x04:return LIST1_FILE1_BT;break;
-        case 0x05:return LIST1_FILE2_BT;break;
-        case 0x06:return LIST1_FILE3_BT;break;
-        case 0x07:return LIST1_FILE4_BT;break;
-        case 0x08:return LIST2_FILE1_BT;break;
-        case 0x09:return LIST2_FILE2_BT;break;
-        case 0x0A:return LIST2_FILE3_BT;break;
-        case 0x0B:return LIST2_FILE4_BT;break;
-        case 0x0C:return LIST3_FILE1_BT;break;
-        case 0x0D:return LIST3_FILE2_BT;break;
-        case 0x0E:return LIST3_FILE3_BT;break;
-        case 0x0F:return LIST3_FILE4_BT;break;
-        case 0x11:return FILE_LIST2_DOWN_BT;break;
-        case 0x12:return FILE_LIST3_UP_BT;break;
-        case 0x13:return FILE_START_STOP_BT;break;
-        case 0x14:return LIGHT_BT;break;
-        case 0x15:return PRINT_RETURN_BT;break;
-        case 0x16:return LOAD_FILAMENT_BT;break;
-        case 0x17:return LOAD_HEAT_STOP_BT;break;
-        case 0x18:return UNLOAD_FILAMENT_BT;break;
-        case 0x19:return UNLOAD_HEAT_STOP_BT;break;
-        case 0x1A:return BUZZER_BT;break;
-        case 0x1B:return X_STEP_ADD_BT;break;
-        case 0x1C:return X_STEP_MIN_BT;break;
-        case 0x1D:return Y_STEP_ADD_BT;break;
-        case 0x1E:return Y_STEP_MIN_BT;break;
-        case 0x1F:return Z_STEP_ADD_BT;break;
-        case 0x20:return Z_STEP_MIN_BT;break;
-        case 0x21:return XYZ_HOME_BT;break;
-        default:return CMD_ERR;break;
-      }
-    }
-    else
-      return CMD_ERR;
   }
-  else 
-    return CMD_ERR;
+  else
+    return CMD_ERROR;
 }
-
 /**
  * judge the type of the command the lcd send to host
  * command type can be seen in enum CmdType
  */
-void processing_lcd_command(void)
+void parser_lcd_command(void)
 {
   if(have_lcd_cmd)
   {
     CmdType type = get_command_type();
     switch (type){
-      case CMD_ERR:break;
-      case OK_TYPE:break;
-      case EN_FONT_BT:
+      case CMD_ERROR:break;
+      case CMD_OK:break;
+      case CMD_BUTTON_SET_CN:
         //SERIAL_ECHOLNPGM("change page 2");
         send_lcd_commands_CRC16(PAGE1_1_1,10);
         send_lcd_commands_CRC16(PAGE1_1_2,10);
         send_lcd_commands_CRC16(CHANGE_PAGE_2,10);
         break;
-      case UK_FONT_BT:break;
+      case CMD_BUTTON_SET_EN:break;
       case FONT_CHECK_BT:
         SERIAL_ECHOLNPGM("FONT_CHECK_BT");
         send_lcd_commands_CRC16(CHANGE_PAGE_4,10);
@@ -491,25 +473,16 @@ void processing_lcd_command(void)
           //send_lcd_commands_CRC16(PAGE2_2_1,10);
 
           //send M22
-          MYSERIAL0.printf_rx("M22\r\n");
-          memset(((void *)&lcd_file[0]), 0, sizeof(lcd_file[0]));
-          strcpy(lcd_file[0].fname ,"123.gcode");
-          uint32_t serial_timeout = millis() + 10UL;
-          while(PENDING(millis(), serial_timeout)){
-          if (commands_in_queue < BUFSIZE) get_available_commands();
-          processing_lcd_command();
-          get_virtual_serial_cmd();
-          if(have_serial_cmd)
-          {
-            if(OK_TYPE == get_vserial_command_type())
-            {
-              SERIAL_ECHOLNPGM("M22\r\n");
-              clear_virtaul_command_queue();
-            }
-          }
-        }
-          send_file_CRC16((uint8_t *)lcd_file[0].fname,1);
+          //MYSERIAL0.printf_rx("M22\r\n");
+          //memset(((void *)&lcd_file[0]), 0, sizeof(lcd_file[0]));
+          //strcpy(lcd_file[0].fname ,"123.gcode");
+          
+          usb_read_test_lcd();
           send_lcd_commands_CRC16(CHANGE_PAGE_8,10);
+          send_file_CRC16((uint8_t *)lcd_file[17].fname,1);
+          send_lcd_commands_CRC16(PAGE2_2_3,10);
+          send_lcd_commands_CRC16(PAGE2_2_4,10);
+          send_lcd_commands_CRC16(PAGE2_2_5,10);
         }
         break;}
 
@@ -576,11 +549,11 @@ void processing_lcd_command(void)
         uint32_t serial_timeout = millis() + 10UL;
         while(PENDING(millis(), serial_timeout)){
           if (commands_in_queue < BUFSIZE) get_available_commands();
-          processing_lcd_command();
+          parser_lcd_command();
           get_virtual_serial_cmd();
           if(have_serial_cmd)
           {
-            if(OK_TYPE == get_vserial_command_type())
+            if(CMD_OK == get_vserial_command_type())
             {
               SERIAL_ECHOLNPGM("x add bt");
               clear_virtaul_command_queue();
