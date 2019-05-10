@@ -181,7 +181,7 @@
 #endif
 
 #if ENABLED(USBMSCSUPPORT)
-  #include "test.h"
+  #include "MassStorageLib.h"
 #endif
 
 bool Running = true;
