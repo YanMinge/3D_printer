@@ -834,14 +834,14 @@ STATIC FIL fileObj;	/* File object */
 void usb_read_test(void)
 {
 	FRESULT rc;		/* Result code */
-	int i;
-	UINT bw, br;
+	int16_t i;
+	UINT br;
 	uint8_t *ptr;
 	char debugBuf[64];
 	DIR dir;		/* Directory object */
 	FILINFO fno;	/* File information object */
 
-	f_mount(0, &fatFS);		/* Register volume work area (never fails) */
+	f_mount(&fatFS, "/" , 0);		/* Register volume work area (never fails) */
 
 	rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
 	if (rc) {
@@ -912,7 +912,7 @@ void usb_read_test_lcd(void)
 	DIR dir;		/* Directory object */
 	FILINFO fno;	/* File information object */
 
-	f_mount(0, &fatFS);		/* Register volume work area (never fails) */
+	f_mount(&fatFS, "/" , 0);;		/* Register volume work area (never fails) */
 
 	rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
 	if (rc) {
@@ -1280,8 +1280,6 @@ void setup() {
 #if ENABLED(USBMSCSUPPORT)
   SetupHardware();
   SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
-  usb_read_test();
-  SERIAL_PRINTF("Example completed.\r\n");
 #endif
 }
 
@@ -1327,5 +1325,10 @@ void loop() {
     advance_command_queue();
     endstops.event_handler();
     idle();
+#if ENABLED(USBMSCSUPPORT)
+    usb_read_test();
+    delay(1000);
+    SERIAL_PRINTF("Example completed.\r\n");
+#endif
   }
 }
