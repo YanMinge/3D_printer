@@ -834,10 +834,10 @@ STATIC FIL fileObj;	/* File object */
 void usb_read_test(void)
 {
 	FRESULT rc;		/* Result code */
-	int16_t i;
+	UINT i;
 	UINT br;
 	uint8_t *ptr;
-	char debugBuf[64];
+	char debugBuf[300];
 	DIR dir;		/* Directory object */
 	FILINFO fno;	/* File information object */
 
@@ -885,10 +885,10 @@ void usb_read_test(void)
 				break;					/* Error or end of dir */
 			}
 			if (fno.fattrib & AM_DIR) {
-				sprintf(debugBuf, "   <dir>  %s\r\n", fno.fname);
+				sprintf(debugBuf, "   <Dir>  %s\r\n", fno.fname);
 			}
 			else {
-				sprintf(debugBuf, "   %8lu  %s\r\n", fno.fsize, fno.fname);
+				sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
 			}
 			SERIAL_PRINTF(debugBuf);
 		}
@@ -901,14 +901,13 @@ void usb_read_test(void)
 
 void usb_read_test_lcd(void)
 {
-  //set memory
-  memset(lcd_file,0,sizeof(lcd_file));
+    //set memory
+    memset(lcd_file,0,sizeof(lcd_file));
 	FRESULT rc;		/* Result code */
-	int i;
+	UINT i;
 	uint8_t j=0;
-	UINT bw, br;
-	uint8_t *ptr;
-	char debugBuf[64];
+	UINT br;
+	char debugBuf[300];
 	DIR dir;		/* Directory object */
 	FILINFO fno;	/* File information object */
 
@@ -927,7 +926,6 @@ void usb_read_test_lcd(void)
 			if (rc || !br) {
 				break;					/* Error or end of file */
 			}
-			ptr = (uint8_t *) buffer;
 			for (i = 0; i < br; i++) {	/* Type the data */
 				SERIAL_PRINTF("%c", lcd_file[i].type);
 			}
@@ -956,12 +954,12 @@ void usb_read_test_lcd(void)
 				break;					/* Error or end of dir */
 			}
 			if (fno.fattrib & AM_DIR) {
-				sprintf(debugBuf, "   <dir>  %s\r\n", fno.fname);
+				sprintf(debugBuf, "   <Dir>  %s\r\n", fno.fname);
 			}
 			else {
-				sprintf(debugBuf, "   %8lu  %s\r\n", fno.fsize, fno.fname);
+				sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
 				sprintf(lcd_file[j].fname, "%s",fno.fname);
-				SERIAL_PRINTF("\r\..lcdfilenum%8lu = %s\r\n", j,lcd_file[j].fname);
+				SERIAL_PRINTF("\r\nlcdfilenum%8lu = %s\r\n", j,lcd_file[j].fname);
 				j++;
 			}
 			SERIAL_PRINTF(debugBuf);
@@ -1060,8 +1058,8 @@ void setup() {
   #endif
 
 #if ENABLED(USE_DWIN_LCD)
-  lcd_font_init();
-  #endif
+  //lcd_font_init();
+#endif
 
   SERIAL_ECHOLNPGM("start");
   SERIAL_ECHO_START();
@@ -1279,7 +1277,6 @@ void setup() {
 
 #if ENABLED(USBMSCSUPPORT)
   SetupHardware();
-  SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
 #endif
 }
 
@@ -1320,15 +1317,16 @@ void loop() {
     // while(VirtualSerial.available_tx() > 0) {
     //   char c = VirtualSerial.read_tx();
     // }
-    get_lcd_commands();
-    parser_lcd_command();
+    //get_lcd_commands();
+    //parser_lcd_command();
     advance_command_queue();
     endstops.event_handler();
     idle();
 #if ENABLED(USBMSCSUPPORT)
-    usb_read_test();
-    delay(1000);
-    SERIAL_PRINTF("Example completed.\r\n");
+	//SERIAL_PRINTF("usb_read_test.\r\n");
+    //usb_read_test();
+    //delay(1000);
+    //SERIAL_PRINTF("Example completed.\r\n");
 #endif
   }
 }
