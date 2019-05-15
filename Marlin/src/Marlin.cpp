@@ -1060,7 +1060,7 @@ void setup() {
   #endif
 
 #if ENABLED(USE_DWIN_LCD)
-  lcd_font_init();
+  //lcd_font_init();
   #endif
 
   SERIAL_ECHOLNPGM("start");
@@ -1280,7 +1280,7 @@ void setup() {
 #if ENABLED(USBMSCSUPPORT)
   SetupHardware();
   SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
-  usb_read_test();
+  //usb_read_test();
   SERIAL_PRINTF("Example completed.\r\n");
 #endif
 }
@@ -1322,8 +1322,7 @@ void loop() {
     // while(VirtualSerial.available_tx() > 0) {
     //   char c = VirtualSerial.read_tx();
     // }
-    get_lcd_commands();
-    parser_lcd_command();
+    lcd_update();
     advance_command_queue();
     endstops.event_handler();
     idle();

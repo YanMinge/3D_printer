@@ -32,65 +32,19 @@
 #include "../inc/MarlinConfig.h"
 #include "../lcd/dwin/lcd_data.h"
 
-#define VIRTUAL_SIZE 100
-#define LCD_SIZE 20
 
-#define VIRTUAL_DEBUG
-/**
+/*
  * discribe the type of the command
  * language type can be update if you want have more language choices
  */
 enum CmdType : unsigned char {
-  CMD_CHECK_ERR,
-  CMD_CHECK_OK,
+  CMD_NULL,
   CMD_ERROR,
   CMD_OK,
-
-  CMD_BUTTON_SET_CN,
-  CMD_BUTTON_SET_EN,
-  CMD_BUTTON_SET_CHECK,
-  UK_FONT_BT,
-  FONT_CHECK_BT,
-  
-  MAINPAGE_PRINT_BT,
-  FILE_LIST1_DOWN_BT,
-  FILE_LIST2_UP_BT,
-  FILE_LIST2_DOWN_BT,
-  FILE_LIST3_UP_BT,
-  FILE_LIST3_DOWN_BT,
-  
-  LIST1_FILE1_BT,
-  LIST1_FILE2_BT,
-  LIST1_FILE3_BT,
-  LIST1_FILE4_BT,
-  LIST2_FILE1_BT,
-  LIST2_FILE2_BT,
-  LIST2_FILE3_BT,
-  LIST2_FILE4_BT,
-  LIST3_FILE1_BT,
-  LIST3_FILE2_BT,
-  LIST3_FILE3_BT,
-  LIST3_FILE4_BT,
-
-  FILE_START_STOP_BT,
-  LIGHT_BT,
-  FILE_RETURN_BT,
-  PRINT_RETURN_BT,
-
-  LOAD_FILAMENT_BT,
-  LOAD_HEAT_STOP_BT,
-  UNLOAD_FILAMENT_BT,
-  UNLOAD_HEAT_STOP_BT,
-
-  BUZZER_BT,
-  X_STEP_ADD_BT,
-  X_STEP_MIN_BT,
-  Y_STEP_ADD_BT,
-  Y_STEP_MIN_BT,
-  Z_STEP_ADD_BT,
-  Z_STEP_MIN_BT,
-  XYZ_HOME_BT,
-
+  CMD_WRITE_REG_OK,
+  CMD_WRITE_VAR_OK,
+  CMD_READ_REG,
+  CMD_READ_VAR,
 };
 
 /**
@@ -111,29 +65,71 @@ extern LCDFILINFO lcd_file[20];
  * Commands are copied into this buffer by the command injectors
  */
 
-extern uint8_t have_serial_cmd;
+/*************Register and Variable addr*****************/
+#define	RegAddr_W	0x80
+#define	RegAddr_R	0x81
+#define	VarAddr_W	0x82		
+#define	VarAddr_R	0x83
 
-void lcd_font_init(void);
+#define SizeofDatabuf		20
+#define MaxSendBUF		256
 
-void clear_lcd_command_queue(void);
-void clear_virtaul_command_queue(void);
+#define HeadOne   (0x5A)
+#define HeadTwo   (0xA5)
 
-void get_lcd_commands(void);
-CmdType check_lcd_commands(uint8_t * str);
+#define PageBase	(unsigned long)0x5A010000
 
-void send_lcd_commands(uint8_t * str);
-void send_lcd_commands_CRC16(uint8_t * str,uint8_t times);
-int add_lcd_commands_CRC16(uint8_t * str);
-
-void get_virtual_serial_cmd(void);
-void send_virtual_serial_cmd(uint8_t * str,uint8_t times);
-uint8_t send_virtual_serial(char * str);
-CmdType get_vserial_command_type(void);
+//var addr
+#define	PageAddr	0x0084
+#define MakeIconAddr 0x1000
+#define StartIconAddr 0x1002
 
 
+typedef struct LcdDataBuffer
+{
+    unsigned char head[2];
+    unsigned char len;
+    unsigned char command;
+    unsigned long addr;
+    unsigned long bytelen;
+    unsigned short data[32];
+    unsigned char reserv[4];
+} LDB;
 
-CmdType get_command_type(void);
-void parser_lcd_command(void);
+class LCDQUEUE {
+  public:
+    LCDQUEUE();
+    void clear_lcd_data_buf(void);
+    void clear_lcd_data_buf1(void);
+    void clear_recevie_buf(void);
+    void clear_send_data_buf(void);
+    void lcd_receive_data(void);
+    void lcd_send_data(void);
+    void lcd_send_data(const String &, unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(const char[], unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(char, unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(unsigned char*, unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(int, unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(float, unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(unsigned int,unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(long,unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data(unsigned long,unsigned long, unsigned char = VarAddr_W);
+    void icon_update(void);
+    void process_lcd_command(void);
+    
+    LDB recdat;
+    LDB snddat;
+  private:
+    bool HaveLcdCommand;
+    CmdType type;
+    unsigned char RecNum;
+    unsigned char recevie_data_buf[SizeofDatabuf];
+    unsigned char send_data_buf[MaxSendBUF];
+    unsigned long StartIconCount;
+    millis_t NextUpdateTime;
+    unsigned char UpdateStatus;
+  };
 
-extern void usb_read_test_lcd(void);
+extern LCDQUEUE lcdqueue;
+extern void lcd_update(void);
 
