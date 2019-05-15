@@ -1059,11 +1059,8 @@ void setup() {
 
 #if ENABLED(USE_DWIN_LCD)
   //lcd_font_init();
-<<<<<<< HEAD
-  #endif
-=======
 #endif
->>>>>>> d654ee7cbad7319ac80e5ce196a89f04c0725cb7
+
 
   SERIAL_ECHOLNPGM("start");
   SERIAL_ECHO_START();
