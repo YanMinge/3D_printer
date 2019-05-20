@@ -31,6 +31,7 @@
 
 #include "../inc/MarlinConfig.h"
 #include "../lcd/dwin/lcd_data.h"
+#include "lcd_file.h"
 
 
 /*
@@ -46,6 +47,10 @@ enum CmdType : unsigned char {
   CMD_READ_REG,
   CMD_READ_VAR,
 };
+
+enum Cmd {
+  Printfile=0,
+  };
 
 /**
  * File status structure (FILINFO)
@@ -73,17 +78,30 @@ extern LCDFILINFO lcd_file[20];
 
 #define SizeofDatabuf		20
 #define MaxSendBUF		256
+#define FileNum   40
 
 #define HeadOne   (0x5A)
 #define HeadTwo   (0xA5)
 
 #define PageBase	(unsigned long)0x5A010000
 
+//btn addr
+#define PrintButtons 0x1200
+
 //var addr
 #define	PageAddr	0x0084
 #define MakeIconAddr 0x1000
 #define StartIconAddr 0x1002
+#define FileIconAddr 0x1004
 
+#define FileTextAddr1 0x1500
+#define FileTextAddr2 0x1510
+#define FileTextAddr3 0x1520
+#define FileTextAddr4 0x1530
+#define FileTextAddr5 0x1540
+#define FileTextAddr6 0x1550
+#define FileTextAddr7 0x1560
+#define FileTextAddr8 0x1570
 
 typedef struct LcdDataBuffer
 {
@@ -107,6 +125,7 @@ class LCDQUEUE {
     void lcd_send_data(void);
     void lcd_send_data(const String &, unsigned long, unsigned char = VarAddr_W);
     void lcd_send_data(const char[], unsigned long, unsigned char = VarAddr_W);
+    void lcd_send_data_clear(unsigned long addr,int len, unsigned char cmd = VarAddr_W);
     void lcd_send_data(char, unsigned long, unsigned char = VarAddr_W);
     void lcd_send_data(unsigned char*, unsigned long, unsigned char = VarAddr_W);
     void lcd_send_data(int, unsigned long, unsigned char = VarAddr_W);
@@ -128,8 +147,11 @@ class LCDQUEUE {
     unsigned long StartIconCount;
     millis_t NextUpdateTime;
     unsigned char UpdateStatus;
+    int CurrentPage;
   };
 
 extern LCDQUEUE lcdqueue;
 extern void lcd_update(void);
+extern void my_lcd_init(void);
+
 

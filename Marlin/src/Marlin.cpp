@@ -902,7 +902,7 @@ void usb_read_test(void)
 void usb_read_test_lcd(void)
 {
     //set memory
-    memset(lcd_file,0,sizeof(lcd_file));
+  memset(lcd_file,0,sizeof(lcd_file));
 	FRESULT rc;		/* Result code */
 	UINT i;
 	uint8_t j=0;
@@ -959,6 +959,7 @@ void usb_read_test_lcd(void)
 			else {
 				sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
 				sprintf(lcd_file[j].fname, "%s",fno.fname);
+				lcd_file[j].fname[19] = 0;
 				SERIAL_PRINTF("\r\nlcdfilenum%8lu = %s\r\n", j,lcd_file[j].fname);
 				j++;
 			}
@@ -1059,6 +1060,7 @@ void setup() {
 
 #if ENABLED(USE_DWIN_LCD)
   //lcd_font_init();
+  //lcd_init();
 #endif
 
 
@@ -1279,8 +1281,13 @@ void setup() {
 #if ENABLED(USBMSCSUPPORT)
   SetupHardware();
   SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
+  //usb_read_test_lcd();
   //usb_read_test();
   SERIAL_PRINTF("Example completed.\r\n");
+  
+  SERIAL_PRINTF("lcd_init() start.\r\n");
+  my_lcd_init();
+  SERIAL_PRINTF("lcd_init() end.\r\n");
 #endif
 }
 
@@ -1324,15 +1331,19 @@ void loop() {
     advance_command_queue();
     endstops.event_handler();
     idle();
-#if ENABLED(USE_DWIN_LCD)
-    lcd_update();
-#endif
+
+    #if ENABLED(USE_DWIN_LCD)
+      lcd_update();
+      //MYSERIAL1.write('a');
+      //MYSERIAL2.write('a');
+      //delay(1000);
+    #endif
 
 #if ENABLED(USBMSCSUPPORT)
 	//SERIAL_PRINTF("usb_read_test.\r\n");
-    //usb_read_test();
-    //delay(1000);
-    //SERIAL_PRINTF("Example completed.\r\n");
+  //usb_read_test_lcd();
+  //delay(1000);
+  //SERIAL_PRINTF("Example completed.\r\n");
 #endif
   }
 }

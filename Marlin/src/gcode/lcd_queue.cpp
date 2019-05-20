@@ -29,6 +29,7 @@
  */
 
 #include "lcd_queue.h"
+#include "lcd_file.h"
 #include "../lcd/dwin/lcd_data.h"
 #include "gcode.h"
 
@@ -46,8 +47,11 @@
   #include "../feature/power_loss_recovery.h"
 #endif
 
+LCDFILINFO lcd_file[20];
 LCDQUEUE lcdqueue;
 const unsigned long ButtonAddr[] = {0x1200, 0};
+
+bool UsbStatus;//check the 
 
 LCDQUEUE::LCDQUEUE()
 {
@@ -73,8 +77,8 @@ void LCDQUEUE::clear_lcd_data_buf1(void) {
 void LCDQUEUE::clear_recevie_buf(void)
 {
   memset(&recdat, 0, sizeof(recdat));
-  snddat.head[0] = HeadOne;
-  snddat.head[1] = HeadTwo;
+  recdat.head[0] = HeadOne;
+  recdat.head[1] = HeadTwo;
 }
 
 void LCDQUEUE::clear_send_data_buf(void) {
@@ -89,6 +93,7 @@ void LCDQUEUE::lcd_receive_data(void)
   while(MYSERIAL2.available() > 0 && (RecNum < SizeofDatabuf))
   {
     recevie_data_buf[RecNum++] = MYSERIAL2.read();
+    MYSERIAL2.write(recevie_data_buf[RecNum-1]);
     if(recevie_data_buf[0] != HeadOne)    //recevie data is wrong
     {
     	 if(RecNum > 0) // reset the databuf
@@ -122,10 +127,10 @@ void LCDQUEUE::lcd_receive_data(void)
           recdat.addr = recevie_data_buf[4];
           recdat.addr = (recdat.addr << 8 ) | recevie_data_buf[5];
           recdat.bytelen = recevie_data_buf[6];
-          for(int i = 0;i < recdat.bytelen;i+=2)
+          for(int i = 0;i < (signed long)recdat.bytelen;i+=2)
           {
             recdat.data[i/2]= recevie_data_buf[7+i];
-            recdat.data[i/2]= (recdat.data[i/2] << 8 )| recevie_data_buf[8+i];
+            recdat.data[i/2]= (recdat.data[i/2] << 8 ) | recevie_data_buf[8+i];
           }
           clear_lcd_data_buf1();
           type = CMD_READ_VAR;
@@ -136,7 +141,7 @@ void LCDQUEUE::lcd_receive_data(void)
         {
           recdat.addr = recevie_data_buf[4];
           recdat.bytelen = recevie_data_buf[5];
-          for(int i = 0;i < recdat.bytelen;i++)
+          for(int i = 0;i < (signed long)recdat.bytelen;i++)
           {
             recdat.data[i]= recevie_data_buf[6+i];
           }
@@ -166,19 +171,274 @@ void LCDQUEUE::process_lcd_command(void)
     switch (type)
     {
       case CMD_READ_VAR:
-        
+        for(int i = 0;ButtonAddr[i] != 0; i++)
+        {
+          if(recdat.addr == ButtonAddr[i])
+          {
+            if(ButtonAddr[i] == PrintButtons)
+              key = Printfile;
+            else
+              key = i;
+            break;
+          }
+        }
+        switch (key)
+        {
+          case Printfile:
+            //main page print button
+            if(recdat.data[0] == 0x09)
+            {
+              //DwinLcdFile.file_list_clear();
+              //DwinLcdFile.linklist_create2();
+              DwinLcdFile.get_file_page_count();
+              if(DwinLcdFile.PageCount > 1)
+              {
+                pfile_list temp = NULL;
+                for(int i = 0; i < 4; i++)
+                {
+                  temp = DwinLcdFile.file_list_index((i+1));
+                  lcd_send_data_clear((FileTextAddr1 + 16*i),30, VarAddr_W);
+                  if(temp->IsDir == 1)
+                  {
+                    lcd_send_data(1,(FileIconAddr + i));
+                  }
+                  else
+                  {
+                    lcd_send_data(0,(FileIconAddr + i));
+                  }
+                  lcd_send_data(temp->UsbFlieName,(FileTextAddr1 + 16*i));
+                }
+              }
+              if(DwinLcdFile.PageCount == 1)
+              {
+                pfile_list temp = NULL;
+                for(int i = 0; i < 4; i++)
+                {
+                  lcd_send_data_clear((FileTextAddr1 + 16*i), 30, VarAddr_W);
+                  lcd_send_data(2,(FileIconAddr + i));
+                }
+                for(int i = 0; i < DwinLcdFile.LastPageFlieCount; i++)
+                {
+                  temp = DwinLcdFile.file_list_index((i+1));
+                  if(temp->IsDir == 1)
+                  {
+                    lcd_send_data(1,(FileIconAddr + i));
+                  }
+                  else
+                  {
+                    lcd_send_data(0,(FileIconAddr + i));
+                  }
+                  lcd_send_data(temp->UsbFlieName,(FileTextAddr1 + 16*i));
+                }
+              }
+              lcd_send_data(PageBase +2, PageAddr);
+              CurrentPage = 1;
+            }
+            // next file page
+            if(recdat.data[0] == 0x0B)
+            {
+              pfile_list temp = NULL;
+              //DwinLcdFile.file_list_clear();
+              //DwinLcdFile.linklist_create2();
+              if(DwinLcdFile.PageCount > CurrentPage)
+              {
+                //奇数页 
+                if(CurrentPage % 2)
+                {
+                  SERIAL_PRINTF(" 奇数页.\r\n");
+                  if(DwinLcdFile.PageCount == (CurrentPage + 1))
+                  {
+                    for(int i = 0; i < 4; i++)
+                    {
+                      lcd_send_data_clear((FileTextAddr5 + 16*i), 30, VarAddr_W);
+                      lcd_send_data(2,(FileIconAddr + i));
+                    }
+                    for(int i = CurrentPage*4; i < (CurrentPage*4 + DwinLcdFile.LastPageFlieCount); i++)
+                    {
+                      temp = DwinLcdFile.file_list_index((i+1));
+                      if(temp->IsDir == 1)
+                      {
+                        lcd_send_data(1,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      else
+                      {
+                        lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      lcd_send_data(temp->UsbFlieName,(FileTextAddr5 + 16*(i - CurrentPage*4)));
+                    }
+                  }
+                  else
+                  {
+                    SERIAL_PRINTF(" pagecount > current + 1 .\r\n");
+                    for(int i = 0; i < 4; i++)
+                    {
+                      lcd_send_data_clear((FileTextAddr5 + 16*i), 30, VarAddr_W);
+                      lcd_send_data(2,(FileIconAddr + i));
+                    }
+                    for(int i = CurrentPage*4; i < (CurrentPage*4 + 4); i++)
+                    {
+                      SERIAL_PRINTF(" i = %d .\r\n",i);
+                      temp = DwinLcdFile.file_list_index((i+1));
+                      if(temp->IsDir == 1)
+                      {
+                        lcd_send_data(1,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      else
+                      {
+                        lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      lcd_send_data(temp->UsbFlieName,(FileTextAddr5 + 16*(i - CurrentPage*4)));
+                    }
+                  }
+                  CurrentPage += 1;
+                  lcd_send_data(PageBase +3, PageAddr);
+                }
+                //偶数页
+                else
+                { 
+                  SERIAL_PRINTF(" 偶数页.\r\n");
+                  if(DwinLcdFile.PageCount == (CurrentPage + 1))
+                  {
+                    SERIAL_PRINTF(" 最后一页.\r\n");
+                    for(int i = 0; i < 4; i++)
+                    {
+                      lcd_send_data_clear((FileTextAddr1 + 16*i), 30, VarAddr_W);
+                      lcd_send_data(2,(FileIconAddr + i));
+                    }
+                    for(int i = CurrentPage*4; i < (CurrentPage*4 + DwinLcdFile.LastPageFlieCount); i++)
+                    {
+                      temp = DwinLcdFile.file_list_index((i+1));
+                      SERIAL_PRINTF("the num of dir is %d \r\n", temp->IsDir);
+                      if(temp->IsDir == 1)
+                      {
+                        SERIAL_PRINTF("the num of dir is %d \r\n", temp->IsDir);
+                        lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      else
+                      {
+                        SERIAL_PRINTF("the num of dir is %d \r\n", temp->IsDir);
+                        SERIAL_PRINTF("the addricon of  is %d \r\n", (i - CurrentPage*4));
+                        lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4)));
+                        lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      lcd_send_data(temp->UsbFlieName,(FileTextAddr1 + 16*(i - CurrentPage*4)));
+                    }
+                  }
+                  else
+                  {
+                    for(int i = 0; i < 4; i++)
+                    {
+                      lcd_send_data_clear((FileTextAddr1 + 16*i), 30, VarAddr_W);
+                      lcd_send_data(2,(FileIconAddr + i));
+                    }
+                    for(int i = CurrentPage*4; i < (CurrentPage*4 + 4); i++)
+                    {
+                      temp = DwinLcdFile.file_list_index((i+1));
+                      if(temp->IsDir == 1)
+                      {
+                        lcd_send_data(1,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      else
+                      {
+                        lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4)));
+                      }
+                      lcd_send_data(temp->UsbFlieName,(FileTextAddr1 + 16*(i - CurrentPage*4)));
+                    }
+                  }
+                  CurrentPage += 1;
+                  lcd_send_data(0,(FileIconAddr));
+                  lcd_send_data(PageBase +2, PageAddr);
+                  break;
+                }
+              }
+              else
+              {
+                type = CMD_NULL;
+                break;
+              }
+              break;
+            }
+            if(recdat.data[0] == 0x0C)
+            {
+              pfile_list temp = NULL;
+              //DwinLcdFile.file_list_clear();
+              //DwinLcdFile.linklist_create2();
+              if( (CurrentPage > 1) )
+              {
+                //奇数页 
+                if(CurrentPage % 2)
+                {
+                  SERIAL_PRINTF(" 奇数页.\r\n");
+                  for(int i = 0; i < 4; i++)
+                  {
+                    lcd_send_data_clear((FileTextAddr5 + 16*i), 30, VarAddr_W);
+                    lcd_send_data(2,(FileIconAddr + i));
+                  }
+                  for(int i = (CurrentPage - 2)*4; i < (CurrentPage*4 -4); i++)
+                  {
+                    temp = DwinLcdFile.file_list_index((i+1));
+                    if(temp->IsDir == 1)
+                    {
+                      lcd_send_data(1,(FileIconAddr + (i - CurrentPage*4 + 8)));
+                    }
+                    else
+                    {
+                      lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4 + 8)));
+                    }
+                    lcd_send_data(temp->UsbFlieName,(FileTextAddr5 + 16*(i - CurrentPage*4 + 8)));
+                }
+                CurrentPage -= 1;
+                lcd_send_data(PageBase +3, PageAddr);
+                }
+                //偶数页
+                else
+                { 
+                  SERIAL_PRINTF(" 偶数页.\r\n");
+                  for(int i = 0; i < 4; i++)
+                  {
+                    lcd_send_data_clear((FileTextAddr1 + 16*i), 30, VarAddr_W);
+                    lcd_send_data(2,(FileIconAddr + i));
+                  }
+                  for(int i = (CurrentPage - 2)*4; i < (CurrentPage*4 -4); i++)
+                  {
+                    temp = DwinLcdFile.file_list_index((i+1));
+                    if(temp->IsDir == 1)
+                    {
+                      lcd_send_data(1,(FileIconAddr + (i - CurrentPage*4 + 8)));
+                    }
+                    else
+                    {
+                      lcd_send_data(0,(FileIconAddr + (i - CurrentPage*4 + 8)));
+                    }
+                    lcd_send_data(temp->UsbFlieName,(FileTextAddr1 + 16*(i - CurrentPage*4 + 8)));
+                  }
+                  CurrentPage -= 1;
+                  lcd_send_data(PageBase +2, PageAddr);
+                }
+              }
+              else
+              {
+                type = CMD_NULL;
+                break;
+              }
+            }
+            if(recdat.data[0] == 0x01)
+            {
+              lcd_send_data(PageBase +4, PageAddr);
+            }
+        }
         type = CMD_NULL;
         break;
-
-
-
         
-      case CMD_WRITE_REG_OK:case CMD_WRITE_VAR_OK:
+      case CMD_WRITE_REG_OK:case CMD_WRITE_VAR_OK:case CMD_READ_REG:
+        type = CMD_NULL;
         clear_recevie_buf();
         break;
       case CMD_NULL:
         break;
+        clear_recevie_buf();
       default:
+        clear_recevie_buf();
         break;
     }
   }
@@ -244,7 +504,7 @@ void LCDQUEUE::lcd_send_data(const char *str, unsigned long addr, unsigned char 
 	if( len > 0)
 	{
 		send_data_buf[0] = HeadOne;
-		send_data_buf[0] = HeadOne;
+		send_data_buf[1] = HeadTwo;
 		send_data_buf[2] = 3+len;
 		send_data_buf[3] = cmd;
 		send_data_buf[4] = addr >> 8;
@@ -252,7 +512,31 @@ void LCDQUEUE::lcd_send_data(const char *str, unsigned long addr, unsigned char 
 		for(int i = 0;i <len ;i++)
 			send_data_buf[6 + i] = str[i];
     for(int i = 0; i < (len + 6); i++)
+    {
       MYSERIAL2.write(send_data_buf[i]);
+      //MYSERIAL1.write(send_data_buf[i]);
+    }
+    clear_send_data_buf();
+	}
+}
+
+void LCDQUEUE::lcd_send_data_clear(unsigned long addr,int len, unsigned char cmd/*= VarAddr_W*/)
+{
+	if( len > 0)
+	{
+		send_data_buf[0] = HeadOne;
+		send_data_buf[1] = HeadTwo;
+		send_data_buf[2] = 3+len;
+		send_data_buf[3] = cmd;
+		send_data_buf[4] = addr >> 8;
+		send_data_buf[5] = addr & 0x00FF;
+		for(int i = 0;i <len ;i++)
+			send_data_buf[6 + i] = 0xff;
+    for(int i = 0; i < (len + 6); i++)
+    {
+      MYSERIAL2.write(send_data_buf[i]);
+      //MYSERIAL1.write(send_data_buf[i]);
+    }
     clear_send_data_buf();
 	}
 }
@@ -361,11 +645,15 @@ void LCDQUEUE::icon_update(void)
 }
 
 
-
+void my_lcd_init(void)
+{
+  DwinLcdFile.file_list_init();
+  DwinLcdFile.linklist_create2();
+}
 void lcd_update(void)
 {
-  lcdqueue.lcd_receive_data();
   lcdqueue.icon_update();
+  lcdqueue.process_lcd_command();
 }
 
 
