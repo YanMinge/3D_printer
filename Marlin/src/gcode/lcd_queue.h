@@ -49,7 +49,7 @@ enum CmdType : unsigned char {
 };
 
 enum Cmd {
-  Printfile=0,
+  MenuFile=0,SelectFile,PrintFile,AxisMove,
   };
 
 /**
@@ -86,7 +86,15 @@ extern LCDFILINFO lcd_file[20];
 #define PageBase	(unsigned long)0x5A010000
 
 //btn addr
-#define PrintButtons 0x1200
+#define MenuButtons 0x1200
+#define SelectButtons 0x1202
+#define PrintButtons 0x1204
+
+#define XaxisMoveBtn 0x1210
+#define YaxisMoveBtn 0x1212
+#define ZaxisMoveBtn 0x1214
+#define HomeMoveBtn  0x1216
+
 
 //var addr
 #define	PageAddr	0x0084
@@ -94,14 +102,21 @@ extern LCDFILINFO lcd_file[20];
 #define StartIconAddr 0x1002
 #define FileIconAddr 0x1004
 
+#define VoiceIconAddr 0x1020
+
+
+#define TempHotendAddr        0X1300
+#define TempHotendTargetAddr  0X1302
+#define TempBedAddr           0X1304
+#define TempTargetAddr        0X1306
+
+
+
 #define FileTextAddr1 0x1500
-#define FileTextAddr2 0x1510
-#define FileTextAddr3 0x1520
-#define FileTextAddr4 0x1530
 #define FileTextAddr5 0x1540
-#define FileTextAddr6 0x1550
-#define FileTextAddr7 0x1560
-#define FileTextAddr8 0x1570
+#define FileTextAddr9 0x1580
+#define FileTextAddrD 0x15C0
+
 
 typedef struct LcdDataBuffer
 {
@@ -135,7 +150,20 @@ class LCDQUEUE {
     void lcd_send_data(unsigned long,unsigned long, unsigned char = VarAddr_W);
     void icon_update(void);
     void process_lcd_command(void);
+
+    void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
     
+    void main_button_response(void);
+    void nextpage_button_response(void);
+    void lastpage_button_response(void);
+    void filereturn_button_response(void);
+
+    void next_page_clear(void);
+    void last_page_clear(void);
+    void send_first_page_data(void);
+    void send_next_page_data(void);
+    void send_last_page_data(void);
+
     LDB recdat;
     LDB snddat;
   private:
@@ -153,5 +181,3 @@ class LCDQUEUE {
 extern LCDQUEUE lcdqueue;
 extern void lcd_update(void);
 extern void my_lcd_init(void);
-
-

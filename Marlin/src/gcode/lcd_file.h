@@ -37,7 +37,6 @@
 typedef struct usbfile
 {
   char IsDir;
-  char Sort;
   unsigned long Time;
   struct usbfile* NextFile;
   char UsbFlieName[FileNameLen];
@@ -49,6 +48,7 @@ class LcdFile{
     void file_list_init(void);
     void file_list_insert(pfile_list m);
     void file_list_insert_tail(pfile_list m);
+    void file_list_insert_tail(char isdir,char filename[]);
     void file_list_del(void);
     void file_list_clear(void);
     void get_file_page_count(void);
@@ -61,11 +61,12 @@ class LcdFile{
     void linklist_create3(void);
     void linklist_create4(void);
 
+
     pfile_list FileList;
     int PageCount;
     int LastPageFlieCount;
   private:
-    
+    char Sort;
 };
 
 extern LcdFile DwinLcdFile;

@@ -899,6 +899,7 @@ void usb_read_test(void)
 	SERIAL_PRINTF("\r\nTest completed.\r\n");
 }
 
+#if 0
 void usb_read_test_lcd(void)
 {
     //set memory
@@ -971,7 +972,7 @@ void usb_read_test_lcd(void)
 	}
 	SERIAL_PRINTF("\r\nTest completed.\r\n");
 }	
-
+#endif
 /**
  * Marlin entry-point: Set up before the program loop
  *  - Set up the kill pin, filament runout, power hold
@@ -1059,8 +1060,9 @@ void setup() {
   #endif
 
 #if ENABLED(USE_DWIN_LCD)
-  //lcd_font_init();
-  //lcd_init();
+  SERIAL_PRINTF("lcd init start.\r\n");
+  my_lcd_init();
+  SERIAL_PRINTF("lcd init end.\r\n");
 #endif
 
 
@@ -1164,7 +1166,7 @@ void setup() {
   #endif
 
   #if ENABLED(DIGIPOT_I2C)
-    digipot_i2c_init();
+    //digipot_i2c_init();
   #endif
 
   #if ENABLED(DAC_STEPPER_CURRENT)
@@ -1281,13 +1283,8 @@ void setup() {
 #if ENABLED(USBMSCSUPPORT)
   SetupHardware();
   SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
-  //usb_read_test_lcd();
   //usb_read_test();
   SERIAL_PRINTF("Example completed.\r\n");
-  
-  SERIAL_PRINTF("lcd_init() start.\r\n");
-  my_lcd_init();
-  SERIAL_PRINTF("lcd_init() end.\r\n");
 #endif
 }
 
@@ -1332,16 +1329,14 @@ void loop() {
     endstops.event_handler();
     idle();
 
+
+
     #if ENABLED(USE_DWIN_LCD)
       lcd_update();
-      //MYSERIAL1.write('a');
-      //MYSERIAL2.write('a');
-      //delay(1000);
     #endif
 
 #if ENABLED(USBMSCSUPPORT)
 	//SERIAL_PRINTF("usb_read_test.\r\n");
-  //usb_read_test_lcd();
   //delay(1000);
   //SERIAL_PRINTF("Example completed.\r\n");
 #endif

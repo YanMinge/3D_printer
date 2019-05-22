@@ -50,7 +50,6 @@
 
 LcdFile DwinLcdFile;
 
-#if 1
 LcdFile::LcdFile()
 {
   PageCount = 0;
@@ -87,6 +86,21 @@ void LcdFile::file_list_insert_tail(pfile_list m)
       t = t->NextFile;
   t->NextFile = m;
 }
+
+//insert to tail
+void LcdFile::file_list_insert_tail(char isdir,char filename[])
+{
+  pfile_list t,m;
+  t = FileList;
+  m = (pfile_list) new char[sizeof(file_list)];
+  m->NextFile = NULL;
+  m->IsDir = isdir;
+  strcpy(m->UsbFlieName,filename);
+  while( t->NextFile != NULL)
+      t = t->NextFile;
+  t->NextFile = m;
+}
+
 
 void LcdFile::file_list_del(void)
 {
@@ -197,7 +211,7 @@ void LcdFile::linklist_create2(void)
 {
   int i;
   pfile_list m;
-  for(i = 0; i < 18; i++)
+  for(i = 0; i < 34; i++)
   {
     m = (pfile_list) new char[(sizeof(file_list))];	
     memset(m,0,sizeof(file_list));
@@ -218,7 +232,7 @@ void LcdFile::linklist_create2(void)
     }
     if((i == 2) || (i == 3))
     {
-      strcpy(m->UsbFlieName, "helloworld.gcode");
+      strcpy(m->UsbFlieName, "123456789.gcode");
     }
     if((i >= 4)&& (i < 8))
     {
@@ -234,7 +248,23 @@ void LcdFile::linklist_create2(void)
     {
       strcpy(m->UsbFlieName, "晨风.gcode");
     }
-    if((i >= 16)&& (i < 18))
+    if((i >= 16)&& (i < 20))
+    {
+      strcpy(m->UsbFlieName, "makeblock.gcode");
+    }
+    if((i >= 20)&& (i < 24))
+    {
+      strcpy(m->UsbFlieName, "maker.gcode");
+    }
+    if((i >= 24)&& (i < 28))
+    {
+      strcpy(m->UsbFlieName, "MakeBlock.gcode");
+    }
+    if((i >= 28)&& (i < 32))
+    {
+      strcpy(m->UsbFlieName, "Hello风.gcode");
+    }
+    if((i >= 32)&& (i < 34))
     {
       strcpy(m->UsbFlieName, "hello民革.gcode");
       if(m->IsDir == 1)
@@ -267,7 +297,7 @@ void LcdFile::linklist_create3(void)
     if(i == 1)
     {
       strcpy(m->UsbFlieName, "auriga.gcode");
-      FileList->IsDir = 1;
+      m->IsDir = 1;
     }
     if((i == 2))
     {
@@ -282,7 +312,7 @@ void LcdFile::linklist_create4(void)
 {
   int i;
   pfile_list m;
-  for(i = 0; i < 18; i++)
+  for(i = 0; i < 7; i++)
   {
     m = (pfile_list) new char[(sizeof(file_list))];	
     memset(m,0,sizeof(file_list));
@@ -294,35 +324,20 @@ void LcdFile::linklist_create4(void)
     if(i == 0)
     {
       strcpy(m->UsbFlieName, "子文件2");
+      m->IsDir = 1;
     }
     if(i == 1)
     {
       strcpy(m->UsbFlieName, "hellogirl.gcode");
-      FileList->IsDir = 1;
     }
     if((i == 2) || (i == 3))
     {
       strcpy(m->UsbFlieName, "helloworld.gcode");
     }
-    if((i >= 4)&& (i < 8))
+    if((i >= 4)&& (i < 7))
     {
       strcpy(m->UsbFlieName, "你好世界.gcode");
-    }
-    if((i >= 8)&& (i < 12))
-    {
-      strcpy(m->UsbFlieName, "创客工厂.gcode");
-    }
-    if((i >= 12)&& (i < 16))
-    {
-      strcpy(m->UsbFlieName, "晨风.gcode");
-    }
-    if((i >= 16)&& (i < 18))
-    {
-      strcpy(m->UsbFlieName, "hello民革.gcode");
     }
     file_list_insert_tail(m);
   }
 }
-
-
-#endif
