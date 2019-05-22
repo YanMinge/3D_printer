@@ -1188,7 +1188,8 @@ void loop() {
     #endif
 
 #if ENABLED(USBMSCSUPPORT)
-    //MsdReader.test_code();
+    //MsdReader.ls(LS_SerialPrint, "libraries/HX711");
+    //MsdReader.ls(LS_Count, "libraries/HX711");
     //delay(1500);
 #endif
   }

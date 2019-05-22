@@ -51,6 +51,8 @@
 #if ENABLED(USBMSCSUPPORT)
 #include "MassStorageLib.h"
 
+enum LsAction : uint8_t { LS_SerialPrint, LS_Count, LS_GetFilename };
+
 class msd_reader
 {
 public:
@@ -60,13 +62,19 @@ public:
 
   void init(void);
   bool is_usb_detected(void);
+  bool is_usb_Initialized(void);
   void usb_status_polling(void);
+  void ls(LsAction Action, const char *path = "", const char * const match = NULL);
+  void lsDive(const char *path = "", const char * const match = NULL);
   void test_code(void);
 
 private:
   //Variable definitions
   FATFS fatFS;	/* File system object */
   bool detected;
+  bool Initialized;;
+  LsAction lsAction;
+  uint8_t file_count;
 };
 
 extern msd_reader MsdReader;

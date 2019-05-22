@@ -36,7 +36,7 @@
 
 typedef struct usbfile
 {
-  char IsDir;
+  bool IsDir;
   unsigned long Time;
   struct usbfile* NextFile;
   char UsbFlieName[FileNameLen];
