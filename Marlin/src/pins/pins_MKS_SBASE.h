@@ -31,31 +31,35 @@
 #define BOARD_NAME        "MKS SBASE"
 #define BOARD_WEBSITE_URL "https://github.com/makerbase-mks/MKS-SBASE"
 
-#define LED_PIN            P1_18   // Used as a status indicator
-#define LED2_PIN           P1_19
-#define LED3_PIN           P1_20
-#define LED4_PIN           P1_21
+// Enable I2C_EEPROM for testing
+#define I2C_EEPROM
+#define E2END 0xFFF   // EEPROM end address
+
+#define LED_PIN            P1_22   // Used as a status indicator
+//#define LED2_PIN           P1_19
+//#define LED3_PIN           P1_20
+//#define LED4_PIN           P1_21
 
 //
 // Servo pin
 //
-#define SERVO0_PIN         P1_23   // J8-3 (low jitter)
-#define SERVO1_PIN         P2_12   // J8-4
-#define SERVO2_PIN         P2_11   // J8-5
-#define SERVO3_PIN         P4_28   // J8-6
+//#define SERVO0_PIN         P1_23   // J8-3 (low jitter)
+//#define SERVO1_PIN         P2_12   // J8-4
+//#define SERVO2_PIN         P2_11   // J8-5
+//#define SERVO3_PIN         P4_28   // J8-6
 
 //
 // Limit Switches - Not Interrupt Capable
 //
 #define X_MIN_PIN          P1_24   // 10k pullup to 3.3V, 1K series
-#define X_MAX_PIN          P1_25   // 10k pullup to 3.3V, 1K series
+//#define X_MAX_PIN          P1_25   // 10k pullup to 3.3V, 1K series
 #define Y_MIN_PIN          P1_26   // 10k pullup to 3.3V, 1K series
-#define Y_MAX_PIN          P1_27   // 10k pullup to 3.3V, 1K series
+//#define Y_MAX_PIN          P1_27   // 10k pullup to 3.3V, 1K series
 #define Z_MIN_PIN          P1_28   // The original Mks Sbase DIO19 has a 10k pullup to 3.3V or 5V, 1K series, so when using a Zprobe we must use DIO41 (J8 P1.22)
-#define Z_MAX_PIN          P1_29   // 10k pullup to 3.3V, 1K series
+//#define Z_MAX_PIN          P1_29   // 10k pullup to 3.3V, 1K series
 
 #ifndef Z_MIN_PROBE_PIN
-  #define Z_MIN_PROBE_PIN  P4_28   // Connector J8
+//#define Z_MIN_PROBE_PIN  P4_28   // Connector J8
 #endif
 
 //
@@ -66,8 +70,8 @@
 #define X_ENABLE_PIN       P0_04
 
 #define Y_STEP_PIN         P2_01
-#define Y_DIR_PIN          P2_13
-#define Y_ENABLE_PIN       P4_29
+#define Y_DIR_PIN          P0_11
+#define Y_ENABLE_PIN       P0_10
 
 #define Z_STEP_PIN         P2_02
 #define Z_DIR_PIN          P0_20
@@ -78,8 +82,8 @@
 #define E0_ENABLE_PIN      P0_21
 
 #define E1_STEP_PIN        P2_08
-#define E1_DIR_PIN         P1_08
-#define E1_ENABLE_PIN      P2_08
+#define E1_DIR_PIN         P2_13
+#define E1_ENABLE_PIN      P4_29
 
 //
 // Temperature Sensors
@@ -93,11 +97,15 @@
 //
 // Heaters / Fans
 //
-#define HEATER_BED_PIN     P2_05
-#define HEATER_0_PIN       P2_07
-#define HEATER_1_PIN       P2_06
+#define HEATER_BED_PIN     P1_20
+#define HEATER_0_PIN       P1_18
+//#define HEATER_1_PIN       P2_06
 #ifndef FAN_PIN
-  #define FAN_PIN          P2_04
+  #define FAN_PIN          P1_17
+#endif
+
+#ifndef FAN1_PIN
+  #define FAN1_PIN         P1_29
 #endif
 
 //

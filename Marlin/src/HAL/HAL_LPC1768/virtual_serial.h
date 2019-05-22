@@ -3,7 +3,7 @@
  * \class   virtual_serial
  * \brief   Virtual serial port driver.
  * @file    virtual_serial.h
- * @author  MakeBlock
+ * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/04/29
  * @brief   Header file for Virtual serial port driver.
@@ -66,7 +66,8 @@
  * T type of the buffer array
  * S size of the buffer (must be power of 2)
  */
-template <typename T, uint32_t S> class ring_buffer {
+template <typename T, uint32_t S> class ring_buffer
+{
 public:
   ring_buffer() {index_read = index_write = 0;}
 
@@ -76,16 +77,20 @@ public:
   bool full() const {return next(index_write) == index_read;}
   void clear() {index_read = index_write = 0;}
 
-  bool peek(T *const value) const {
-    if (value == nullptr || empty()) {
+  bool peek(T *const value) const
+  {
+    if (value == nullptr || empty())
+    {
       return false;
     }
     *value = buffer[index_read];
     return true;
   }
 
-  uint32_t read(T *const value) {
-    if (value == nullptr || empty()) {
+  uint32_t read(T *const value)
+  {
+    if (value == nullptr || empty())
+    {
       return 0;
     }
     *value = buffer[index_read];
@@ -93,9 +98,11 @@ public:
     return 1;
   }
 
-  uint32_t write(const T value) {
+  uint32_t write(const T value)
+  {
     uint32_t next_head = next(index_write);
-    if (next_head == index_read) {
+    if (next_head == index_read) 
+    {
       return 0;     // buffer full
     }
     buffer[index_write] = value;
@@ -103,16 +110,19 @@ public:
     return 1;
   }
 
-  constexpr uint32_t size() const {
+  constexpr uint32_t size() const
+  {
     return buffer_size - 1;
   }
 
 private:
-  inline uint32_t mask(uint32_t val) const {
+  inline uint32_t mask(uint32_t val) const
+  {
     return val & buffer_mask;
   }
 
-  inline uint32_t next(uint32_t val) const {
+  inline uint32_t next(uint32_t val) const
+  {
     return mask(val + 1);
   }
 
@@ -128,7 +138,8 @@ private:
  *  Data is injected directly into, and consumed from, the fifo buffers
  */
 //: public Stream 
-class virtual_serial : public Stream{
+class virtual_serial : public Stream
+{
 public:
 
   virtual_serial(void);

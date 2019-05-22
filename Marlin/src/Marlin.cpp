@@ -181,7 +181,7 @@
 #endif
 
 #if ENABLED(USBMSCSUPPORT)
-  #include "MassStorageLib.h"
+  #include "msd_reader.h"
 #endif
 
 bool Running = true;
@@ -827,152 +827,6 @@ void stop() {
   }
 }
 
-
-static uint8_t buffer[8 * 1024];
-STATIC FATFS fatFS;	/* File system object */
-STATIC FIL fileObj;	/* File object */
-void usb_read_test(void)
-{
-	FRESULT rc;		/* Result code */
-	UINT i;
-	UINT br;
-	uint8_t *ptr;
-	char debugBuf[300];
-	DIR dir;		/* Directory object */
-	FILINFO fno;	/* File information object */
-
-	f_mount(&fatFS, "/" , 0);		/* Register volume work area (never fails) */
-
-	rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
-	if (rc) {
-		SERIAL_PRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
-		die(rc);
-	}
-	else {
-		SERIAL_PRINTF("Opened file MESSAGE.TXT from USB Disk. Printing contents...\r\n\r\n");
-		for (;; ) {
-			/* Read a chunk of file */
-			rc = f_read(&fileObj, buffer, sizeof buffer, &br);
-			if (rc || !br) {
-				break;					/* Error or end of file */
-			}
-			ptr = (uint8_t *) buffer;
-			for (i = 0; i < br; i++) {	/* Type the data */
-				SERIAL_PRINTF("%c", ptr[i]);
-			}
-		}
-		if (rc) {
-			die(rc);
-		}
-
-		SERIAL_PRINTF("\r\n\r\nClose the file.\r\n");
-		rc = f_close(&fileObj);
-		if (rc) {
-			die(rc);
-		}
-	}
-	SERIAL_PRINTF("\r\nOpen root directory.\r\n");
-	rc = f_opendir(&dir, "");
-	if (rc) {
-		die(rc);
-	}
-	else {
-		SERIAL_PRINTF("\r\nDirectory listing...\r\n");
-		for (;; ) {
-			/* Read a directory item */
-			rc = f_readdir(&dir, &fno);
-			if (rc || !fno.fname[0]) {
-				break;					/* Error or end of dir */
-			}
-			if (fno.fattrib & AM_DIR) {
-				sprintf(debugBuf, "   <Dir>  %s\r\n", fno.fname);
-			}
-			else {
-				sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
-			}
-			SERIAL_PRINTF(debugBuf);
-		}
-		if (rc) {
-			die(rc);
-		}
-	}
-	SERIAL_PRINTF("\r\nTest completed.\r\n");
-}
-
-#if 0
-void usb_read_test_lcd(void)
-{
-    //set memory
-  memset(lcd_file,0,sizeof(lcd_file));
-	FRESULT rc;		/* Result code */
-	UINT i;
-	uint8_t j=0;
-	UINT br;
-	char debugBuf[300];
-	DIR dir;		/* Directory object */
-	FILINFO fno;	/* File information object */
-
-	f_mount(&fatFS, "/" , 0);;		/* Register volume work area (never fails) */
-
-	rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
-	if (rc) {
-		SERIAL_PRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
-		die(rc);
-	}
-	else {
-		SERIAL_PRINTF("Opened file MESSAGE.TXT from USB Disk. Printing contents...\r\n\r\n");
-		for (;; ) {
-			/* Read a chunk of file */
-			rc = f_read(&fileObj, buffer, sizeof buffer, &br);
-			if (rc || !br) {
-				break;					/* Error or end of file */
-			}
-			for (i = 0; i < br; i++) {	/* Type the data */
-				SERIAL_PRINTF("%c", lcd_file[i].type);
-			}
-		}
-		if (rc) {
-			die(rc);
-		}
-
-		SERIAL_PRINTF("\r\n\r\nClose the file.\r\n");
-		rc = f_close(&fileObj);
-		if (rc) {
-			die(rc);
-		}
-	}
-	SERIAL_PRINTF("\r\nOpen root directory.\r\n");
-	rc = f_opendir(&dir, "");
-	if (rc) {
-		die(rc);
-	}
-	else {
-		SERIAL_PRINTF("\r\nDirectory listing...\r\n");
-		for (;; ) {
-			/* Read a directory item */
-			rc = f_readdir(&dir, &fno);
-			if (rc || !fno.fname[0]) {
-				break;					/* Error or end of dir */
-			}
-			if (fno.fattrib & AM_DIR) {
-				sprintf(debugBuf, "   <Dir>  %s\r\n", fno.fname);
-			}
-			else {
-				sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
-				sprintf(lcd_file[j].fname, "%s",fno.fname);
-				lcd_file[j].fname[19] = 0;
-				SERIAL_PRINTF("\r\nlcdfilenum%8lu = %s\r\n", j,lcd_file[j].fname);
-				j++;
-			}
-			SERIAL_PRINTF(debugBuf);
-		}
-		if (rc) {
-			die(rc);
-		}
-	}
-	SERIAL_PRINTF("\r\nTest completed.\r\n");
-}	
-#endif
 /**
  * Marlin entry-point: Set up before the program loop
  *  - Set up the kill pin, filament runout, power hold
@@ -1064,7 +918,6 @@ void setup() {
   my_lcd_init();
   SERIAL_PRINTF("lcd init end.\r\n");
 #endif
-
 
   SERIAL_ECHOLNPGM("start");
   SERIAL_ECHO_START();
@@ -1166,7 +1019,7 @@ void setup() {
   #endif
 
   #if ENABLED(DIGIPOT_I2C)
-    //digipot_i2c_init();
+    digipot_i2c_init();
   #endif
 
   #if ENABLED(DAC_STEPPER_CURRENT)
@@ -1281,10 +1134,11 @@ void setup() {
   #endif
 
 #if ENABLED(USBMSCSUPPORT)
-  SetupHardware();
-  SERIAL_PRINTF("Mass Storage Host Demo running.\r\n");
-  //usb_read_test();
-  SERIAL_PRINTF("Example completed.\r\n");
+  MsdReader.init();
+#endif
+
+#if PIN_EXISTS(LED)
+  OUT_WRITE(LED_PIN, true);
 #endif
 }
 
@@ -1329,16 +1183,13 @@ void loop() {
     endstops.event_handler();
     idle();
 
-
-
     #if ENABLED(USE_DWIN_LCD)
       lcd_update();
     #endif
 
 #if ENABLED(USBMSCSUPPORT)
-	//SERIAL_PRINTF("usb_read_test.\r\n");
-  //delay(1000);
-  //SERIAL_PRINTF("Example completed.\r\n");
+    //MsdReader.test_code();
+    //delay(1500);
 #endif
   }
 }

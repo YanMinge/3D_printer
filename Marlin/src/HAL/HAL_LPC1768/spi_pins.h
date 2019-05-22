@@ -46,7 +46,7 @@
   #define MOSI_PIN          P0_18
 #endif
 #ifndef SS_PIN
-  #define SS_PIN            P1_23
+  #define SS_PIN            P2_11
 #endif
 #if !defined(SDSS) || SDSS == P_NC // gets defaulted in pins.h
   #undef SDSS

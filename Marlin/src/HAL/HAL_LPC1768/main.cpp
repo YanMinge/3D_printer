@@ -10,43 +10,22 @@ extern "C" {
 #include "HAL_timers.h"
 
 #if ENABLED(USBMSCSUPPORT)
-  #include "MassStorageLib.h"
+  #include "msd_reader.h"
 #endif
 
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
 extern "C" int isLPC1769();
 extern "C" void disk_timerproc(void);
-extern "C" bool is_usb_connected(void);
-extern "C" usb_error_info_type get_usb_error_info(void);
 
-int start_systick = false;
+static int start_systick = false;
 void SysTick_Callback() {
   //disk_timerproc();
 
   if(start_systick == true)
   {
 #if ENABLED(USBMSCSUPPORT)
-	static bool pre_usb_status;
-    bool usb_status = is_usb_connected();
-    if(usb_status != pre_usb_status)
-    {
-        SERIAL_PRINTF("usb_status(%d)\r\n", usb_status);
-		pre_usb_status = usb_status;
-    }
+    MsdReader.usb_status_polling();
 #endif
-
-#if ENABLED(USBMSCSUPPORT)
-    usb_error_info_type error_info = get_usb_error_info();
-    if(error_info.ErrorCode != 0 || error_info.SubErrorCode != 0)
-    {
-      SERIAL_PRINTF(("Dev Enum Error\r\n"
-				  " -- Error port %d\r\n"
-				  " -- Error Code %d\r\n"
-				  " -- Sub Error Code %d\r\n"),
-				 error_info.corenum, error_info.ErrorCode, error_info.SubErrorCode);
-    }
-#endif
-    //SERIAL_PRINTF("*");
   }
 }
 
@@ -90,7 +69,7 @@ void HAL_init() {
   #endif
   //USB_Init();                               // USB Initialization
   //USB_Connect(FALSE);                       // USB clear connection
-  delay(3000);                              // Give OS time to notice
+  //delay(3000);                              // Give OS time to notice
   //USB_Connect(TRUE);
 
   #if DISABLED(USB_SD_DISABLED)

@@ -2,11 +2,11 @@
  * \par Copyright (C), 2018-2019, MakeBlock
  * \class   virtual_serial
  * \brief   Virtual serial port driver.
- * @file    virtual_serial.h
- * @author  MakeBlock
+ * @file    virtual_serial.cpp
+ * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/04/29
- * @brief   Header file for Virtual serial port driver.
+ * @brief   Source code for Virtual serial port driver.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -55,89 +55,113 @@
 
 virtual_serial VirtualSerial;
 
-virtual_serial::virtual_serial(void):Stream(){ }
+virtual_serial::virtual_serial(void):Stream()
+{
 
-void virtual_serial::begin(int32_t baud) { }
+}
 
-int16_t virtual_serial::peek(void) {
+void virtual_serial::begin(int32_t baud)
+{
+
+}
+
+int16_t virtual_serial::peek(void)
+{
   uint8_t value;
   return receive_buffer.peek(&value) ? value : -1;
 }
 
-int16_t virtual_serial::peek_tx(void) {
+int16_t virtual_serial::peek_tx(void)
+{
   uint8_t value;
   uint32_t ret = transmit_buffer.read(&value);
   return (ret ? value : -1);
 }
 
-int16_t virtual_serial::read(void) {
+int16_t virtual_serial::read(void)
+{
   uint8_t value;
   uint32_t ret = receive_buffer.read(&value);
   return (ret ? value : -1);
 }
 
-int16_t virtual_serial::read_tx(void) {
+int16_t virtual_serial::read_tx(void)
+{
   uint8_t value;
   uint32_t ret = transmit_buffer.read(&value);
   return (ret ? value : -1);
 }
 
-size_t virtual_serial::write(const uint8_t c) {
+size_t virtual_serial::write(const uint8_t c)
+{
   uint32_t current_time = millis();
-  while (transmit_buffer.write(c) == 0) {
-    if(millis() - current_time > VIRTUAL_SERIAL_TIMEOUT) {
+  while (transmit_buffer.write(c) == 0)
+  {
+    if(millis() - current_time > VIRTUAL_SERIAL_TIMEOUT)
+    {
       return	0;
     }
   }
   return 1;
 }
 
-size_t virtual_serial::available(void) {
+size_t virtual_serial::available(void)
+{
   return (size_t)receive_buffer.available();
 }
 
-size_t virtual_serial::available_tx(void) {
+size_t virtual_serial::available_tx(void)
+{
   return (size_t)transmit_buffer.available();
 }
 
-void virtual_serial::flush(void) {
+void virtual_serial::flush(void)
+{
   receive_buffer.clear();
 }
 
-void virtual_serial::flush_tx(void) {
+void virtual_serial::flush_tx(void)
+{
   transmit_buffer.clear();
 }
 
-uint8_t virtual_serial::availableForWrite(void) {
+uint8_t virtual_serial::availableForWrite(void)
+{
   return transmit_buffer.free() > 255 ? 255 : (uint8_t)transmit_buffer.free();
 }
 
-size_t virtual_serial::printf(const char *format, ...) {
+size_t virtual_serial::printf(const char *format, ...)
+{
   static char buffer[512];
   va_list vArgs;
   va_start(vArgs, format);
   int length = vsnprintf((char *) buffer, 256, (char const *) format, vArgs);
   va_end(vArgs);
   size_t i = 0;
-  if (length > 0 && length < 512) {
-    while (i < (size_t)length) {
+  if (length > 0 && length < 512)
+  {
+    while (i < (size_t)length)
+    {
       i += transmit_buffer.write(buffer[i]);
     }
   }
   return i;
 }
 
-size_t virtual_serial::printf_rx(const char *format, ...) {
+size_t virtual_serial::printf_rx(const char *format, ...)
+{
   static char buffer[256];
   va_list vArgs;
   va_start(vArgs, format);
   int length = vsnprintf((char *) buffer, 256, (char const *) format, vArgs);
   va_end(vArgs);
   size_t i = 0;
-  if (length > 0 && length < 256) {
-    while (i < (size_t)length) {
+  if (length > 0 && length < 256)
+  {
+    while (i < (size_t)length)
+    {
       i += receive_buffer.write(buffer[i]);
-   }
+    }
   }
   return i;
 }
