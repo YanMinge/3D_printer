@@ -48,7 +48,7 @@
 
 LCDFILINFO lcd_file[20];
 LCDQUEUE lcdqueue;
-const unsigned long ButtonAddr[] = {0x1200,0x1202,0x1210,0x1212,0x1214,0x1216, 0};
+const unsigned long ButtonAddr[] = {0x1200,0x1202,0x120E,0x1210,0x1212,0x1214,0x1216,0x1218, 0};
 
 bool UsbStatus;//check the 
 
@@ -180,11 +180,13 @@ void LCDQUEUE::process_lcd_command(void)
               key = SelectFile;
             else if(ButtonAddr[i] == PrintButtons)
               key = PrintFile;
-            else if(ButtonAddr[i] >= XaxisMoveBtn && ButtonAddr[i] <= HomeMoveBtn)
+            else if(ButtonAddr[i] >= AxisMoveBtn && ButtonAddr[i] <= HomeMoveBtn)
             {
               key = AxisMove;
               SERIAL_PRINTF("\r\n this axis\r\n");
             }
+            else if(ButtonAddr[i] == LangSetBtn)
+              key = SetLanguage;
             else
               key = i;
             break;
@@ -258,28 +260,46 @@ void LCDQUEUE::process_lcd_command(void)
             }
             break;
           case AxisMove:
-            if(recdat.addr == XaxisMoveBtn)
+            if(recdat.addr == AxisMoveBtn)
+            {
+              //move xaxis distance away;
+              SERIAL_PRINTF("AxisMoveBtn...\r\n");
+              lcd_send_data(0,XaxisMoveBtn);
+              lcd_send_data(0,YaxisMoveBtn);
+              lcd_send_data(0,ZaxisMoveBtn);
+              lcd_send_data(PageBase + 9, PageAddr);
+            }
+            else if(recdat.addr == XaxisMoveBtn)
             {
               //move xaxis distance away;
               SERIAL_PRINTF("X move distance =  %f.\r\n",((float)recdat.data[0])/10);
             }
-            if(recdat.addr == YaxisMoveBtn)
+            else if(recdat.addr == YaxisMoveBtn)
             {
               //move yaxis distance away;
               SERIAL_PRINTF("Y move distance =  %f.\r\n",((float)recdat.data[0])/10);
             }
-            if(recdat.addr == ZaxisMoveBtn)
+            else if(recdat.addr == ZaxisMoveBtn)
             {
               //move xaxis distance away;
               SERIAL_PRINTF("Z move distance =  %f.\r\n",((float)recdat.data[0])/10);
             }
-            if(recdat.addr == HomeMoveBtn)
+            else if(recdat.addr == HomeMoveBtn)
             {
               //go home;
               SERIAL_PRINTF("go hmoenow ...\r\n");
             }
             break;
-            
+          case SetLanguage:
+            if(recdat.data[0] == 0x01)
+            {
+              lcd_send_data(PageBase + 1, PageAddr);
+            }
+            if(recdat.data[0] == 0x02)
+            {
+              lcd_send_data(PageBase + 11, PageAddr);
+            }
+            break;
           default:
             break;
         }

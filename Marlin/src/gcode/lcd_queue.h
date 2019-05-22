@@ -34,6 +34,8 @@
 #include "lcd_file.h"
 
 
+
+
 /*
  * discribe the type of the command
  * language type can be update if you want have more language choices
@@ -49,8 +51,8 @@ enum CmdType : unsigned char {
 };
 
 enum Cmd {
-  MenuFile=0,SelectFile,PrintFile,AxisMove,
-  };
+  MenuFile=0,SelectFile,PrintFile,AxisMove,SetLanguage,
+};
 
 /**
  * File status structure (FILINFO)
@@ -69,6 +71,8 @@ extern LCDFILINFO lcd_file[20];
  *
  * Commands are copied into this buffer by the command injectors
  */
+
+#define DEBUGPRINTF(...) SERIAL_OUT(printf, __VA_ARGS__)
 
 /*************Register and Variable addr*****************/
 #define	RegAddr_W	0x80
@@ -90,11 +94,12 @@ extern LCDFILINFO lcd_file[20];
 #define SelectButtons 0x1202
 #define PrintButtons 0x1204
 
+#define AxisMoveBtn  0x120E
 #define XaxisMoveBtn 0x1210
 #define YaxisMoveBtn 0x1212
 #define ZaxisMoveBtn 0x1214
 #define HomeMoveBtn  0x1216
-
+#define LangSetBtn   0x1218
 
 //var addr
 #define	PageAddr	0x0084
@@ -103,20 +108,22 @@ extern LCDFILINFO lcd_file[20];
 #define FileIconAddr 0x1004
 
 #define VoiceIconAddr 0x1020
-
-
 #define TempHotendAddr        0X1300
 #define TempHotendTargetAddr  0X1302
 #define TempBedAddr           0X1304
 #define TempTargetAddr        0X1306
-
-
 
 #define FileTextAddr1 0x1500
 #define FileTextAddr5 0x1540
 #define FileTextAddr9 0x1580
 #define FileTextAddrD 0x15C0
 
+/***************not used text button addr*************/
+/*****************************************************
+#define MainPagetextaddr   1400--1438  //进料退料、返回复位等文字的地址
+#define EnglishPagetextaddr   1440-1460
+#define EnTextAddrD  0x15D0  0x1600//language set text addr
+******************************************************/
 
 typedef struct LcdDataBuffer
 {
