@@ -37,6 +37,7 @@
 #include "../module/planner.h"
 #include "../module/temperature.h"
 #include "../Marlin.h"
+#include "msd_reader.h"
 
 #if ENABLED(PRINTER_EVENT_LEDS)
   #include "../feature/leds/printer_event_leds.h"
@@ -199,6 +200,7 @@ void LCDQUEUE::process_lcd_command(void)
             if(recdat.data[0] == 0x09)
             { 
               lcd_send_temperature(102,200,50,80);
+			  MsdReader.ls(LS_GetFilename, "");
               DwinLcdFile.get_file_page_count();
               CurrentPage = 0;
               send_first_page_data();

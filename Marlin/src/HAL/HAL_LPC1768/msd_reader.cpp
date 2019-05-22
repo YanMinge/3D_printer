@@ -37,6 +37,7 @@
 
 #ifdef TARGET_LPC1768
 #include "msd_reader.h"
+#include "../../gcode/lcd_file.h"
 #include HAL_PATH(.., HAL.h)
 
 #if ENABLED(USBMSCSUPPORT)
@@ -52,12 +53,13 @@ extern "C"  void set_disk_status(DSTATUS status);
 msd_reader::msd_reader(void)
 {
   detected = false;
+  Initialized = false;
 }
 
 void msd_reader::init(void)
 {
   SetupHardware();
-  detected = false;
+  Initialized = true;
 }
 
 bool msd_reader::is_usb_detected(void)
@@ -65,18 +67,24 @@ bool msd_reader::is_usb_detected(void)
   return detected;
 }
 
+bool msd_reader::is_usb_Initialized(void)
+{
+  return Initialized;
+}
+
+
 void msd_reader::usb_status_polling(void)
 {
   static bool pre_usb_status;
   usb_error_info_type error_info = get_usb_error_info();
   if(error_info.ErrorCode != 0 || error_info.SubErrorCode != 0)
   {
-      DEBUGPRINTF(("Dev Enum Error\r\n"
+    DEBUGPRINTF(("Dev Enum Error\r\n"
                   " -- Error port %d\r\n"
                   " -- Error Code %d\r\n"
                   " -- Sub Error Code %d\r\n"),
                  error_info.corenum, error_info.ErrorCode, error_info.SubErrorCode);
-      return;
+    return;
   }
 
   bool usb_status = is_usb_connected();
@@ -86,13 +94,103 @@ void msd_reader::usb_status_polling(void)
     {
       f_unmount("/");
       set_disk_status(STA_NOINIT);
+	  detected = false;
     }
     else
     {
       f_mount(&fatFS, "/" , 0);     /* Register volume work area (never fails) */
+	  detected = true;
     }
-    DEBUGPRINTF("Yan == usb_status(%d)\r\n", usb_status);
+    DEBUGPRINTF("usb_status(%d)\r\n", usb_status);
     pre_usb_status = usb_status;
+  }
+}
+
+void msd_reader::ls(LsAction Action, const char *path, const char * const match)
+{
+  lsAction = Action;
+  DEBUGPRINTF("list dir!\r\n");
+  lsDive(path, match);
+}
+
+void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
+{
+  FRESULT rc; 	/* Result code */
+  DIR dir;        /* Directory object */
+  char *debugBuf = NULL;
+  FILINFO fno;    /* File information object */
+  pfile_list file_list_data;
+  rc = f_opendir(&dir, path);
+  if (rc) 
+  {
+    DwinLcdFile.file_list_clear();
+    DEBUGPRINTF("can't open dir(%s)\r\n", path);
+  }
+  else
+  {
+    file_count = 0;
+	if(lsAction == LS_SerialPrint)
+	{
+      debugBuf = new char[11+255];	
+      memset(debugBuf, 0, sizeof(11+255));
+	}
+	if(lsAction == LS_GetFilename)
+	{
+      DwinLcdFile.file_list_clear();
+	}
+    for(;; )
+    {
+      /* Read a directory item */
+      rc = f_readdir(&dir, &fno);
+      if (rc || !fno.fname[0])
+      {
+        break;                  /* Error or end of dir */
+      }
+      file_count++;
+      if(lsAction == LS_SerialPrint && debugBuf != NULL)
+      {
+        if (fno.fattrib & AM_DIR)
+        {
+          sprintf(debugBuf, " <Dir>  %s\r\n", fno.fname);
+        }
+        else 
+        {
+          sprintf(debugBuf, " <File> %s\r\n", fno.fname);
+        }
+        DEBUGPRINTF(debugBuf);
+      }
+	  else if(lsAction == LS_GetFilename)
+      {
+        file_list_data = (pfile_list) new char[(sizeof(file_list))];
+        memset(file_list_data, 0, sizeof(file_list));
+        if(fno.fattrib & AM_DIR)
+        {
+          file_list_data->IsDir = true;
+		}
+		else
+        {
+          file_list_data->IsDir = false;
+		}	
+		if(strlen(fno.fname) <= FileNameLen)
+        {
+		  strcpy(file_list_data->UsbFlieName, fno.fname);
+        }
+		else
+        {
+          memcpy(file_list_data->UsbFlieName, fno.fname, FileNameLen);
+		  file_list_data->UsbFlieName[FileNameLen] = '\0'; 
+		}
+		DwinLcdFile.file_list_insert(file_list_data);
+      }
+    }
+    if (rc)
+    {
+      DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
+    }
+    else if(lsAction == LS_Count)
+    {
+      DEBUGPRINTF("LS_Count(%d)\r\n",file_count);
+    }
   }
 }
 
@@ -112,7 +210,6 @@ void msd_reader::test_code(void)
   if (rc)
   {
     DEBUGPRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
-    die(rc);
   }
   else 
   {
@@ -134,21 +231,21 @@ void msd_reader::test_code(void)
     }
     if (rc)
     {
-      die(rc);
+      DEBUGPRINTF("f_read error(%d)\r\n", rc);
     }
 
     DEBUGPRINTF("\r\n\r\nClose the file.\r\n");
     rc = f_close(&fileObj);
     if (rc)
     {
-        die(rc);
+      DEBUGPRINTF("f_close error(%d)\r\n", rc);
     }
   }
   DEBUGPRINTF("\r\nOpen root directory.\r\n");
   rc = f_opendir(&dir, "");
   if (rc) 
   {
-    die(rc);
+    DEBUGPRINTF("f_opendir error(%d)\r\n", rc);
   }
   else
   {
@@ -173,7 +270,7 @@ void msd_reader::test_code(void)
     }
     if (rc)
     {
-      die(rc);
+      DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
     }
   }
   DEBUGPRINTF("\r\nTest completed.\r\n");
