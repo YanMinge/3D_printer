@@ -180,33 +180,6 @@ void LcdFile::get_file_page_count(void)
   SERIAL_PRINTF("last page file count = %d.\r\n",LastPageFlieCount);
 }
 
-void LcdFile::linklist_create(void)
-{
-  int i;
-  pfile_list m;
-  
-  for(i = 0; i < 18; i++)
-  {
-    m = (pfile_list) new char[(sizeof(file_list))];	
-    memset(m,0,sizeof(file_list));
-    m->NextFile = NULL;
-    if(NULL==m)
-    {
-      SERIAL_PRINTF("link create failed.\r\n");
-      return;
-    }
-    if(m->NextFile == NULL)
-    {
-      SERIAL_PRINTF(" m_nextfile = NULL  %d.\r\n",(m->NextFile));
-    }
-    strcpy(m->UsbFlieName, "123456创客工厂");
-    SERIAL_PRINTF("before insert m_nextfile  %d.\r\n",(m->NextFile));
-    file_list_insert(m);
-    SERIAL_PRINTF("link create file 1   %d.\r\n",i);
-    SERIAL_PRINTF("after insert m_nextfile  %d.\r\n",(m->NextFile));
-  }
-}
-
 void LcdFile::linklist_create2(void)
 {
   int i;
@@ -270,73 +243,6 @@ void LcdFile::linklist_create2(void)
       if(m->IsDir == 1)
         SERIAL_PRINTF("THIS IS NOT DIR");
       SERIAL_PRINTF("THIS IS NOT DIR");
-    }
-    file_list_insert_tail(m);
-  }
-}
-
-
-//TEST 文件夹1下面的子文件
-void LcdFile::linklist_create3(void)
-{
-  int i;
-  pfile_list m;
-  for(i = 0; i < 3; i++)
-  {
-    m = (pfile_list) new char[(sizeof(file_list))];	
-    memset(m,0,sizeof(file_list));
-    m->NextFile = NULL;
-    if(NULL==m)
-    {
-      return;
-    }
-    if(i == 0)
-    {
-      strcpy(m->UsbFlieName, "子文件1.gcode");
-    }
-    if(i == 1)
-    {
-      strcpy(m->UsbFlieName, "auriga.gcode");
-      m->IsDir = 1;
-    }
-    if((i == 2))
-    {
-      strcpy(m->UsbFlieName, "orion.gcode");
-    }
-    file_list_insert_tail(m);
-  }
-}
-
-//TEST 文件夹4下面的子文件
-void LcdFile::linklist_create4(void)
-{
-  int i;
-  pfile_list m;
-  for(i = 0; i < 7; i++)
-  {
-    m = (pfile_list) new char[(sizeof(file_list))];	
-    memset(m,0,sizeof(file_list));
-    m->NextFile = NULL;
-    if(NULL==m)
-    {
-      return;
-    }
-    if(i == 0)
-    {
-      strcpy(m->UsbFlieName, "子文件2");
-      m->IsDir = 1;
-    }
-    if(i == 1)
-    {
-      strcpy(m->UsbFlieName, "hellogirl.gcode");
-    }
-    if((i == 2) || (i == 3))
-    {
-      strcpy(m->UsbFlieName, "helloworld.gcode");
-    }
-    if((i >= 4)&& (i < 7))
-    {
-      strcpy(m->UsbFlieName, "你好世界.gcode");
     }
     file_list_insert_tail(m);
   }

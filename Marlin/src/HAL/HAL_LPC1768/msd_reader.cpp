@@ -38,6 +38,7 @@
 #ifdef TARGET_LPC1768
 #include "msd_reader.h"
 #include "../../gcode/lcd_file.h"
+#include "../../gcode/lcd_queue.h"
 #include HAL_PATH(.., HAL.h)
 
 #if ENABLED(USBMSCSUPPORT)
@@ -124,6 +125,7 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
   if (rc) 
   {
     DwinLcdFile.file_list_clear();
+    lcdqueue.lcd_send_data(PageBase +12, PageAddr);
     DEBUGPRINTF("can't open dir(%s)\r\n", path);
   }
   else

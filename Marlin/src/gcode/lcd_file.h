@@ -55,12 +55,7 @@ class LcdFile{
     bool file_list_isempty(void);
     int file_list_len(void);
     pfile_list file_list_index(int index);
-
-    void linklist_create(void);
     void linklist_create2(void);
-    void linklist_create3(void);
-    void linklist_create4(void);
-
 
     pfile_list FileList;
     int PageCount;

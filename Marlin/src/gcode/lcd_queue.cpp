@@ -200,7 +200,7 @@ void LCDQUEUE::process_lcd_command(void)
             if(recdat.data[0] == 0x09)
             { 
               lcd_send_temperature(102,200,50,80);
-			  MsdReader.ls(LS_GetFilename, "");
+			        MsdReader.ls(LS_GetFilename, "");
               DwinLcdFile.get_file_page_count();
               CurrentPage = 0;
               send_first_page_data();
@@ -232,7 +232,7 @@ void LCDQUEUE::process_lcd_command(void)
               if(temp->IsDir)
               {
                 DwinLcdFile.file_list_clear();
-                DwinLcdFile.linklist_create4();
+                DwinLcdFile.linklist_create2();
                 DwinLcdFile.get_file_page_count();
                 CurrentPage = 0;
                 send_first_page_data();
@@ -248,11 +248,11 @@ void LCDQUEUE::process_lcd_command(void)
             {
             }
             //third file select button
-            if(recdat.data[0] == 0x01)
+            if(recdat.data[0] == 0x03)
             {
             }
             //forth file select button
-            if(recdat.data[0] == 0x01)
+            if(recdat.data[0] == 0x04)
             {
             }
             break;

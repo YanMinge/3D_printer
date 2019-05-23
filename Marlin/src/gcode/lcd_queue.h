@@ -121,7 +121,8 @@ extern LCDFILINFO lcd_file[20];
 /***************not used text button addr*************/
 /*****************************************************
 #define MainPagetextaddr   1400--1438  //进料退料、返回复位等文字的地址
-#define EnglishPagetextaddr   1440-1460
+#define EnglishPagetextaddr   1440-1460  //英文主几面地址
+#define 12page ADDR   1470-1480
 #define EnTextAddrD  0x15D0  0x1600//language set text addr
 ******************************************************/
 
