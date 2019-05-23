@@ -25,7 +25,13 @@
  *
  * \par Method List:
  *
- *    1.  void    msd_reader::begin(int32_t baud);
+ *    1.  void    msd_reader::init(void);
+ *    2.  bool    msd_reader::is_usb_detected(void);
+ *    3.  void    msd_reader::usb_status_polling(void);
+ *    4.  void    msd_reader::test_code(void);
+ *    5.  uint16_t msd_reader::ls(LsAction Action, const char *path = "", const char * const match = NULL);
+ *    6.  uint16_t msd_reader::lsDive(LsAction Action, const char *path = "", const char * const match = NULL);
+ *    7.  uint16_t msd_reader::get_num_Files(const char *path = "", const char * const match = NULL);
  *
  * \par History:
  * <pre>
@@ -107,16 +113,15 @@ void msd_reader::usb_status_polling(void)
   }
 }
 
-void msd_reader::ls(LsAction Action, const char *path, const char * const match)
+uint16_t msd_reader::ls(LsAction Action, const char *path, const char * const match)
 {
   lsAction = Action;
-  DEBUGPRINTF("list dir!\r\n");
-  lsDive(path, match);
+  return lsDive(path, match);
 }
 
-void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
+uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
 {
-  FRESULT rc; 	/* Result code */
+  FRESULT rc = FR_OK; 	/* Result code */
   DIR dir;        /* Directory object */
   char *debugBuf = NULL;
   FILINFO fno;    /* File information object */
@@ -125,16 +130,22 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
   if (rc) 
   {
     DwinLcdFile.file_list_clear();
-    lcdqueue.lcd_send_data(PageBase +12, PageAddr);
     DEBUGPRINTF("can't open dir(%s)\r\n", path);
+    if(!is_usb_detected())
+    {
+      lcdqueue.lcd_send_data(PageBase +12, PageAddr);
+      return USB_NOT_DETECTED;
+	}
+	return rc;
   }
   else
   {
     file_count = 0;
 	if(lsAction == LS_SerialPrint)
 	{
-      debugBuf = new char[11+255];	
-      memset(debugBuf, 0, sizeof(11+255));
+      SERIAL_PRINTF("\r\nList files in :/%s\r\n", path);
+      debugBuf = new char[100];	
+      memset(debugBuf, 0, sizeof(100));
 	}
 	if(lsAction == LS_GetFilename)
 	{
@@ -151,15 +162,21 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
       file_count++;
       if(lsAction == LS_SerialPrint && debugBuf != NULL)
       {
+        uint16_t year = ((fno.fdate >> 9) & 0x3f) + 1980;
+		uint16_t month = ((fno.fdate >> 5) & 0x0f);
+		uint16_t date = (fno.fdate & 0x1f);
+
+		uint16_t hour = ((fno.ftime >> 11) & 0x1f);
+		uint16_t min = ((fno.ftime >> 5) & 0x3f); 
         if (fno.fattrib & AM_DIR)
         {
-          sprintf(debugBuf, " <Dir>  %s\r\n", fno.fname);
+          sprintf(debugBuf, " <DIR> %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
         }
         else 
         {
-          sprintf(debugBuf, " <File> %s\r\n", fno.fname);
+          sprintf(debugBuf, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
         }
-        DEBUGPRINTF(debugBuf);
+        SERIAL_PRINTF(debugBuf);
       }
 	  else if(lsAction == LS_GetFilename)
       {
@@ -172,7 +189,8 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
 		else
         {
           file_list_data->IsDir = false;
-		}	
+		}
+
 		if(strlen(fno.fname) <= FileNameLen)
         {
 		  strcpy(file_list_data->UsbFlieName, fno.fname);
@@ -191,9 +209,16 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
     }
     else if(lsAction == LS_Count)
     {
-      DEBUGPRINTF("LS_Count(%d)\r\n",file_count);
+      SERIAL_PRINTF("LS_Count(%d)\r\n",file_count);
+      return file_count;
     }
+	return rc;
   }
+}
+
+uint16_t msd_reader::get_num_Files(const char *path, const char * const match) 
+{
+  return ls(LS_Count, path, match);
 }
 
 void msd_reader::test_code(void)

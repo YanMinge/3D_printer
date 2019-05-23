@@ -38,6 +38,7 @@
 #include "../module/temperature.h"
 #include "../Marlin.h"
 #include "msd_reader.h"
+#include "user_execution.h"
 
 #if ENABLED(PRINTER_EVENT_LEDS)
   #include "../feature/leds/printer_event_leds.h"
@@ -200,7 +201,7 @@ void LCDQUEUE::process_lcd_command(void)
             if(recdat.data[0] == 0x09)
             { 
               lcd_send_temperature(102,200,50,80);
-			        MsdReader.ls(LS_GetFilename, "");
+              MsdReader.ls(LS_GetFilename, "");
               DwinLcdFile.get_file_page_count();
               CurrentPage = 0;
               send_first_page_data();
@@ -270,26 +271,22 @@ void LCDQUEUE::process_lcd_command(void)
               lcd_send_data(0,YaxisMoveBtn);
               lcd_send_data(0,ZaxisMoveBtn);
               lcd_send_data(PageBase + 9, PageAddr);
+			  UserExecution.cmd_g92(0, 0, 0, 0);
             }
-            else if(recdat.addr == XaxisMoveBtn)
+            else if((recdat.addr == XaxisMoveBtn) ||
+				    (recdat.addr == YaxisMoveBtn) ||
+				    (recdat.addr == ZaxisMoveBtn))
             {
-              //move xaxis distance away;
               SERIAL_PRINTF("X move distance =  %f.\r\n",((float)recdat.data[0])/10);
-            }
-            else if(recdat.addr == YaxisMoveBtn)
-            {
-              //move yaxis distance away;
               SERIAL_PRINTF("Y move distance =  %f.\r\n",((float)recdat.data[0])/10);
-            }
-            else if(recdat.addr == ZaxisMoveBtn)
-            {
-              //move xaxis distance away;
               SERIAL_PRINTF("Z move distance =  %f.\r\n",((float)recdat.data[0])/10);
+			  UserExecution.cmd_g1((float)recdat.data[0]/10, (float)recdat.data[0]/10, (float)recdat.data[0]/10, 0);
             }
             else if(recdat.addr == HomeMoveBtn)
             {
               //go home;
               SERIAL_PRINTF("go hmoenow ...\r\n");
+			  UserExecution.cmd_g28();
             }
             break;
           case SetLanguage:

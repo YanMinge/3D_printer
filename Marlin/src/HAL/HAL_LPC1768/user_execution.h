@@ -25,7 +25,9 @@
  *
  * \par Method List:
  *
- *    1.  void    user_execution::init(void);
+ *    1.  void    user_execution::cmd_g92(float x, float y, float z, float e);
+ *    2.  void    user_execution::cmd_g1(float x, float y, float z, float e);
+ *    3.  void    user_execution::cmd_g28(void);
  *
  * \par History:
  * <pre>
@@ -43,6 +45,7 @@
 #include <stdio.h>
 #include <Arduino.h>
 #include "../../inc/MarlinConfigPre.h"
+#include "../../inc/MarlinConfig.h"
 
 #if ENABLED(USE_DWIN_LCD)
 class user_execution
@@ -51,8 +54,9 @@ public:
 
   user_execution(void);
   virtual ~user_execution(void) { }
-
-  void init(void);
+  void cmd_g92(float x, float y, float z, float e);
+  void cmd_g1(float x, float y, float z, float e);
+  void cmd_g28(void);
 };
 
 extern user_execution UserExecution;

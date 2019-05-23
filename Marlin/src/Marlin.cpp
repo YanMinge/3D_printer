@@ -1176,19 +1176,20 @@ void loop() {
     #endif // SDSUPPORT
 
     if (commands_in_queue < BUFSIZE) get_available_commands();
-    // while(VirtualSerial.available_tx() > 0) {
-    //   char c = VirtualSerial.read_tx();
-    // }
+    while(VirtualSerial.available_tx() > 0) {
+       char c = VirtualSerial.read_tx();
+	   //MYSERIAL1.write(c);
+    }
     advance_command_queue();
     endstops.event_handler();
     idle();
 
-    #if ENABLED(USE_DWIN_LCD)
-      lcd_update();
-    #endif
+#if ENABLED(USE_DWIN_LCD)
+    lcd_update();
+#endif
 
 #if ENABLED(USBMSCSUPPORT)
-    //MsdReader.ls(LS_SerialPrint, "libraries/HX711");
+    //MsdReader.ls(LS_SerialPrint, "");
     //MsdReader.ls(LS_Count, "libraries/HX711");
     //delay(1500);
 #endif
