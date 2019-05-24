@@ -826,27 +826,25 @@ inline void get_udisk_commands(void) {
   static bool udisk_comment_mode = false;
   if (!IS_UDISK_PRINTING()) return;
 
-  bool udisk_eof = udisk.eof();
-  #if 0
   if (commands_in_queue == 0) stop_buffering = false;
-      while (commands_in_queue < BUFSIZE && !card_eof && !stop_buffering) {
-      const int16_t n = card.get();
-      char sd_char = (char)n;
-      card_eof = card.eof();
-      if (card_eof || n == -1
-          || sd_char == '\n' || sd_char == '\r'
-          || ((sd_char == '#' || sd_char == ':') && !sd_comment_mode
-            #if ENABLED(PAREN_COMMENTS)
-              && !sd_comment_paren_mode
-            #endif
-          )
-      ) {
-        if (card_eof) {
+  uint16_t udsik_count = 0;
 
-          card.printingHasFinished();
+  bool udisk_eof = udisk.eof();
+
+  if (commands_in_queue == 0) stop_buffering = false;
+      while (commands_in_queue < BUFSIZE && !udisk_eof && !stop_buffering) {
+      const int16_t n = udisk.get();
+      char udsik_char = (char)n;
+      udisk_eof = udisk.eof();
+      if (udisk_eof || n == -1
+          || udsik_char == '\n' || udsik_char == '\r'
+          || ((udsik_char == '#' || udsik_char == ':') && !udisk_comment_mode)) {
+        if (udsik_char) {
+
+          //card.printingHasFinished();
 
           if (IS_SD_PRINTING())
-            sd_count = 0; // If a sub-file was printing, continue from call point
+            udsik_count = 0; // If a sub-file was printing, continue from call point
           else {
             SERIAL_ECHOLNPGM(MSG_FILE_PRINTED);
             #if ENABLED(PRINTER_EVENT_LEDS)
@@ -866,41 +864,31 @@ inline void get_udisk_commands(void) {
         else if (n == -1)
           SERIAL_ERROR_MSG(MSG_SD_ERR_READ);
 
-        if (sd_char == '#') stop_buffering = true;
+        if (udsik_char == '#') stop_buffering = true;
 
-        sd_comment_mode = false; // for new command
-        #if ENABLED(PAREN_COMMENTS)
-          sd_comment_paren_mode = false;
-        #endif
+        udisk_comment_mode = false; // for new command
 
         // Skip empty lines and comments
-        if (!sd_count) { thermalManager.manage_heater(); continue; }
+        if (!udsik_count) { thermalManager.manage_heater(); continue; }
 
-        command_queue[cmd_queue_index_w][sd_count] = '\0'; // terminate string
-        sd_count = 0; // clear sd line buffer
+        command_queue[cmd_queue_index_w][udsik_count] = '\0'; // terminate string
+        udsik_count = 0; // clear sd line buffer
 
         _commit_command(false);
       }
-      else if (sd_count >= MAX_CMD_SIZE - 1) {
+      else if (udsik_count >= MAX_CMD_SIZE - 1) {
         /**
          * Keep fetching, but ignore normal characters beyond the max length
          * The command will be injected when EOL is reached
          */
       }
       else {
-        if (sd_char == ';') sd_comment_mode = true;
-        #if ENABLED(PAREN_COMMENTS)
-          else if (sd_char == '(') sd_comment_paren_mode = true;
-          else if (sd_char == ')') sd_comment_paren_mode = false;
-        #endif
-        else if (!sd_comment_mode
-          #if ENABLED(PAREN_COMMENTS)
-            && ! sd_comment_paren_mode
-          #endif
-        ) command_queue[cmd_queue_index_w][sd_count++] = sd_char;
+        if (udsik_char == ';') udisk_comment_mode = true;
+        else if (!udisk_comment_mode){
+          command_queue[cmd_queue_index_w][udsik_count++] = udsik_char;
+        }
       }
     }
-    #endif
 }
 #endif //USB_DISK_SUPPORT
 

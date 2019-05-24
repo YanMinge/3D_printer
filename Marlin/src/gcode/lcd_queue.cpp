@@ -253,6 +253,7 @@ void lcd_queue::process_lcd_command(void)
               {
                 lcd_send_data(select_file_name,(FILE_TEXT_ADDR_D));
                 lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
+                UserExecution.cmd_M2023(select_file_name);
               }
             }
             //second file select button
@@ -277,17 +278,20 @@ void lcd_queue::process_lcd_command(void)
                 lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
                 SERIAL_PRINTF("\r\n kaishi\r\n");
                 //send print file to 
+                UserExecution.cmd_M2024();
                 
               }
               else if(current_status == on_printing )
               {
                 current_status = stop_printing;
                 lcd_send_data(START_MESSAGE,START_STOP_ICON_ADDR);
+                UserExecution.cmd_M2025();
               }
               else if(current_status == stop_printing)
               {
                 current_status = on_printing;
                 lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
+                UserExecution.cmd_M2024();
               }
             }
             break;

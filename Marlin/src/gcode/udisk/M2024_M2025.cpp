@@ -33,24 +33,31 @@
 #if ENABLED(USB_DISK_SUPPORT)
 
 #include "../gcode.h"
+#include "../../module/printcounter.h"
 #include "udisk_reader.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2024: Start or Resume USB Disk Print
  */
-void GcodeSuite::M2020()
+void GcodeSuite::M2024()
 {
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
-
-  for (char *fn = parser.string_arg; *fn; ++fn)
+  if (udisk.is_file_open())
   {
-  	if (*fn == ' ') 
-    { 
-      *fn = '\0';
-  	}
+    udisk.start_udisk_print();
+    print_job_timer.start();
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, NULL);
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
+}
+
+/**
+ * M2025: Pause USB Disk Print
+ */
+void GcodeSuite::M2025() 
+{
+  if(IS_UDISK_PRINTING())
+  {
+    udisk.pause_udisk_print();
+    print_job_timer.pause();
+  }
 }
 
 #endif // USB_DISK_SUPPORT

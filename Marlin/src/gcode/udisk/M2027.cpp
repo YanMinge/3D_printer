@@ -36,21 +36,19 @@
 #include "udisk_reader.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2027: Get SD Card status
+ *      OR, with 'S<seconds>' set the SD status auto-report interval. (Requires AUTO_REPORT_SD_STATUS)
+ *      OR, with 'C' get the current filename.
  */
-void GcodeSuite::M2020()
+void GcodeSuite::M2027()
 {
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
-
-  for (char *fn = parser.string_arg; *fn; ++fn)
+  if (parser.seen('C'))
   {
-  	if (*fn == ' ') 
-    { 
-      *fn = '\0';
-  	}
+    SERIAL_ECHOPGM("Current file: ");
+    udisk.print_file_name();
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, NULL);
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
+  else
+    udisk.report_status();
 }
 
 #endif // USB_DISK_SUPPORT

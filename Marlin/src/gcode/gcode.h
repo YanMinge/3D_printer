@@ -877,6 +877,11 @@ private:
 
   #if ENABLED(USB_DISK_SUPPORT)
     static void M2020();
+    static void M2023();
+    static void M2024();
+    static void M2025();
+    static void M2026();
+    static void M2027();
   #endif
   static void T(const uint8_t tool_index);
 
