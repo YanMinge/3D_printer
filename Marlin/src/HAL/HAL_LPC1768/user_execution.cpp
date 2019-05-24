@@ -25,7 +25,9 @@
  *
  * \par Method List:
  *
- *    1.  void    msd_reader::init(void);
+ *    1.  void    user_execution::cmd_g92(float x, float y, float z, float e);
+ *    2.  void    user_execution::cmd_g1(float x, float y, float z, float e);
+ *    3.  void    user_execution::cmd_g28(void);
  *
  * \par History:
  * <pre>
@@ -39,6 +41,8 @@
 #include "user_execution.h"
 
 #if ENABLED(USE_DWIN_LCD)
+#include HAL_PATH(.., HAL.h)
+
 user_execution UserExecution;
 
 user_execution::user_execution(void)
@@ -46,10 +50,19 @@ user_execution::user_execution(void)
 
 }
 
-void user_execution::init(void)
+void user_execution::cmd_g92(float x, float y, float z, float e)
 {
-
+  VirtualSerial.printf_rx("G92 X%f Y%f Z%f E%f\r\n", x, y, z, e);
 }
 
+void user_execution::cmd_g1(float x, float y, float z, float e)
+{
+  VirtualSerial.printf_rx("G1 X%f Y%f Z%f E%f\r\n", x, y, z, e);
+}
+
+void user_execution::cmd_g28(void)
+{
+  VirtualSerial.printf_rx("G28\r\n");
+}
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

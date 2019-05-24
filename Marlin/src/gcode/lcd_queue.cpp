@@ -38,6 +38,7 @@
 #include "../module/temperature.h"
 #include "../Marlin.h"
 #include "msd_reader.h"
+#include "user_execution.h"
 
 #if ENABLED(PRINTER_EVENT_LEDS)
   #include "../feature/leds/printer_event_leds.h"
@@ -299,26 +300,19 @@ void lcd_queue::process_lcd_command(void)
               lcd_send_data(0,Y_AXIS_MOVE_BTN);
               lcd_send_data(0,Z_AXIS_MOVE_BTN);
               lcd_send_data(PAGE_BASE + 9, PAGE_ADDR);
+			  UserExecution.cmd_g92(0, 0, 0, 0);
             }
-            else if(recive_data.addr == X_AXIS_MOVE_BTN)
+            else if((recive_data.addr == X_AXIS_MOVE_BTN)||
+				           (recive_data.addr == Y_AXIS_MOVE_BTN) ||
+				           (recive_data.addr == Z_AXIS_MOVE_BTN))
             {
-              //move xaxis distance away;
-              SERIAL_PRINTF("X move distance =  %f.\r\n",((float)recive_data.data[0])/10);
-            }
-            else if(recive_data.addr == Y_AXIS_MOVE_BTN)
-            {
-              //move yaxis distance away;
-              SERIAL_PRINTF("Y move distance =  %f.\r\n",((float)recive_data.data[0])/10);
-            }
-            else if(recive_data.addr == Z_AXIS_MOVE_BTN)
-            {
-              //move xaxis distance away;
-              SERIAL_PRINTF("Z move distance =  %f.\r\n",((float)recive_data.data[0])/10);
+			        UserExecution.cmd_g1((float)recive_data.data[0]/10, (float)recive_data.data[0]/10, (float)recive_data.data[0]/10, 0);
             }
             else if(recive_data.addr == HOME_MOVE_BTN)
             {
               //go home;
               SERIAL_PRINTF("go hmoenow ...\r\n");
+			  UserExecution.cmd_g28();
             }
             break;
           case SetLanguage:

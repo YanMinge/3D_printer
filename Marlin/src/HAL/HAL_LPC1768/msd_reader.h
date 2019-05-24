@@ -29,6 +29,9 @@
  *    2.  bool    msd_reader::is_usb_detected(void);
  *    3.  void    msd_reader::usb_status_polling(void);
  *    4.  void    msd_reader::test_code(void);
+ *    5.  uint16_t msd_reader::ls(LsAction Action, const char *path = "", const char * const match = NULL);
+ *    6.  uint16_t msd_reader::lsDive(LsAction Action, const char *path = "", const char * const match = NULL);
+ *    7.  uint16_t msd_reader::get_num_Files(const char *path = "", const char * const match = NULL);
  *
  * \par History:
  * <pre>
@@ -53,6 +56,8 @@
 
 enum LsAction : uint8_t { LS_SerialPrint, LS_Count, LS_GetFilename };
 
+#define USB_NOT_DETECTED 100;
+
 class msd_reader
 {
 public:
@@ -64,8 +69,9 @@ public:
   bool is_usb_detected(void);
   bool is_usb_Initialized(void);
   void usb_status_polling(void);
-  void ls(LsAction Action, const char *path = "", const char * const match = NULL);
-  void lsDive(const char *path = "", const char * const match = NULL);
+  uint16_t ls(LsAction Action, const char *path = "", const char * const match = NULL);
+  uint16_t lsDive(const char *path = "", const char * const match = NULL);
+  uint16_t get_num_Files(const char *path = "", const char * const match = NULL);
   void test_code(void);
 
 private:

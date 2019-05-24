@@ -34,8 +34,6 @@
 #include "lcd_file.h"
 
 
-
-
 /*
  * discribe the type of the command
  * language type can be update if you want have more language choices
