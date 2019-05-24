@@ -875,6 +875,9 @@ private:
     static void M1000();
   #endif
 
+  #if ENABLED(USBMSCSUPPORT)
+    static void M2020();
+  #endif
   static void T(const uint8_t tool_index);
 
 };

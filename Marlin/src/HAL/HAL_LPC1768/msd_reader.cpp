@@ -142,7 +142,7 @@ uint16_t msd_reader::ls_dive(const char *path, const char * const match/*=NULL*/
     file_count = 0;
 	if(is_action == LS_SERIAL_PRINT)
 	{
-      SERIAL_PRINTF("\r\nList files in :/%s\r\n", path);
+      SERIAL_PRINTF("List files in path:%s\r\n", path);
       debugBuf = new char[100];	
       memset(debugBuf, 0, sizeof(100));
 	}

@@ -206,7 +206,7 @@ void lcd_queue::process_lcd_command(void)
             if(recive_data.data[0] == 0x09)
             { 
               lcd_send_temperature(102,200,50,80);
-			        MsdReader.ls(LS_GetFilename, "");
+              udisk.ls(LS_GET_FILE_NAME, "");
               LcdFile.get_file_page_count();
               max_file_index = GET_MAX_INDEX(LcdFile);
               current_page = 0;
