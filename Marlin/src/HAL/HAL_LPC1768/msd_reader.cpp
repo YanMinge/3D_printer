@@ -29,8 +29,8 @@
  *    2.  bool    msd_reader::is_usb_detected(void);
  *    3.  void    msd_reader::usb_status_polling(void);
  *    4.  void    msd_reader::test_code(void);
- *    5.  uint16_t msd_reader::ls(LsAction Action, const char *path = "", const char * const match = NULL);
- *    6.  uint16_t msd_reader::lsDive(LsAction Action, const char *path = "", const char * const match = NULL);
+ *    5.  uint16_t msd_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
+ *    6.  uint16_t msd_reader::is_dive(const char *path = "", const char * const match = NULL);
  *    7.  uint16_t msd_reader::get_num_Files(const char *path = "", const char * const match = NULL);
  *
  * \par History:
@@ -43,12 +43,11 @@
 
 #ifdef TARGET_LPC1768
 #include "msd_reader.h"
-#include "../../gcode/lcd_file.h"
 #include "../../gcode/lcd_queue.h"
 #include HAL_PATH(.., HAL.h)
 
 #if ENABLED(USBMSCSUPPORT)
-msd_reader MsdReader;
+msd_reader udisk;
 
 //#define DEBUGPRINTF(...) 
 #define DEBUGPRINTF(...) SERIAL_OUT(printf, __VA_ARGS__)
@@ -61,6 +60,7 @@ msd_reader::msd_reader(void)
 {
   detected = false;
   Initialized = false;
+  udisk_printing = abort_udisk_printing = false;
 }
 
 void msd_reader::init(void)
@@ -78,7 +78,6 @@ bool msd_reader::is_usb_Initialized(void)
 {
   return Initialized;
 }
-
 
 void msd_reader::usb_status_polling(void)
 {
@@ -113,13 +112,13 @@ void msd_reader::usb_status_polling(void)
   }
 }
 
-uint16_t msd_reader::ls(LsAction Action, const char *path, const char * const match)
+uint16_t msd_reader::ls(is_action_t action, const char *path, const char * const match)
 {
-  lsAction = Action;
-  return lsDive(path, match);
+  is_action = action;
+  return ls_dive(path, match);
 }
 
-uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
+uint16_t msd_reader::ls_dive(const char *path, const char * const match/*=NULL*/)
 {
   FRESULT rc = FR_OK; 	/* Result code */
   DIR dir;        /* Directory object */
@@ -141,13 +140,13 @@ uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
   else
   {
     file_count = 0;
-	if(lsAction == LS_SerialPrint)
+	if(is_action == LS_SERIAL_PRINT)
 	{
       SERIAL_PRINTF("\r\nList files in :/%s\r\n", path);
       debugBuf = new char[100];	
       memset(debugBuf, 0, sizeof(100));
 	}
-	if(lsAction == LS_GetFilename)
+	if(is_action == LS_GET_FILE_NAME)
 	{
       LcdFile.file_list_clear();
 	}
@@ -160,7 +159,7 @@ uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
         break;                  /* Error or end of dir */
       }
       file_count++;
-      if(lsAction == LS_SerialPrint && debugBuf != NULL)
+      if(is_action == LS_SERIAL_PRINT && debugBuf != NULL)
       {
         uint16_t year = ((fno.fdate >> 9) & 0x3f) + 1980;
 		uint16_t month = ((fno.fdate >> 5) & 0x0f);
@@ -178,7 +177,7 @@ uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
         }
         SERIAL_PRINTF(debugBuf);
       }
-	  else if(lsAction == LS_GetFilename)
+	  else if(is_action == LS_GET_FILE_NAME)
       {
         file_list_data = (pfile_list) new char[(sizeof(file_list))];
         memset(file_list_data, 0, sizeof(file_list));
@@ -189,15 +188,15 @@ uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
 		else
         {
           file_list_data->IsDir = false;
-		}	
+        }
 		if(strlen(fno.fname) <= FILE_NAME_LEN)
         {
-		  strcpy(file_list_data->file_name, fno.fname);
+          strcpy(file_list_data->file_name, fno.fname);
         }
 		else
         {
           memcpy(file_list_data->file_name, fno.fname, FILE_NAME_LEN);
-		  file_list_data->file_name[FILE_NAME_LEN] = '\0'; 
+          file_list_data->file_name[FILE_NAME_LEN] = '\0'; 
 		}
 		LcdFile.file_list_insert(file_list_data);
       }
@@ -206,7 +205,7 @@ uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
     {
       DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
     }
-    else if(lsAction == LS_Count)
+    else if(is_action == LS_COUNT)
     {
       SERIAL_PRINTF("LS_Count(%d)\r\n",file_count);
       return file_count;
@@ -217,7 +216,30 @@ uint16_t msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
 
 uint16_t msd_reader::get_num_Files(const char *path, const char * const match) 
 {
-  return ls(LS_Count, path, match);
+  return ls(LS_COUNT, path, match);
+}
+
+void msd_reader::get(void)
+{
+
+}
+
+void msd_reader::start_file_print(void)
+{
+  if (is_usb_detected())
+  {
+    udisk_printing = true;
+  }
+}
+
+void msd_reader::stop_udisk_Print(void)
+{
+  udisk_printing = abort_udisk_printing = false;
+}
+
+bool msd_reader::get_udisk_printing_flag(void)
+{
+  return udisk_printing;
 }
 
 void msd_reader::test_code(void)

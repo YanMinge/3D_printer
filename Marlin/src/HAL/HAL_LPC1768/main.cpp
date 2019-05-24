@@ -21,10 +21,10 @@ static int start_systick = false;
 void SysTick_Callback() {
   //disk_timerproc();
 
-  if(start_systick == true && MsdReader.is_usb_Initialized() == true)
+  if(start_systick == true && udisk.is_usb_Initialized() == true)
   {
 #if ENABLED(USBMSCSUPPORT)
-    MsdReader.usb_status_polling();
+    udisk.usb_status_polling();
 #endif
   }
 }

@@ -41,6 +41,10 @@
   #include "../feature/power_loss_recovery.h"
 #endif
 
+#if ENABLED(USBMSCSUPPORT)
+  #include "msd_reader.h"
+#endif //USBMSCSUPPORT
+
 /**
  * GCode line number handling. Hosts may opt to include line numbers when
  * sending commands to Marlin, and lines will be checked for sequentiality.
@@ -810,6 +814,96 @@ inline void get_serial_commands() {
 
 #endif // SDSUPPORT
 
+
+#if ENABLED(USBMSCSUPPORT)
+/**
+* Get commands from the USB disk until the command buffer is full
+* or until the end of the file is reached. The special character '#'
+* can also interrupt buffering.
+*/
+inline void get_udisk_commands(void) {
+  static bool stop_buffering = false;
+  static bool udisk_comment_mode = false;
+  if (!IS_UDISK_PRINTING()) return;
+
+  bool udisk_eof = udisk.eof();
+  #if 0
+  if (commands_in_queue == 0) stop_buffering = false;
+      while (commands_in_queue < BUFSIZE && !card_eof && !stop_buffering) {
+      const int16_t n = card.get();
+      char sd_char = (char)n;
+      card_eof = card.eof();
+      if (card_eof || n == -1
+          || sd_char == '\n' || sd_char == '\r'
+          || ((sd_char == '#' || sd_char == ':') && !sd_comment_mode
+            #if ENABLED(PAREN_COMMENTS)
+              && !sd_comment_paren_mode
+            #endif
+          )
+      ) {
+        if (card_eof) {
+
+          card.printingHasFinished();
+
+          if (IS_SD_PRINTING())
+            sd_count = 0; // If a sub-file was printing, continue from call point
+          else {
+            SERIAL_ECHOLNPGM(MSG_FILE_PRINTED);
+            #if ENABLED(PRINTER_EVENT_LEDS)
+              printerEventLEDs.onPrintCompleted();
+              #if HAS_RESUME_CONTINUE
+                enqueue_and_echo_commands_P(PSTR("M0 S"
+                  #if HAS_LCD_MENU
+                    "1800"
+                  #else
+                    "60"
+                  #endif
+                ));
+              #endif
+            #endif // PRINTER_EVENT_LEDS
+          }
+        }
+        else if (n == -1)
+          SERIAL_ERROR_MSG(MSG_SD_ERR_READ);
+
+        if (sd_char == '#') stop_buffering = true;
+
+        sd_comment_mode = false; // for new command
+        #if ENABLED(PAREN_COMMENTS)
+          sd_comment_paren_mode = false;
+        #endif
+
+        // Skip empty lines and comments
+        if (!sd_count) { thermalManager.manage_heater(); continue; }
+
+        command_queue[cmd_queue_index_w][sd_count] = '\0'; // terminate string
+        sd_count = 0; // clear sd line buffer
+
+        _commit_command(false);
+      }
+      else if (sd_count >= MAX_CMD_SIZE - 1) {
+        /**
+         * Keep fetching, but ignore normal characters beyond the max length
+         * The command will be injected when EOL is reached
+         */
+      }
+      else {
+        if (sd_char == ';') sd_comment_mode = true;
+        #if ENABLED(PAREN_COMMENTS)
+          else if (sd_char == '(') sd_comment_paren_mode = true;
+          else if (sd_char == ')') sd_comment_paren_mode = false;
+        #endif
+        else if (!sd_comment_mode
+          #if ENABLED(PAREN_COMMENTS)
+            && ! sd_comment_paren_mode
+          #endif
+        ) command_queue[cmd_queue_index_w][sd_count++] = sd_char;
+      }
+    }
+    #endif
+}
+#endif //USBMSCSUPPORT
+
 /**
  * Add to the circular command queue the next command from:
  *  - The command-injection queue (injected_commands_P)
@@ -825,6 +919,10 @@ void get_available_commands() {
 
   #if ENABLED(SDSUPPORT)
     get_sdcard_commands();
+  #endif
+
+  #if ENABLED(USBMSCSUPPORT)
+    get_udisk_commands();
   #endif
 }
 

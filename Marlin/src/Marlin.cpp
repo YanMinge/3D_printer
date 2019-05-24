@@ -178,11 +178,11 @@
 
 #if ENABLED(USBMSCSUPPORT)
   #include "msd_reader.h"
-#endif
+#endif //USBMSCSUPPORT
 
 #if ENABLED(USE_DWIN_LCD)
   #include "gcode/lcd_queue.h"
-#endif
+#endif //USE_DWIN_LCD
 
 bool Running = true;
 
@@ -1128,7 +1128,7 @@ void setup() {
   #endif
 
 #if ENABLED(USBMSCSUPPORT)
-  MsdReader.init();
+  udisk.init();
 #endif
 
 #if PIN_EXISTS(LED)
@@ -1137,7 +1137,7 @@ void setup() {
 
 #if ENABLED(USE_DWIN_LCD)
   my_lcd_init();
-#endif
+#endif //USE_DWIN_LCD
 
 }
 
@@ -1185,12 +1185,12 @@ void loop() {
 
 #if ENABLED(USE_DWIN_LCD)
     lcd_update();
-#endif
+#endif //USE_DWIN_LCD
 
 #if ENABLED(USBMSCSUPPORT)
-    //MsdReader.ls(LS_SerialPrint, "");
-    //MsdReader.ls(LS_Count, "libraries/HX711");
+    //udisk.ls(LS_SerialPrint, "");
+    //udisk.ls(LS_Count, "libraries/HX711");
     //delay(1500);
-#endif
+#endif //USBMSCSUPPORT
   }
 }

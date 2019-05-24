@@ -29,8 +29,8 @@
  *    2.  bool    msd_reader::is_usb_detected(void);
  *    3.  void    msd_reader::usb_status_polling(void);
  *    4.  void    msd_reader::test_code(void);
- *    5.  uint16_t msd_reader::ls(LsAction Action, const char *path = "", const char * const match = NULL);
- *    6.  uint16_t msd_reader::lsDive(LsAction Action, const char *path = "", const char * const match = NULL);
+ *    5.  uint16_t msd_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
+ *    6.  uint16_t msd_reader::is_dive(const char *path = "", const char * const match = NULL);
  *    7.  uint16_t msd_reader::get_num_Files(const char *path = "", const char * const match = NULL);
  *
  * \par History:
@@ -53,8 +53,9 @@
 
 #if ENABLED(USBMSCSUPPORT)
 #include "MassStorageLib.h"
+#include "../../gcode/lcd_file.h"
 
-enum LsAction : uint8_t { LS_SerialPrint, LS_Count, LS_GetFilename };
+enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 
 #define USB_NOT_DETECTED 100;
 
@@ -69,21 +70,37 @@ public:
   bool is_usb_detected(void);
   bool is_usb_Initialized(void);
   void usb_status_polling(void);
-  uint16_t ls(LsAction Action, const char *path = "", const char * const match = NULL);
-  uint16_t lsDive(const char *path = "", const char * const match = NULL);
+  uint16_t ls(is_action_t action, const char *path = "", const char * const match = NULL);
+  uint16_t ls_dive(const char *path = "", const char * const match = NULL);
   uint16_t get_num_Files(const char *path = "", const char * const match = NULL);
+  void get(void);
+  inline bool eof() { return udisk_pos >= file_size; }
+  void start_file_print(void);
+  void stop_udisk_Print(void);
   void test_code(void);
-
+  bool get_udisk_printing_flag(void);
 private:
   //Variable definitions
   FATFS fatFS;	/* File system object */
+
   bool detected;
-  bool Initialized;;
-  LsAction lsAction;
-  uint8_t file_count;
+  bool Initialized;
+  bool udisk_printing;
+  bool abort_udisk_printing;
+
+  is_action_t is_action;
+
+  uint16_t file_count;  //counter for the files in the current directory
+
+  uint32_t udisk_pos;
+  uint32_t file_size;
+  lcd_file file;
 };
 
-extern msd_reader MsdReader;
+#define IS_UDISK_PRINTING() udisk.get_udisk_printing_flag()
+#define IS_UDISK_FILE_OPEN()
+
+extern msd_reader udisk;
 #endif // USBMSCSUPPORT
 #endif // TARGET_LPC1768
 #endif // _MSD_READER_H_
