@@ -56,10 +56,6 @@
 #include "gcode/parser.h"
 #include "gcode/queue.h"
 
-#if ENABLED(USE_DWIN_LCD)
-  #include "gcode/lcd_queue.h"
-#endif
-
 #if ENABLED(HOST_ACTION_COMMANDS)
   #include "feature/host_actions.h"
 #endif
@@ -182,6 +178,10 @@
 
 #if ENABLED(USBMSCSUPPORT)
   #include "msd_reader.h"
+#endif
+
+#if ENABLED(USE_DWIN_LCD)
+  #include "gcode/lcd_queue.h"
 #endif
 
 bool Running = true;
@@ -913,12 +913,6 @@ void setup() {
     #endif
   #endif
 
-#if ENABLED(USE_DWIN_LCD)
-  SERIAL_PRINTF("lcd init start.\r\n");
-  my_lcd_init();
-  SERIAL_PRINTF("lcd init end.\r\n");
-#endif
-
   SERIAL_ECHOLNPGM("start");
   SERIAL_ECHO_START();
 
@@ -1140,6 +1134,11 @@ void setup() {
 #if PIN_EXISTS(LED)
   OUT_WRITE(LED_PIN, true);
 #endif
+
+#if ENABLED(USE_DWIN_LCD)
+  my_lcd_init();
+#endif
+
 }
 
 /**
@@ -1183,9 +1182,9 @@ void loop() {
     endstops.event_handler();
     idle();
 
-    #if ENABLED(USE_DWIN_LCD)
-      lcd_update();
-    #endif
+#if ENABLED(USE_DWIN_LCD)
+    lcd_update();
+#endif
 
 #if ENABLED(USBMSCSUPPORT)
     //MsdReader.ls(LS_SerialPrint, "libraries/HX711");

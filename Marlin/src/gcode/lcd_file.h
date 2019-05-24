@@ -22,6 +22,7 @@
  *
  */
 
+#define FILE_NAME_LEN   32
 #pragma once
 
 /**
@@ -29,39 +30,47 @@
  *           go to the parser and dispatcher.
  */
 
+#include "stdio.h"
 #include "../inc/MarlinConfig.h"
 #include "lcd_queue.h"
 
-#define FileNameLen   32
+//#define FILE_NAME_LEN   32
+#define GET_MAX_INDEX(X) (4*X.page_count + X.last_page_file_count)
 
-typedef struct usbfile
+typedef struct usb_file
 {
   bool IsDir;
   unsigned long Time;
-  struct usbfile* NextFile;
-  char UsbFlieName[FileNameLen];
+  struct usb_file* next_file;
+  char file_name[FILE_NAME_LEN];
 }file_list, *pfile_list;
 
-class LcdFile{
-  public:
-    LcdFile();
-    void file_list_init(void);
-    void file_list_insert(pfile_list m);
-    void file_list_insert_tail(pfile_list m);
-    void file_list_insert_tail(char isdir,char filename[]);
-    void file_list_del(void);
-    void file_list_clear(void);
-    void get_file_page_count(void);
-    bool file_list_isempty(void);
-    int file_list_len(void);
-    pfile_list file_list_index(int index);
-    void linklist_create2(void);
+class lcd_file
+{
+public:
 
-    pfile_list FileList;
-    int PageCount;
-    int LastPageFlieCount;
-  private:
-    char Sort;
+  lcd_file(void);
+  virtual ~lcd_file(void) { }
+
+  void file_list_init(void);
+  void file_list_insert(pfile_list m);
+  void file_list_insert_tail(pfile_list m);
+  void file_list_insert_tail(char isdir,char filename[]);
+  void file_list_del(void);
+  void file_list_clear(void);
+  void get_file_page_count(void);
+  bool file_list_isempty(void);
+  int file_list_len(void);
+  pfile_list file_list_index(int index);
+  void linklist_create2(void);
+
+  int page_count;
+  int last_page_file_count;
+
+private:
+  char sort;
+  //char select_file_name[FILE_NAME_LEN];
+  pfile_list FileList;
 };
 
-extern LcdFile DwinLcdFile;
+extern lcd_file LcdFile;

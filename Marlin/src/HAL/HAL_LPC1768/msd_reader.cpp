@@ -124,8 +124,8 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
   rc = f_opendir(&dir, path);
   if (rc) 
   {
-    DwinLcdFile.file_list_clear();
-    lcdqueue.lcd_send_data(PageBase +12, PageAddr);
+    LcdFile.file_list_clear();
+    lcdqueue.lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
     DEBUGPRINTF("can't open dir(%s)\r\n", path);
   }
   else
@@ -138,7 +138,7 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
 	}
 	if(lsAction == LS_GetFilename)
 	{
-      DwinLcdFile.file_list_clear();
+      LcdFile.file_list_clear();
 	}
     for(;; )
     {
@@ -173,16 +173,16 @@ void msd_reader::lsDive(const char *path, const char * const match/*=NULL*/)
         {
           file_list_data->IsDir = false;
 		}	
-		if(strlen(fno.fname) <= FileNameLen)
+		if(strlen(fno.fname) <= FILE_NAME_LEN)
         {
-		  strcpy(file_list_data->UsbFlieName, fno.fname);
+		  strcpy(file_list_data->file_name, fno.fname);
         }
 		else
         {
-          memcpy(file_list_data->UsbFlieName, fno.fname, FileNameLen);
-		  file_list_data->UsbFlieName[FileNameLen] = '\0'; 
+          memcpy(file_list_data->file_name, fno.fname, FILE_NAME_LEN);
+		  file_list_data->file_name[FILE_NAME_LEN] = '\0'; 
 		}
-		DwinLcdFile.file_list_insert(file_list_data);
+		LcdFile.file_list_insert(file_list_data);
       }
     }
     if (rc)

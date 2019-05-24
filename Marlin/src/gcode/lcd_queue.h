@@ -54,15 +54,9 @@ enum Cmd {
   MenuFile=0,SelectFile,PrintFile,AxisMove,SetLanguage,
 };
 
-/**
- * File status structure (FILINFO)
- */
-typedef struct {
-  uint8_t type;       /* File type */
-	uint8_t	fsize;			/* File size */
-	char	fname[20];	/* file name*/
-} LCDFILINFO;
-extern LCDFILINFO lcd_file[20];
+enum print_status {
+  out_printing,on_printing,stop_printing,
+};
 
 
 /**
@@ -75,48 +69,53 @@ extern LCDFILINFO lcd_file[20];
 #define DEBUGPRINTF(...) SERIAL_OUT(printf, __VA_ARGS__)
 
 /*************Register and Variable addr*****************/
-#define	RegAddr_W	0x80
-#define	RegAddr_R	0x81
-#define	VarAddr_W	0x82		
-#define	VarAddr_R	0x83
+#define	WRITE_REGISTER_ADDR	0x80
+#define	READ_REGISTER_ADDR	0x81
+#define	WRITE_VARIABLE_ADDR	0x82		
+#define	READ_VARIABLE_ADDR	0x83
 
-#define SizeofDatabuf		20
-#define MaxSendBUF		256
-#define FileNum   40
+#define DATA_BUF_SIZE		  20
+#define MAX_SEND_BUF		  256
+#define FILE_NUM_MAX      40
 
-#define HeadOne   (0x5A)
-#define HeadTwo   (0xA5)
+#define HEAD_ONE   (0x5A)
+#define HEAD_TWO   (0xA5)
 
-#define PageBase	(unsigned long)0x5A010000
+#define PAGE_BASE	      (unsigned long)0x5A010000
+#define STOP_MESSAGE    (unsigned long)0xCDA3D6B9
+#define START_MESSAGE   (unsigned long)0xBFAACABC
+
 
 //btn addr
-#define MenuButtons 0x1200
-#define SelectButtons 0x1202
-#define PrintButtons 0x1204
+#define MENU_BUTTONS    0x1200
+#define SELECT_BUTTONS  0x1202
+#define PRINT_BUTTONS   0x1204
 
-#define AxisMoveBtn  0x120E
-#define XaxisMoveBtn 0x1210
-#define YaxisMoveBtn 0x1212
-#define ZaxisMoveBtn 0x1214
-#define HomeMoveBtn  0x1216
-#define LangSetBtn   0x1218
+#define AXIS_MOVE_BTN   0x120E
+#define X_AXIS_MOVE_BTN 0x1210
+#define Y_AXIS_MOVE_BTN 0x1212
+#define Z_AXIS_MOVE_BTN 0x1214
+#define HOME_MOVE_BTN   0x1216
+#define LANGUAGE_SET_BTN   0x1218
 
 //var addr
-#define	PageAddr	0x0084
-#define MakeIconAddr 0x1000
-#define StartIconAddr 0x1002
-#define FileIconAddr 0x1004
+#define	PAGE_ADDR	            0x0084
+#define MAKEBLOCK_ICON_ADDR   0x1000
+#define START_ICON_ADDR       0x1002
+#define FILE_ICON_ADDR        0x1004
 
-#define VoiceIconAddr 0x1020
-#define TempHotendAddr        0X1300
-#define TempHotendTargetAddr  0X1302
-#define TempBedAddr           0X1304
-#define TempTargetAddr        0X1306
+#define VOICE_ICON_ADDR         0x1020
+#define TEMP_HOTEND_ADDR        0X1300
+#define TEMP_HOTEND_TARGET_ADDR 0X1302
+#define TEMP_BED_ADDR           0X1304
+#define TEMP_BED_TARGET_ADDR    0X1306
 
-#define FileTextAddr1 0x1500
-#define FileTextAddr5 0x1540
-#define FileTextAddr9 0x1580
-#define FileTextAddrD 0x15C0
+#define START_STOP_ICON_ADDR    0X1430
+
+#define FILE_TEXT_ADDR_1 0x1500
+#define FILE_TEXT_ADDR_5 0x1540
+#define FILE_TEXT_ADDR_9 0x1580
+#define FILE_TEXT_ADDR_D 0x15C0
 
 /***************not used text button addr*************/
 /*****************************************************
@@ -126,7 +125,7 @@ extern LCDFILINFO lcd_file[20];
 #define EnTextAddrD  0x15D0  0x1600//language set text addr
 ******************************************************/
 
-typedef struct LcdDataBuffer
+typedef struct lcd_data_buffer
 {
     unsigned char head[2];
     unsigned char len;
@@ -135,57 +134,64 @@ typedef struct LcdDataBuffer
     unsigned long bytelen;
     unsigned short data[32];
     unsigned char reserv[4];
-} LDB;
+} lcd_buffer;
 
-class LCDQUEUE {
-  public:
-    LCDQUEUE();
-    void clear_lcd_data_buf(void);
-    void clear_lcd_data_buf1(void);
-    void clear_recevie_buf(void);
-    void clear_send_data_buf(void);
-    void lcd_receive_data(void);
-    void lcd_send_data(void);
-    void lcd_send_data(const String &, unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(const char[], unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data_clear(unsigned long addr,int len, unsigned char cmd = VarAddr_W);
-    void lcd_send_data(char, unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(unsigned char*, unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(int, unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(float, unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(unsigned int,unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(long,unsigned long, unsigned char = VarAddr_W);
-    void lcd_send_data(unsigned long,unsigned long, unsigned char = VarAddr_W);
-    void icon_update(void);
-    void process_lcd_command(void);
+class lcd_queue 
+{
+public:
+  lcd_queue();
+  void clear_lcd_data_buf(void);
+  void clear_lcd_data_buf1(void);
+  void clear_recevie_buf(void);
+  void clear_send_data_buf(void);
+  void lcd_receive_data(void);
+  void lcd_send_data(void);
+  void lcd_send_data(const String &, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(const char[], unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data_clear(unsigned long addr,int len, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(char, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(unsigned char*, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(int, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(float, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(unsigned int,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_send_data(unsigned long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void icon_update(void);
+  void process_lcd_command(void);
 
-    void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
-    
-    void main_button_response(void);
-    void nextpage_button_response(void);
-    void lastpage_button_response(void);
-    void filereturn_button_response(void);
+  void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
+  
+  void main_button_response(void);
+  void nextpage_button_response(void);
+  void lastpage_button_response(void);
+  void filereturn_button_response(void);
 
-    void next_page_clear(void);
-    void last_page_clear(void);
-    void send_first_page_data(void);
-    void send_next_page_data(void);
-    void send_last_page_data(void);
+  void next_page_clear(void);
+  void last_page_clear(void);
+  void send_first_page_data(void);
+  void send_next_page_data(void);
+  void send_last_page_data(void);
 
-    LDB recdat;
-    LDB snddat;
-  private:
-    bool HaveLcdCommand;
-    CmdType type;
-    unsigned char RecNum;
-    unsigned char recevie_data_buf[SizeofDatabuf];
-    unsigned char send_data_buf[MaxSendBUF];
-    unsigned long StartIconCount;
-    millis_t NextUpdateTime;
-    unsigned char UpdateStatus;
-    int CurrentPage;
+  lcd_buffer recive_data;
+  lcd_buffer send_data;
+private:
+  bool HaveLcdCommand;
+  CmdType type;
+  unsigned char RecNum;
+  unsigned char recevie_data_buf[DATA_BUF_SIZE];
+  unsigned char send_data_buf[MAX_SEND_BUF];
+  unsigned long StartIconCount;
+  millis_t NextUpdateTime;
+  unsigned char UpdateStatus;
+  int current_page;
+  char current_path[FILE_NAME_LEN];
+  char select_file_name[FILE_NAME_LEN];
+  char current_dir[FILE_NAME_LEN];
+  int current_file_index;
+  print_status current_status;
+  int max_file_index;
   };
 
-extern LCDQUEUE lcdqueue;
+extern lcd_queue lcdqueue;
 extern void lcd_update(void);
 extern void my_lcd_init(void);

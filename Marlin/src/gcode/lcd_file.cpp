@@ -48,87 +48,85 @@
   #include "../feature/power_loss_recovery.h"
 #endif
 
-LcdFile DwinLcdFile;
+lcd_file LcdFile;
 
-LcdFile::LcdFile()
-{
-  PageCount = 0;
-}
+lcd_file::lcd_file(){}
 
-void LcdFile::file_list_init(void)
+void lcd_file::file_list_init(void)
 {
-  pfile_list L;
-  L =(pfile_list) new char[sizeof(file_list)];
-  memset(L,0,sizeof(file_list));
-  if(NULL == L)
+  pfile_list m;
+  m =(pfile_list) new char[sizeof(file_list)];
+  memset(m,0,sizeof(file_list));
+  if(NULL == m)
   {
+    //add err code
     return;
   }
-  L->NextFile = NULL;
-  SERIAL_PRINTF("file list init ok.\r\n");
-  FileList = L;
+  m->next_file = NULL;
+  FileList = m;
   return;
 }
 
 //insert to head
-void LcdFile::file_list_insert(pfile_list m)
+void lcd_file::file_list_insert(pfile_list m)
 {
-  m->NextFile = FileList->NextFile;
-  FileList->NextFile = m;
+  m->next_file = FileList->next_file;
+  FileList->next_file = m;
 }
 
 //insert to tail
-void LcdFile::file_list_insert_tail(pfile_list m)
+void lcd_file::file_list_insert_tail(pfile_list m)
 {
   pfile_list t;
   t = FileList;
-  while( t->NextFile != NULL)
-      t = t->NextFile;
-  t->NextFile = m;
+  while( t->next_file != NULL)
+  {
+    t = t->next_file;
+  }
+  t->next_file = m;
 }
 
 //insert to tail
-void LcdFile::file_list_insert_tail(char isdir,char filename[])
+void lcd_file::file_list_insert_tail(char isdir,char filename[])
 {
   pfile_list t,m;
   t = FileList;
   m = (pfile_list) new char[sizeof(file_list)];
-  m->NextFile = NULL;
+  m->next_file = NULL;
   m->IsDir = isdir;
-  strcpy(m->UsbFlieName,filename);
-  while( t->NextFile != NULL)
-      t = t->NextFile;
-  t->NextFile = m;
+  strcpy(m->file_name,filename);
+  while( t->next_file != NULL)
+  {
+    t = t->next_file;
+  }
+  t->next_file = m;
 }
 
 
-void LcdFile::file_list_del(void)
+void lcd_file::file_list_del(void)
 {
   pfile_list t;
-  t = FileList->NextFile;
-  FileList->NextFile = t->NextFile;
+  t = FileList->next_file;
+  FileList->next_file = t->next_file;
   delete (t);
   t = NULL;
 }
 
-void LcdFile::file_list_clear(void)
+void lcd_file::file_list_clear(void)
 {
   pfile_list t,temp;
-  t = FileList->NextFile;
-  int i=0;
+  t = FileList->next_file;
   while( t != NULL)
   {
     temp = t;
-    t = t->NextFile;
+    t = t->next_file;
     delete (temp);
-    SERIAL_PRINTF("link clear file %d.\r\n",i++);
-    SERIAL_PRINTF("the t is  %d.\r\n",t);
   }
-  FileList->NextFile = NULL;
+  FileList->next_file = NULL;
 }
 
 
-pfile_list LcdFile::file_list_index(int index)
+pfile_list lcd_file::file_list_index(int index)
 {
   int i = 0;
   pfile_list t = NULL;
@@ -136,51 +134,59 @@ pfile_list LcdFile::file_list_index(int index)
   while( (t != NULL) && (i != index))
   {
     i++;
-    t = t->NextFile;
+    t = t->next_file;
   }
   if(i == index)
+  {
     return t;
+  }
   else
+  {
     return NULL;
+  }
 }
 
-bool LcdFile::file_list_isempty(void)
+bool lcd_file::file_list_isempty(void)
 {
-  if(FileList->NextFile == NULL)
+  if(FileList->next_file == NULL)
+  {
     return true;
+  }
   else
+  {
     return false;
+  }
 }
 
-int LcdFile::file_list_len(void)
+int lcd_file::file_list_len(void)
 {
   int i = 0;
-  pfile_list head = FileList->NextFile;
-  for(; head; head = head->NextFile,i++);
+  pfile_list head = FileList->next_file;
+  for(; head; head = head->next_file,i++);
   return i;
 }
 
-void LcdFile::get_file_page_count(void)
+void lcd_file::get_file_page_count(void)
 {
   if(file_list_isempty())
   {
-    PageCount = 0;
-    LastPageFlieCount = 0;
+    page_count = 0;
+    last_page_file_count = 0;
     return;
   }
   int file_len;
   file_len = file_list_len();
-  PageCount = file_len / 4;
+  page_count = file_len / 4;
   if(file_len % 4)
   {
-    PageCount += 1;
+    page_count += 1;
   }
-  LastPageFlieCount = file_len % 4;
-  SERIAL_PRINTF("page count = %d.\r\n",PageCount);
-  SERIAL_PRINTF("last page file count = %d.\r\n",LastPageFlieCount);
+  last_page_file_count = file_len % 4;
+  SERIAL_PRINTF("page count = %d.\r\n",page_count);
+  SERIAL_PRINTF("last page file count = %d.\r\n",last_page_file_count);
 }
 
-void LcdFile::linklist_create2(void)
+void lcd_file::linklist_create2(void)
 {
   int i;
   pfile_list m;
@@ -188,58 +194,58 @@ void LcdFile::linklist_create2(void)
   {
     m = (pfile_list) new char[(sizeof(file_list))];	
     memset(m,0,sizeof(file_list));
-    m->NextFile = NULL;
+    m->next_file = NULL;
     if(NULL==m)
     {
       return;
     }
     if(i == 0)
     {
-      strcpy(m->UsbFlieName, "文件夹一");
+      strcpy(m->file_name, "文件夹一");
       m->IsDir = 1;
     }
     if(i == 1)
     {
-      strcpy(m->UsbFlieName, "文件夹二");
+      strcpy(m->file_name, "文件夹二");
       m->IsDir = 1;
     }
     if((i == 2) || (i == 3))
     {
-      strcpy(m->UsbFlieName, "123456789.gcode");
+      strcpy(m->file_name, "123456789.gcode");
     }
     if((i >= 4)&& (i < 8))
     {
-      strcpy(m->UsbFlieName, "你好世界.gcode");
+      strcpy(m->file_name, "你好世界.gcode");
     }
     if((i >= 8)&& (i < 12))
     {
-      strcpy(m->UsbFlieName, "创客工厂.gcode");
+      strcpy(m->file_name, "创客工厂.gcode");
       if(m->IsDir == 1)
         SERIAL_PRINTF("THIS IS NOT DIR");
     }
     if((i >= 12)&& (i < 16))
     {
-      strcpy(m->UsbFlieName, "晨风.gcode");
+      strcpy(m->file_name, "晨风.gcode");
     }
     if((i >= 16)&& (i < 20))
     {
-      strcpy(m->UsbFlieName, "makeblock.gcode");
+      strcpy(m->file_name, "makeblock.gcode");
     }
     if((i >= 20)&& (i < 24))
     {
-      strcpy(m->UsbFlieName, "maker.gcode");
+      strcpy(m->file_name, "maker.gcode");
     }
     if((i >= 24)&& (i < 28))
     {
-      strcpy(m->UsbFlieName, "MakeBlock.gcode");
+      strcpy(m->file_name, "MakeBlock.gcode");
     }
     if((i >= 28)&& (i < 32))
     {
-      strcpy(m->UsbFlieName, "Hello风.gcode");
+      strcpy(m->file_name, "Hello风.gcode");
     }
     if((i >= 32)&& (i < 34))
     {
-      strcpy(m->UsbFlieName, "hello民革.gcode");
+      strcpy(m->file_name, "hello民革.gcode");
       if(m->IsDir == 1)
         SERIAL_PRINTF("THIS IS NOT DIR");
       SERIAL_PRINTF("THIS IS NOT DIR");
