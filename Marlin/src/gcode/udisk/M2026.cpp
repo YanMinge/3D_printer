@@ -36,21 +36,11 @@
 #include "udisk_reader.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2026: Set USB Disk file index
  */
-void GcodeSuite::M2020()
+void GcodeSuite::M2026()
 {
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
 
-  for (char *fn = parser.string_arg; *fn; ++fn)
-  {
-  	if (*fn == ' ') 
-    { 
-      *fn = '\0';
-  	}
-  }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, NULL);
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
 }
 
 #endif // USB_DISK_SUPPORT

@@ -73,12 +73,16 @@ public:
   uint16_t ls(is_action_t action, const char *path = "", const char * const match = NULL);
   uint16_t ls_dive(const char *path = "", const char * const match = NULL);
   uint16_t get_num_Files(const char *path = "", const char * const match = NULL);
-  void get(void);
-  inline bool eof() { return udisk_pos >= file_size; }
-  void start_file_print(void);
-  void stop_udisk_Print(void);
-  void test_code(void);
+  void open_file(char * const path, const bool read);
+  void print_file_name();
+  void report_status();
+  int16_t get(void);
+  void start_udisk_print(void);
+  void pause_udisk_print(void);
+  void stop_udisk_print(void);
   bool get_udisk_printing_flag(void);
+  inline bool eof() { return udisk_pos >= file_size; }
+  inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
 private:
   //Variable definitions
   FATFS fatFS;	/* File system object */
@@ -87,6 +91,7 @@ private:
   bool Initialized;
   bool udisk_printing;
   bool abort_udisk_printing;
+  bool is_file_opened;
 
   is_action_t is_action;
 
@@ -95,6 +100,8 @@ private:
   uint32_t udisk_pos;
   uint32_t file_size;
   lcd_file file;
+  FIL file_obj;
+  char *opened_file_name;
 };
 
 #define IS_UDISK_PRINTING() udisk.get_udisk_printing_flag()

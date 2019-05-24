@@ -36,21 +36,13 @@
 #include "udisk_reader.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2023: Open a file
  */
-void GcodeSuite::M2020()
+void GcodeSuite::M2023()
 {
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
-
-  for (char *fn = parser.string_arg; *fn; ++fn)
-  {
-  	if (*fn == ' ') 
-    { 
-      *fn = '\0';
-  	}
-  }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, NULL);
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
+  // Simplify3D includes the size, so zero out all spaces (#7227)
+  for (char *fn = parser.string_arg; *fn; ++fn) if (*fn == ' ') *fn = '\0';
+  udisk.open_file(parser.string_arg, true);
 }
 
 #endif // USB_DISK_SUPPORT

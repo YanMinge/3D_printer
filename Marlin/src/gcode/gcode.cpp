@@ -757,6 +757,11 @@ void GcodeSuite::process_parsed_command(
 
       #if ENABLED(USB_DISK_SUPPORT)
         case 2020: M2020(); break;
+        case 2023: M2023(); break;
+        case 2024: M2024(); break;
+        case 2025: M2025(); break;
+        case 2026: M2026(); break;
+        case 2027: M2027(); break;
       #endif
       default: parser.unknown_command_error(); break;
     }

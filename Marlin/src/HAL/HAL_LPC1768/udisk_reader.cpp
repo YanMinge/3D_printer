@@ -64,6 +64,8 @@ udisk_reader::udisk_reader(void)
   detected = false;
   Initialized = false;
   udisk_printing = abort_udisk_printing = false;
+  is_file_opened = false;
+  opened_file_name = NULL;
 }
 
 void udisk_reader::init(void)
@@ -125,7 +127,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
 {
   FRESULT rc = FR_OK; 	/* Result code */
   DIR dir;        /* Directory object */
-  char *debugBuf = NULL;
+  char *lsdata = NULL;
   FILINFO fno;    /* File information object */
   pfile_list_t file_list_data;
   rc = f_opendir(&dir, path);
@@ -145,9 +147,9 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     file_count = 0;
 	if(is_action == LS_SERIAL_PRINT)
 	{
-      SERIAL_PRINTF("List files in path:%s\r\n", path);
-      debugBuf = new char[100];
-      memset(debugBuf, 0, sizeof(100));
+      SERIAL_PRINTF("List files in path: %s\r\n", path);
+      lsdata = new char[100];
+      memset(lsdata, 0, sizeof(100));
 	}
 	if(is_action == LS_GET_FILE_NAME)
 	{
@@ -162,7 +164,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
         break;                  /* Error or end of dir */
       }
       file_count++;
-      if(is_action == LS_SERIAL_PRINT && debugBuf != NULL)
+      if(is_action == LS_SERIAL_PRINT && lsdata != NULL)
       {
         uint16_t year = ((fno.fdate >> 9) & 0x3f) + 1980;
 		uint16_t month = ((fno.fdate >> 5) & 0x0f);
@@ -172,13 +174,14 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
 		uint16_t min = ((fno.ftime >> 5) & 0x3f);
         if (fno.fattrib & AM_DIR)
         {
-          sprintf(debugBuf, " <DIR> %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
+          sprintf(lsdata, " <DIR> %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
         }
         else
         {
-          sprintf(debugBuf, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
+          sprintf(lsdata, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
         }
-        SERIAL_PRINTF(debugBuf);
+        SERIAL_PRINTF(lsdata);
+		delete[] lsdata;
       }
 	  else if(is_action == LS_GET_FILE_NAME)
       {
@@ -222,11 +225,106 @@ uint16_t udisk_reader::get_num_Files(const char *path, const char * const match)
   return ls(LS_COUNT, path, match);
 }
 
-void udisk_reader::get(void)
+void udisk_reader::open_file(char * const path, const bool read)
 {
-  SERIAL_PRINTF("M2020 /\r\n");
-  //VirtualSerial.printf_rx("M2020 /\r\n");
-  enqueue_and_echo_command("M2020 /");
+  FRESULT rc;
+  uint8_t doing = 0;
+  if (!is_usb_detected())
+  {
+    return;
+  }
+
+  if(is_file_open())
+  {
+    if(opened_file_name != NULL)
+    {
+      DEBUGPRINTF("The file: %s has been opened\r\n",opened_file_name);
+    }
+    doing = 1;
+  }
+  else
+  {
+    doing = 2;
+  }
+
+  if (doing)
+  {
+    SERIAL_ECHO_START();
+    SERIAL_ECHOPGM("Now ");
+    serialprintPGM(doing == 1 ? PSTR("doing") : PSTR("fresh"));
+    SERIAL_ECHOLNPAIR(" file: ", path);
+  }
+
+  stop_udisk_print();
+
+  if(read)
+  {
+    rc = f_open(&file_obj, path, FA_READ);
+    if (rc)
+    {
+      DEBUGPRINTF("Unable to open file: %s from USB Disk\r\n", path);
+	  return;
+	}
+	else
+    {
+      if(strlen(path) <= FILE_NAME_LEN * 4)
+      {
+	    opened_file_name = new char[strlen(path)];
+        strcpy(opened_file_name, path);
+      }
+	  else
+      {
+        opened_file_name = new char[FILE_NAME_LEN * 4];
+	    memcpy(opened_file_name, path, FILE_NAME_LEN * 4);
+		opened_file_name[FILE_NAME_LEN * 4] = '\0';
+      }
+	  is_file_opened = true;
+      file_size = file_obj.obj.objsize;
+	  udisk_pos = 0;
+      SERIAL_ECHOLNPAIR(MSG_SD_FILE_OPENED, opened_file_name, MSG_SD_SIZE, file_size);
+      SERIAL_ECHOLNPGM(MSG_SD_FILE_SELECTED);
+    }
+  }
+}
+
+void udisk_reader::print_file_name()
+{
+  if(opened_file_name != NULL)
+  {
+    SERIAL_ECHO(' ');
+    SERIAL_ECHO(opened_file_name);
+  }
+  else
+  {
+    SERIAL_ECHOPGM("(no file)");
+  }
+  SERIAL_EOL();
+}
+
+void udisk_reader::report_status()
+{
+  DEBUGPRINTF("report_status\r\n");
+  for(uint32_t i = 0; i< file_size; i++)
+  {
+    int16_t c = get();
+	DEBUGPRINTF("%c (%d)", c, file_obj.fptr);
+  }
+  DEBUGPRINTF("\r\n");
+}
+
+int16_t udisk_reader::get(void)
+{
+  uint8_t data[1];
+  UINT br;
+  FRESULT rc;
+  rc = f_read(&file_obj, data, 1, &br);
+  if (rc)
+  {
+    DEBUGPRINTF("f_read error(%d)\r\n", rc);
+	return -1;
+  }
+  udisk_pos = file_obj.fptr;
+  return data[0];
 }
 
 #if 0
@@ -239,7 +337,7 @@ void CardReader::openAndPrintFile(const char *name) {
 }
 #endif
 
-void udisk_reader::start_file_print(void)
+void udisk_reader::start_udisk_print(void)
 {
   if (is_usb_detected())
   {
@@ -247,96 +345,31 @@ void udisk_reader::start_file_print(void)
   }
 }
 
-void udisk_reader::stop_udisk_Print(void)
+void udisk_reader::pause_udisk_print(void)
 {
+  udisk_printing = false;
+}
+
+void udisk_reader::stop_udisk_print(void)
+{
+  FRESULT rc;
   udisk_printing = abort_udisk_printing = false;
+  if(is_file_open())
+  {
+    rc = f_close(&file_obj);
+    if (rc)
+    {
+      DEBUGPRINTF("f_close error(%d)\r\n", rc);
+    }
+	is_file_opened = false;
+    delete[] opened_file_name;
+	opened_file_name = NULL;
+  }
 }
 
 bool udisk_reader::get_udisk_printing_flag(void)
 {
   return udisk_printing;
-}
-
-void udisk_reader::test_code(void)
-{
-  static uint8_t buffer[8 * 1024];
-  static FIL fileObj; /* File object */
-  FRESULT rc;     /* Result code */
-  UINT i;
-  UINT br;
-  uint8_t *ptr;
-  char debugBuf[300];
-  DIR dir;        /* Directory object */
-  FILINFO fno;    /* File information object */
-
-  rc = f_open(&fileObj, "MESSAGE.TXT", FA_READ);
-  if (rc)
-  {
-    DEBUGPRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
-  }
-  else
-  {
-    DEBUGPRINTF("Opened file MESSAGE.TXT from USB Disk. Printing contents...\r\n\r\n");
-    for (;; )
-    {
-      /* Read a chunk of file */
-      rc = f_read(&fileObj, buffer, sizeof buffer, &br);
-      if (rc || !br)
-      {
-        break;                  /* Error or end of file */
-      }
-      ptr = (uint8_t *) buffer;
-      for (i = 0; i < br; i++)
-      {
-        /* Type the data */
-        DEBUGPRINTF("%c", ptr[i]);
-      }
-    }
-    if (rc)
-    {
-      DEBUGPRINTF("f_read error(%d)\r\n", rc);
-    }
-
-    DEBUGPRINTF("\r\n\r\nClose the file.\r\n");
-    rc = f_close(&fileObj);
-    if (rc)
-    {
-      DEBUGPRINTF("f_close error(%d)\r\n", rc);
-    }
-  }
-  DEBUGPRINTF("\r\nOpen root directory.\r\n");
-  rc = f_opendir(&dir, "");
-  if (rc)
-  {
-    DEBUGPRINTF("f_opendir error(%d)\r\n", rc);
-  }
-  else
-  {
-    DEBUGPRINTF("\r\nDirectory listing...\r\n");
-    for (;; )
-    {
-      /* Read a directory item */
-      rc = f_readdir(&dir, &fno);
-      if (rc || !fno.fname[0])
-      {
-        break;                  /* Error or end of dir */
-      }
-      if (fno.fattrib & AM_DIR)
-      {
-        sprintf(debugBuf, "   <Dir>  %s\r\n", fno.fname);
-      }
-      else
-      {
-        sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
-      }
-      DEBUGPRINTF(debugBuf);
-    }
-    if (rc)
-    {
-      DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
-    }
-  }
-  DEBUGPRINTF("\r\nTest completed.\r\n");
 }
 
 #endif // USB_DISK_SUPPORT

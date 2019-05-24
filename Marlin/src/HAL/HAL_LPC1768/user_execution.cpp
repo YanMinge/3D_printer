@@ -42,6 +42,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
 #include HAL_PATH(.., HAL.h)
+#include "../../gcode/queue.h"
 
 user_execution UserExecution;
 
@@ -52,17 +53,43 @@ user_execution::user_execution(void)
 
 void user_execution::cmd_g92(float x, float y, float z, float e)
 {
-  VirtualSerial.printf_rx("G92 X%f Y%f Z%f E%f\r\n", x, y, z, e);
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G92 X%4.1f Y%4.1f Z%4.1f E%4.1f"), x, y, z, e);
+  enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g1(float x, float y, float z, float e)
 {
-  VirtualSerial.printf_rx("G1 X%f Y%f Z%f E%f\r\n", x, y, z, e);
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 X%4.1f Y%4.1f Z%4.1f E%4.1f"), x, y, z, e);
+  enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g28(void)
 {
-  VirtualSerial.printf_rx("G28\r\n");
+  enqueue_and_echo_command("G28");
 }
+
+void user_execution::cmd_M2023(char *file_name)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2023 /%s"), file_name);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_M2024(void)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2024"));
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_M2025(void)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2025"));
+  enqueue_and_echo_command(cmd);
+}
+
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768
