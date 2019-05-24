@@ -37,7 +37,7 @@
 #include "../module/planner.h"
 #include "../module/temperature.h"
 #include "../Marlin.h"
-#include "msd_reader.h"
+#include "udisk_reader.h"
 #include "user_execution.h"
 
 #if ENABLED(PRINTER_EVENT_LEDS)
@@ -93,7 +93,7 @@ void lcd_queue::lcd_receive_data(void)
   while(MYSERIAL2.available() > 0 )//&& (RecNum < DATA_BUF_SIZE)
   {
     recevie_data_buf[RecNum++] = MYSERIAL2.read();
-    MYSERIAL1.write(recevie_data_buf[RecNum-1]);
+    //MYSERIAL1.write(recevie_data_buf[RecNum-1]);
     if(recevie_data_buf[0] != HEAD_ONE)    //recevie data is wrong
     {
       clear_lcd_data_buf();
@@ -300,13 +300,13 @@ void lcd_queue::process_lcd_command(void)
               lcd_send_data(0,Y_AXIS_MOVE_BTN);
               lcd_send_data(0,Z_AXIS_MOVE_BTN);
               lcd_send_data(PAGE_BASE + 9, PAGE_ADDR);
-			  UserExecution.cmd_g92(0, 0, 0, 0);
+              UserExecution.cmd_g92(0, 0, 0, 0);
             }
             else if((recive_data.addr == X_AXIS_MOVE_BTN)||
 				           (recive_data.addr == Y_AXIS_MOVE_BTN) ||
 				           (recive_data.addr == Z_AXIS_MOVE_BTN))
             {
-			        UserExecution.cmd_g1((float)recive_data.data[0]/10, (float)recive_data.data[0]/10, (float)recive_data.data[0]/10, 0);
+              UserExecution.cmd_g1((float)recive_data.data[0]/10, (float)recive_data.data[0]/10, (float)recive_data.data[0]/10, 0);
             }
             else if(recive_data.addr == HOME_MOVE_BTN)
             {

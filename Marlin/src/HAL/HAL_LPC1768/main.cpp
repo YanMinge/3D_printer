@@ -9,8 +9,8 @@ extern "C" {
 #include "HAL.h"
 #include "HAL_timers.h"
 
-#if ENABLED(USBMSCSUPPORT)
-  #include "msd_reader.h"
+#if ENABLED(USB_DISK_SUPPORT)
+  #include "udisk_reader.h"
 #endif
 
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
@@ -23,7 +23,7 @@ void SysTick_Callback() {
 
   if(start_systick == true && udisk.is_usb_Initialized() == true)
   {
-#if ENABLED(USBMSCSUPPORT)
+#if ENABLED(USB_DISK_SUPPORT)
     udisk.usb_status_polling();
 #endif
   }

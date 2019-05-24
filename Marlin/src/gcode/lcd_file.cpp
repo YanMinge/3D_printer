@@ -248,7 +248,6 @@ void lcd_file::linklist_create2(void)
       strcpy(m->file_name, "helloÃñ¸ï.gcode");
       if(m->IsDir == 1)
         SERIAL_PRINTF("THIS IS NOT DIR");
-      SERIAL_PRINTF("THIS IS NOT DIR");
     }
     file_list_insert_tail(m);
   }

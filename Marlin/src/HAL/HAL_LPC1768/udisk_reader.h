@@ -1,8 +1,8 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * \class   msd_reader
+ * \class   udisk_reader
  * \brief   USB HOST mass storge driver.
- * @file    msd_reader.h
+ * @file    udisk_reader.h
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/05/15
@@ -25,13 +25,13 @@
  *
  * \par Method List:
  *
- *    1.  void    msd_reader::init(void);
- *    2.  bool    msd_reader::is_usb_detected(void);
- *    3.  void    msd_reader::usb_status_polling(void);
- *    4.  void    msd_reader::test_code(void);
- *    5.  uint16_t msd_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
- *    6.  uint16_t msd_reader::is_dive(const char *path = "", const char * const match = NULL);
- *    7.  uint16_t msd_reader::get_num_Files(const char *path = "", const char * const match = NULL);
+ *    1.  void    udisk_reader::init(void);
+ *    2.  bool    udisk_reader::is_usb_detected(void);
+ *    3.  void    udisk_reader::usb_status_polling(void);
+ *    4.  void    udisk_reader::test_code(void);
+ *    5.  uint16_t udisk_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
+ *    6.  uint16_t udisk_reader::is_dive(const char *path = "", const char * const match = NULL);
+ *    7.  uint16_t udisk_reader::get_num_Files(const char *path = "", const char * const match = NULL);
  *
  * \par History:
  * <pre>
@@ -41,8 +41,8 @@
  *
  */
 
-#ifndef _MSD_READER_H_
-#define _MSD_READER_H_
+#ifndef _UDISK_READER_H_
+#define _UDISK_READER_H_
 
 #ifdef TARGET_LPC1768
 #include <stdarg.h>
@@ -51,7 +51,7 @@
 #include "../../inc/MarlinConfigPre.h"
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USBMSCSUPPORT)
+#if ENABLED(USB_DISK_SUPPORT)
 #include "MassStorageLib.h"
 #include "../../gcode/lcd_file.h"
 
@@ -59,12 +59,12 @@ enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 
 #define USB_NOT_DETECTED 100;
 
-class msd_reader
+class udisk_reader
 {
 public:
 
-  msd_reader(void);
-  virtual ~msd_reader(void) { }
+  udisk_reader(void);
+  virtual ~udisk_reader(void) { }
 
   void init(void);
   bool is_usb_detected(void);
@@ -100,7 +100,7 @@ private:
 #define IS_UDISK_PRINTING() udisk.get_udisk_printing_flag()
 #define IS_UDISK_FILE_OPEN()
 
-extern msd_reader udisk;
-#endif // USBMSCSUPPORT
+extern udisk_reader udisk;
+#endif // USB_DISK_SUPPORT
 #endif // TARGET_LPC1768
-#endif // _MSD_READER_H_
+#endif // _UDISK_READER_H_

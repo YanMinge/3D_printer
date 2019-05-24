@@ -2104,7 +2104,7 @@
 //#define EDITABLE_SERVO_ANGLES
 
 //USB HOST MSC support
-#define USBMSCSUPPORT
+#define USB_DISK_SUPPORT
 
 #define USE_DWIN_LCD
 #ifdef USE_DWIN_LCD

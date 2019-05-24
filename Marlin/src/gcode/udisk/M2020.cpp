@@ -22,10 +22,10 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USBMSCSUPPORT)
+#if ENABLED(USB_DISK_SUPPORT)
 
 #include "../gcode.h"
-#include "msd_reader.h"
+#include "udisk_reader.h"
 
 /**
  * M20: List SD card to serial output
@@ -44,4 +44,4 @@ void GcodeSuite::M2020() {
   SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
 }
 
-#endif // USBMSCSUPPORT
+#endif // USB_DISK_SUPPORT

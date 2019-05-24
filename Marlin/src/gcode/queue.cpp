@@ -41,9 +41,9 @@
   #include "../feature/power_loss_recovery.h"
 #endif
 
-#if ENABLED(USBMSCSUPPORT)
-  #include "msd_reader.h"
-#endif //USBMSCSUPPORT
+#if ENABLED(USB_DISK_SUPPORT)
+  #include "udisk_reader.h"
+#endif //USB_DISK_SUPPORT
 
 /**
  * GCode line number handling. Hosts may opt to include line numbers when
@@ -815,7 +815,7 @@ inline void get_serial_commands() {
 #endif // SDSUPPORT
 
 
-#if ENABLED(USBMSCSUPPORT)
+#if ENABLED(USB_DISK_SUPPORT)
 /**
 * Get commands from the USB disk until the command buffer is full
 * or until the end of the file is reached. The special character '#'
@@ -902,7 +902,7 @@ inline void get_udisk_commands(void) {
     }
     #endif
 }
-#endif //USBMSCSUPPORT
+#endif //USB_DISK_SUPPORT
 
 /**
  * Add to the circular command queue the next command from:
@@ -921,7 +921,7 @@ void get_available_commands() {
     get_sdcard_commands();
   #endif
 
-  #if ENABLED(USBMSCSUPPORT)
+  #if ENABLED(USB_DISK_SUPPORT)
     get_udisk_commands();
   #endif
 }

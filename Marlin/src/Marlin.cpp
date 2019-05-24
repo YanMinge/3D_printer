@@ -176,9 +176,9 @@
   #include "libs/L6470/L6470_Marlin.h"
 #endif
 
-#if ENABLED(USBMSCSUPPORT)
-  #include "msd_reader.h"
-#endif //USBMSCSUPPORT
+#if ENABLED(USB_DISK_SUPPORT)
+  #include "udisk_reader.h"
+#endif //USB_DISK_SUPPORT
 
 #if ENABLED(USE_DWIN_LCD)
   #include "gcode/lcd_queue.h"
@@ -1127,7 +1127,7 @@ void setup() {
     mmu2.init();
   #endif
 
-#if ENABLED(USBMSCSUPPORT)
+#if ENABLED(USB_DISK_SUPPORT)
   udisk.init();
 #endif
 
@@ -1175,10 +1175,6 @@ void loop() {
     #endif // SDSUPPORT
 
     if (commands_in_queue < BUFSIZE) get_available_commands();
-    while(VirtualSerial.available_tx() > 0) {
-       char c = VirtualSerial.read_tx();
-	   //MYSERIAL1.write(c);
-    }
     advance_command_queue();
     endstops.event_handler();
     idle();
@@ -1187,10 +1183,10 @@ void loop() {
     lcd_update();
 #endif //USE_DWIN_LCD
 
-#if ENABLED(USBMSCSUPPORT)
+#if ENABLED(USB_DISK_SUPPORT)
     //udisk.ls(LS_SerialPrint, "");
     //udisk.ls(LS_Count, "libraries/HX711");
     //delay(1500);
-#endif //USBMSCSUPPORT
+#endif //USB_DISK_SUPPORT
   }
 }

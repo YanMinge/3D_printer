@@ -1,8 +1,8 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * \class   msd_reader
+ * \class   udisk_reader
  * \brief   USB HOST mass storge driver.
- * @file    msd_reader.h
+ * @file    udisk_reader.cpp
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/05/15
@@ -25,13 +25,13 @@
  *
  * \par Method List:
  *
- *    1.  void    msd_reader::init(void);
- *    2.  bool    msd_reader::is_usb_detected(void);
- *    3.  void    msd_reader::usb_status_polling(void);
- *    4.  void    msd_reader::test_code(void);
- *    5.  uint16_t msd_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
- *    6.  uint16_t msd_reader::is_dive(const char *path = "", const char * const match = NULL);
- *    7.  uint16_t msd_reader::get_num_Files(const char *path = "", const char * const match = NULL);
+ *    1.  void    udisk_reader::init(void);
+ *    2.  bool    udisk_reader::is_usb_detected(void);
+ *    3.  void    udisk_reader::usb_status_polling(void);
+ *    4.  void    udisk_reader::test_code(void);
+ *    5.  uint16_t udisk_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
+ *    6.  uint16_t udisk_reader::is_dive(const char *path = "", const char * const match = NULL);
+ *    7.  uint16_t udisk_reader::get_num_Files(const char *path = "", const char * const match = NULL);
  *
  * \par History:
  * <pre>
@@ -42,12 +42,15 @@
  */
 
 #ifdef TARGET_LPC1768
-#include "msd_reader.h"
+#include "udisk_reader.h"
 #include "../../gcode/lcd_queue.h"
+#include "../../gcode/queue.h"
+
 #include HAL_PATH(.., HAL.h)
 
-#if ENABLED(USBMSCSUPPORT)
-msd_reader udisk;
+#if ENABLED(USB_DISK_SUPPORT)
+
+udisk_reader udisk;
 
 //#define DEBUGPRINTF(...) 
 #define DEBUGPRINTF(...) SERIAL_OUT(printf, __VA_ARGS__)
@@ -56,30 +59,30 @@ extern "C" bool is_usb_connected(void);
 extern "C" usb_error_info_type get_usb_error_info(void);
 extern "C"  void set_disk_status(DSTATUS status);
 
-msd_reader::msd_reader(void)
+udisk_reader::udisk_reader(void)
 {
   detected = false;
   Initialized = false;
   udisk_printing = abort_udisk_printing = false;
 }
 
-void msd_reader::init(void)
+void udisk_reader::init(void)
 {
   SetupHardware();
   Initialized = true;
 }
 
-bool msd_reader::is_usb_detected(void)
+bool udisk_reader::is_usb_detected(void)
 {
   return detected;
 }
 
-bool msd_reader::is_usb_Initialized(void)
+bool udisk_reader::is_usb_Initialized(void)
 {
   return Initialized;
 }
 
-void msd_reader::usb_status_polling(void)
+void udisk_reader::usb_status_polling(void)
 {
   static bool pre_usb_status;
   usb_error_info_type error_info = get_usb_error_info();
@@ -112,13 +115,13 @@ void msd_reader::usb_status_polling(void)
   }
 }
 
-uint16_t msd_reader::ls(is_action_t action, const char *path, const char * const match)
+uint16_t udisk_reader::ls(is_action_t action, const char *path, const char * const match)
 {
   is_action = action;
   return ls_dive(path, match);
 }
 
-uint16_t msd_reader::ls_dive(const char *path, const char * const match/*=NULL*/)
+uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL*/)
 {
   FRESULT rc = FR_OK; 	/* Result code */
   DIR dir;        /* Directory object */
@@ -207,24 +210,36 @@ uint16_t msd_reader::ls_dive(const char *path, const char * const match/*=NULL*/
     }
     else if(is_action == LS_COUNT)
     {
-      SERIAL_PRINTF("LS_Count(%d)\r\n",file_count);
+      SERIAL_PRINTF("file_count(%d)\r\n",file_count);
       return file_count;
     }
 	return rc;
   }
 }
 
-uint16_t msd_reader::get_num_Files(const char *path, const char * const match) 
+uint16_t udisk_reader::get_num_Files(const char *path, const char * const match) 
 {
   return ls(LS_COUNT, path, match);
 }
 
-void msd_reader::get(void)
+void udisk_reader::get(void)
 {
-
+  SERIAL_PRINTF("M2020 /\r\n");
+  //VirtualSerial.printf_rx("M2020 /\r\n");
+  enqueue_and_echo_command("M2020 /");
 }
 
-void msd_reader::start_file_print(void)
+#if 0
+void CardReader::openAndPrintFile(const char *name) {
+  char cmd[4 + strlen(name) + 1]; // Room for "M23 ", filename, and null
+  sprintf_P(cmd, PSTR("M23 %s"), name);
+  for (char *c = &cmd[4]; *c; c++) *c = tolower(*c);
+  enqueue_and_echo_command_now(cmd);
+  enqueue_and_echo_commands_P(PSTR("M24"));
+}
+#endif
+
+void udisk_reader::start_file_print(void)
 {
   if (is_usb_detected())
   {
@@ -232,17 +247,17 @@ void msd_reader::start_file_print(void)
   }
 }
 
-void msd_reader::stop_udisk_Print(void)
+void udisk_reader::stop_udisk_Print(void)
 {
   udisk_printing = abort_udisk_printing = false;
 }
 
-bool msd_reader::get_udisk_printing_flag(void)
+bool udisk_reader::get_udisk_printing_flag(void)
 {
   return udisk_printing;
 }
 
-void msd_reader::test_code(void)
+void udisk_reader::test_code(void)
 {
   static uint8_t buffer[8 * 1024];
   static FIL fileObj; /* File object */
@@ -324,5 +339,5 @@ void msd_reader::test_code(void)
   DEBUGPRINTF("\r\nTest completed.\r\n");
 }
 
-#endif // USBMSCSUPPORT
+#endif // USB_DISK_SUPPORT
 #endif // TARGET_LPC1768

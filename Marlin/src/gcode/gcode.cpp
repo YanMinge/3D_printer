@@ -755,7 +755,7 @@ void GcodeSuite::process_parsed_command(
         case 1000: M1000(); break;                                // M1000: Resume from power-loss
       #endif
 
-      #if ENABLED(USBMSCSUPPORT)
+      #if ENABLED(USB_DISK_SUPPORT)
         case 2020: M2020(); break;
       #endif
       default: parser.unknown_command_error(); break;
