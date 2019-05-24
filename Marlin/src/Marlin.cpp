@@ -181,7 +181,7 @@
 #endif //USB_DISK_SUPPORT
 
 #if ENABLED(USE_DWIN_LCD)
-  #include "gcode/lcd_queue.h"
+  #include "lcd_process.h"
 #endif //USE_DWIN_LCD
 
 bool Running = true;

@@ -1,4 +1,4 @@
-/**   
+/**
  * \par Copyright (C), 2018-2019, MakeBlock
  * \class   udisk_reader
  * \brief   USB HOST mass storge driver.
@@ -53,7 +53,7 @@
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "MassStorageLib.h"
-#include "../../gcode/lcd_file.h"
+#include "lcd_file.h"
 
 enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 

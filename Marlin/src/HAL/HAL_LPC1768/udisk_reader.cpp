@@ -1,4 +1,4 @@
-/**   
+/**
  * \par Copyright (C), 2018-2019, MakeBlock
  * \class   udisk_reader
  * \brief   USB HOST mass storge driver.
@@ -43,7 +43,7 @@
 
 #ifdef TARGET_LPC1768
 #include "udisk_reader.h"
-#include "../../gcode/lcd_queue.h"
+#include "lcd_process.h"
 #include "../../gcode/queue.h"
 
 #include HAL_PATH(.., HAL.h)
@@ -52,7 +52,7 @@
 
 udisk_reader udisk;
 
-//#define DEBUGPRINTF(...) 
+//#define DEBUGPRINTF(...)
 #define DEBUGPRINTF(...) SERIAL_OUT(printf, __VA_ARGS__)
 
 extern "C" bool is_usb_connected(void);
@@ -127,15 +127,15 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
   DIR dir;        /* Directory object */
   char *debugBuf = NULL;
   FILINFO fno;    /* File information object */
-  pfile_list file_list_data;
+  pfile_list_t file_list_data;
   rc = f_opendir(&dir, path);
-  if (rc) 
+  if (rc)
   {
     LcdFile.file_list_clear();
     DEBUGPRINTF("can't open dir(%s)\r\n", path);
     if(!is_usb_detected())
     {
-      lcdqueue.lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
+      dwin_process.lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
       return USB_NOT_DETECTED;
 	}
 	return rc;
@@ -146,7 +146,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
 	if(is_action == LS_SERIAL_PRINT)
 	{
       SERIAL_PRINTF("List files in path:%s\r\n", path);
-      debugBuf = new char[100];	
+      debugBuf = new char[100];
       memset(debugBuf, 0, sizeof(100));
 	}
 	if(is_action == LS_GET_FILE_NAME)
@@ -169,12 +169,12 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
 		uint16_t date = (fno.fdate & 0x1f);
 
 		uint16_t hour = ((fno.ftime >> 11) & 0x1f);
-		uint16_t min = ((fno.ftime >> 5) & 0x3f); 
+		uint16_t min = ((fno.ftime >> 5) & 0x3f);
         if (fno.fattrib & AM_DIR)
         {
           sprintf(debugBuf, " <DIR> %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
         }
-        else 
+        else
         {
           sprintf(debugBuf, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
         }
@@ -182,8 +182,8 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       }
 	  else if(is_action == LS_GET_FILE_NAME)
       {
-        file_list_data = (pfile_list) new char[(sizeof(file_list))];
-        memset(file_list_data, 0, sizeof(file_list));
+        file_list_data = (pfile_list_t) new char[(sizeof(file_list_t))];
+        memset(file_list_data, 0, sizeof(file_list_t));
         if(fno.fattrib & AM_DIR)
         {
           file_list_data->IsDir = true;
@@ -199,7 +199,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
 		else
         {
           memcpy(file_list_data->file_name, fno.fname, FILE_NAME_LEN);
-          file_list_data->file_name[FILE_NAME_LEN] = '\0'; 
+          file_list_data->file_name[FILE_NAME_LEN] = '\0';
 		}
 		LcdFile.file_list_insert(file_list_data);
       }
@@ -217,7 +217,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
   }
 }
 
-uint16_t udisk_reader::get_num_Files(const char *path, const char * const match) 
+uint16_t udisk_reader::get_num_Files(const char *path, const char * const match)
 {
   return ls(LS_COUNT, path, match);
 }
@@ -274,7 +274,7 @@ void udisk_reader::test_code(void)
   {
     DEBUGPRINTF("Unable to open MESSAGE.TXT from USB Disk\r\n");
   }
-  else 
+  else
   {
     DEBUGPRINTF("Opened file MESSAGE.TXT from USB Disk. Printing contents...\r\n\r\n");
     for (;; )
@@ -287,7 +287,7 @@ void udisk_reader::test_code(void)
       }
       ptr = (uint8_t *) buffer;
       for (i = 0; i < br; i++)
-      {  
+      {
         /* Type the data */
         DEBUGPRINTF("%c", ptr[i]);
       }
@@ -306,7 +306,7 @@ void udisk_reader::test_code(void)
   }
   DEBUGPRINTF("\r\nOpen root directory.\r\n");
   rc = f_opendir(&dir, "");
-  if (rc) 
+  if (rc)
   {
     DEBUGPRINTF("f_opendir error(%d)\r\n", rc);
   }
@@ -325,7 +325,7 @@ void udisk_reader::test_code(void)
       {
         sprintf(debugBuf, "   <Dir>  %s\r\n", fno.fname);
       }
-      else 
+      else
       {
         sprintf(debugBuf, "   <File> %s\r\n", fno.fname);
       }

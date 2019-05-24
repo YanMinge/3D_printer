@@ -1,12 +1,12 @@
 /**
  * \par Copyright (C), 2018-2019, MakeBlock
- * \class   user_execution
- * \brief   Execution command API for LCD.
- * @file    user_execution.h
- * @author  Mark Yan
+ * \class   lcd_file
+ * \brief   lcd_file_list.
+ * @file    lcd_file.h
+ * @author  Akingpan
  * @version V1.0.0
  * @date    2019/05/15
- * @brief   source code for LCD execution command API.
+ * @brief   Header file for lcd_file list.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -21,48 +21,41 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * This file is used for LCD execution command.
+ * This file is the fundamental function of lcd_file list.
  *
  * \par Method List:
  *
- *    1.  void    user_execution::cmd_g92(float x, float y, float z, float e);
- *    2.  void    user_execution::cmd_g1(float x, float y, float z, float e);
- *    3.  void    user_execution::cmd_g28(void);
+ *    1.  void    udisk_reader::init(void);
  *
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/05/15     1.0.0            Initial function design.
+ * Akingpan           2019/05/15       1.0.0              Initial function design.
  * </pre>
  *
  */
 
+#ifndef _LCD_PARSER_H_
+#define _LCD_PARSER_H_
+
 #ifdef TARGET_LPC1768
-#include "user_execution.h"
+#include "../Marlin.h"
 
 #if ENABLED(USE_DWIN_LCD)
-#include HAL_PATH(.., HAL.h)
+#include "dwin.h"
 
-user_execution UserExecution;
-
-user_execution::user_execution(void)
+class lcd_parser
 {
+public:
+  lcd_parser(void);
+  virtual ~lcd_parser(void) { }
 
-}
 
-void user_execution::cmd_g92(float x, float y, float z, float e)
-{
-  VirtualSerial.printf_rx("G92 X%f Y%f Z%f E%f\r\n", x, y, z, e);
-}
 
-void user_execution::cmd_g1(float x, float y, float z, float e)
-{
-  VirtualSerial.printf_rx("G1 X%f Y%f Z%f E%f\r\n", x, y, z, e);
-}
+private:
+};
 
-void user_execution::cmd_g28(void)
-{
-  VirtualSerial.printf_rx("G28\r\n");
-}
+
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768
+#endif // _LCD_PARSER_H_
