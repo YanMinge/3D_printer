@@ -41,8 +41,257 @@
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
 #include "lcd_parser.h"
+#include "lcd_file.h"
+#include "lcd_process.h"
 
+#if ENABLED(USB_DISK_SUPPORT)
+#include "udisk_reader.h"
+#include "user_execution.h"
 
+lcd_parser dwin_parser;
+const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120E,0x1210,0x1212,0x1214,0x1216,0x1218, 0};
 
+lcd_parser::lcd_parser(void)
+{
+  type = CMD_NULL;
+  receive_data = 0;
+  receive_addr = 0;
+}
+
+void lcd_parser::lcd_update(void)
+{
+  dwin_process.icon_update();
+  dwin_parser.parser_lcd_command();
+}
+
+void lcd_parser::get_command_type(void)
+{
+  receive_addr = dwin_process.get_receive_addr();
+  receive_data = dwin_process.get_receive_data();
+
+  type = dwin_process.get_command_type();
+  dwin_process.reset_command_type();
+
+  if(CMD_READ_VAR == type)
+  {
+    for(int i = 0;button_addr[i] != 0; i++)
+    {
+      if(receive_addr == button_addr[i])
+      {
+        if(MENU_BUTTONS == button_addr[i])
+        {
+          type = CMD_MENU_FILE;
+        }
+        else if(SELECT_BUTTONS == button_addr[i])
+        {
+          type = CMD_SELECT_FILE;
+        }
+        else if(PRINT_BUTTONS == button_addr[i])
+        {
+          type = CMD_PRINT_FILE;
+        }
+        else if(button_addr[i] >= AXIS_MOVE_BTN && button_addr[i] <= HOME_MOVE_BTN)
+        {
+          type = CMD_AXIS_MOVE;
+        }
+        else if(LANGUAGE_SET_BTN == button_addr[i])
+        {
+          type = CMD_SET_LANGUAGE;
+        }
+        else
+        {
+          type = CMD_NULL;
+        }
+        return;
+      }
+    }
+  }
+}
+void lcd_parser::parser_lcd_command(void)
+{
+  bool is_command = 0;
+
+  dwin_process.lcd_receive_data();
+  is_command = dwin_process.is_have_command();
+  dwin_process.reset_command();
+
+  if(is_command)
+  {
+    get_command_type();
+    switch (type)
+    {
+      case CMD_MENU_FILE:
+        response_menu_file();
+        break;
+
+      case CMD_SELECT_FILE:
+        response_select_file();
+        break;
+
+      case CMD_PRINT_FILE:
+        response_print_file();
+        break;
+
+      case CMD_AXIS_MOVE:
+        response_move_axis();
+        break;
+
+      case CMD_SET_LANGUAGE:
+        response_set_language();
+        break;
+
+      case CMD_WRITE_REG_OK:case CMD_WRITE_VAR_OK:case CMD_READ_REG:
+        type = CMD_NULL;
+        break;
+      case CMD_NULL:
+        break;
+      default:
+        type = CMD_NULL;
+        break;
+    }
+    dwin_process.clear_recevie_buf();
+  }
+}
+
+void lcd_parser::response_menu_file(void)
+{
+  //main page print button
+  if(0x09 == receive_data)
+  {
+    dwin_process.lcd_send_temperature(172,256,93,48);
+    udisk.ls(LS_GET_FILE_NAME, "");
+    LcdFile.get_file_page_count();
+    LcdFile.set_current_page(0);
+    dwin_process.send_first_page_data();
+  }
+  // return button
+  else if(0x0A == receive_data)
+  {
+    dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+  }
+  // next file page button
+  else if(0x0B == receive_data)
+  {
+    dwin_process.send_next_page_data();
+  }
+  //last file page button
+  else if(0x0C == receive_data)
+  {
+    dwin_process.send_last_page_data();
+  }
+}
+
+void lcd_parser::response_select_file(void)
+{
+  int index = 0;
+  char file_name[FILE_NAME_LEN];
+  pfile_list_t temp = NULL;
+
+  memset(file_name,0,FILE_NAME_LEN);
+  LcdFile.set_current_status(out_printing);
+  index = LcdFile.get_current_index();
+  if((0x01 == receive_data) || \
+     (0x02 == receive_data) || \
+     (0x03 == receive_data) || \
+     (0x04 == receive_data))
+  {
+    index += receive_data;
+  }
+  else
+  {
+    //add error code
+    return;
+  }
+
+  temp = LcdFile.file_list_index((index));
+  strcpy(file_name,temp->file_name);
+  if(temp->IsDir)
+  {
+    LcdFile.file_list_clear();
+    LcdFile.list_test();
+    LcdFile.get_file_page_count();
+    LcdFile.set_current_page(0);
+    dwin_process.send_first_page_data();
+  }
+  else
+  {
+    dwin_process.lcd_send_data(file_name,(FILE_TEXT_ADDR_D));
+    dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
+    UserExecution.cmd_M2023(file_name);
+  }
+}
+
+void lcd_parser::response_print_file(void)
+{
+  print_status status;
+  status = LcdFile.get_current_status();
+
+  if(0x01 == receive_data)
+  {
+    if(status == out_printing)
+    {
+      LcdFile.set_current_status(on_printing);
+      dwin_process.lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
+      UserExecution.cmd_M2024();
+    }
+    else if(status == on_printing )
+    {
+      LcdFile.set_current_status(stop_printing);
+      dwin_process.lcd_send_data(START_MESSAGE,START_STOP_ICON_ADDR);
+      UserExecution.cmd_M2025();
+    }
+    else if(status == stop_printing)
+    {
+      LcdFile.set_current_status(on_printing);
+      dwin_process.lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
+      UserExecution.cmd_M2024();
+    }
+  }
+  else
+  {
+    return;
+  }
+}
+
+void lcd_parser::response_move_axis(void)
+{
+  if(AXIS_MOVE_BTN == receive_addr)
+  {
+    //move xaxis distance away;
+    SERIAL_PRINTF("AXIS_MOVE_BTN...\r\n");
+    dwin_process.lcd_send_data(0,X_AXIS_MOVE_BTN);
+    dwin_process.lcd_send_data(0,Y_AXIS_MOVE_BTN);
+    dwin_process.lcd_send_data(0,Z_AXIS_MOVE_BTN);
+    dwin_process.lcd_send_data(PAGE_BASE + 9, PAGE_ADDR);
+    UserExecution.cmd_g92(0, 0, 0, 0);
+  }
+  else if((X_AXIS_MOVE_BTN == receive_addr)|| \
+         (Y_AXIS_MOVE_BTN == receive_addr) || \
+         (Z_AXIS_MOVE_BTN == receive_addr))
+  {
+    UserExecution.cmd_g1((float)receive_data/10, (float)receive_data/10, (float)receive_data/10, 0);
+  }
+  else if(HOME_MOVE_BTN == receive_addr)
+  {
+    //go home;
+    SERIAL_PRINTF("go hmoenow ...\r\n");
+    UserExecution.cmd_g28();
+  }
+
+}
+
+void lcd_parser::response_set_language(void)
+{
+  if(0x01 == receive_data)
+  {
+    dwin_process.lcd_send_data(PAGE_BASE + 1, PAGE_ADDR);
+  }
+  if(0x02 == receive_data)
+  {
+    dwin_process.lcd_send_data(PAGE_BASE + 11, PAGE_ADDR);
+  }
+}
+
+#endif // USB_DISK_SUPPORT
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

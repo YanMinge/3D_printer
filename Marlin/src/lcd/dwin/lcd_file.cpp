@@ -56,8 +56,12 @@ lcd_file LcdFile;
 
 lcd_file::lcd_file()
 {
-  page_count = 0;
+  current_page = 0;
+  current_status = out_printing;
+  file_page_num = 0;
   last_page_file_count = 0;
+
+  current_file_index = 0;
 }
 
 void lcd_file::file_list_init(void)
@@ -157,24 +161,6 @@ int lcd_file::file_list_len(void)
   return i;
 }
 
-void lcd_file::get_file_page_count(void)
-{
-  int len;
-  if(file_list_is_empty())
-  {
-    page_count = 0;
-    last_page_file_count = 0;
-    return;
-  }
-  len = file_list_len();
-  page_count = (len / PAGE_FILE_NUM);
-  if(len % PAGE_FILE_NUM)
-  {
-    page_count += 1;
-  }
-  last_page_file_count = (len % PAGE_FILE_NUM);
-}
-
 void lcd_file::list_test(void)
 {
   int i;
@@ -183,8 +169,7 @@ void lcd_file::list_test(void)
   {
     m = (pfile_list_t) new char[(sizeof(file_list_t))];
     memset(m,0,sizeof(file_list_t));
-    m->next_file = NULL;
-    if(NULL==m)
+    if(NULL == m)
     {
       return;
     }
@@ -206,13 +191,57 @@ void lcd_file::list_test(void)
   }
 }
 
+void lcd_file::get_file_page_count(void)
+{
+  int len;
+  if(file_list_is_empty())
+  {
+    file_page_num = 0;
+    last_page_file_count = 0;
+    return;
+  }
+  len = file_list_len();
+  file_page_num = (len / PAGE_FILE_NUM);
+  if(len % PAGE_FILE_NUM)
+  {
+    file_page_num += 1;
+  }
+  last_page_file_count = (len % PAGE_FILE_NUM);
+}
+
 int lcd_file::get_page_count(void)
 {
-  return page_count;
+  return file_page_num;
 }
 int lcd_file::get_last_page_file_num(void)
 {
   return last_page_file_count;
+}
+
+int lcd_file::get_current_page_num(void)
+{
+  return current_page;
+}
+
+void lcd_file::set_current_page(int num)
+{
+  current_page = num;
+}
+
+void lcd_file::set_current_status(print_status status)
+{
+  current_status = status;
+}
+
+print_status lcd_file::get_current_status(void)
+{
+  return current_status;
+}
+
+
+int lcd_file::get_current_index(void)
+{
+  return (current_page - 1)*PAGE_FILE_NUM;
 }
 
 #endif // USE_DWIN_LCD

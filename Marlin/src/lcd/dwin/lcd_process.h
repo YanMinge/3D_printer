@@ -45,7 +45,7 @@
 #include "dwin.h"
 #include "lcd_file.h"
 
-enum CmdType : unsigned char {
+enum lcd_cmd_type : unsigned char {
   CMD_NULL,
   CMD_ERROR,
   CMD_OK,
@@ -53,14 +53,12 @@ enum CmdType : unsigned char {
   CMD_WRITE_VAR_OK,
   CMD_READ_REG,
   CMD_READ_VAR,
-};
 
-enum Cmd {
-  MenuFile=0,SelectFile,PrintFile,AxisMove,SetLanguage,
-};
-
-enum print_status {
-  out_printing,on_printing,stop_printing,
+  CMD_MENU_FILE,
+  CMD_SELECT_FILE,
+  CMD_PRINT_FILE,
+  CMD_AXIS_MOVE,
+  CMD_SET_LANGUAGE,
 };
 
 typedef struct lcd_data_buffer
@@ -72,7 +70,7 @@ typedef struct lcd_data_buffer
     unsigned long bytelen;
     unsigned short data[32];
     unsigned char reserv[4];
-} lcd_buffer;
+} lcd_buffer_t;
 
 class lcd_process
 {
@@ -96,49 +94,44 @@ public:
   void lcd_send_data(unsigned int,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(unsigned long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
-  void icon_update(void);
-  void process_lcd_command(void);
 
   void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
 
-  void main_button_response(void);
-  void nextpage_button_response(void);
-  void lastpage_button_response(void);
-  void filereturn_button_response(void);
+  inline void clear_page(unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  inline void send_page(unsigned long addr,int page,int num, unsigned char cmd = WRITE_VARIABLE_ADDR);
 
-  void next_page_clear(void);
-  void last_page_clear(void);
+  void icon_update(void);
   void send_first_page_data(void);
   void send_next_page_data(void);
   void send_last_page_data(void);
 
-  lcd_buffer recive_data;
-  lcd_buffer send_data;
+  bool is_have_command();
+  void reset_command(void);
+  void reset_command_type(void);
+  lcd_cmd_type get_command_type(void);
+  unsigned long get_receive_addr(void);
+  unsigned short get_receive_data(void);
+
 private:
-  bool HaveLcdCommand;
+  //command
+  bool is_command;
+  lcd_cmd_type type;
 
   //icon up_date_variable
   bool icon_update_status;
   millis_t update_time;
   unsigned int start_icon_count;
 
-
-  CmdType type;
-  unsigned char RecNum;
+  //data
+  lcd_buffer_t recive_data;
+  lcd_buffer_t send_data;
+  unsigned char receive_num;
   unsigned char recevie_data_buf[DATA_BUF_SIZE];
   unsigned char send_data_buf[MAX_SEND_BUF];
-  int current_page;
-  char current_path[FILE_NAME_LEN];
-  char select_file_name[FILE_NAME_LEN];
-  char current_dir[FILE_NAME_LEN];
-  int current_file_index;
-  print_status current_status;
-  int max_file_index;
+
 };
 
 extern lcd_process dwin_process;
-extern void lcd_update(void);
-extern void my_lcd_init(void);
 
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

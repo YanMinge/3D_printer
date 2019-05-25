@@ -46,22 +46,25 @@
 //marco defines have relation with UI layout
 #define PAGE_FILE_NUM   4
 #define FILE_NAME_LEN   32
+#define FILE_TEXT_LEN   (FILE_NAME_LEN/2)
 #define FILE_NUM_MAX    40
 
-#define DATA_BUF_SIZE		20
+#define DATA_BUF_SIZE		20  //lcd_recive_buf_size
 #define MAX_SEND_BUF		256
 #define FILE_NUM_MAX    40
 
-/*************Register and Variable addr*****************/
+//marco defines have relation with lcd command
 #define	WRITE_REGISTER_ADDR	0x80
 #define	READ_REGISTER_ADDR	0x81
 #define	WRITE_VARIABLE_ADDR	0x82
 #define	READ_VARIABLE_ADDR	0x83
 
-
 #define HEAD_ONE   (0x5A)
 #define HEAD_TWO   (0xA5)
+#define TAIL_ONE   (0x4F)
+#define TAIL_TWO   (0x4B)
 
+/*************Register and Variable addr*****************/
 #define PAGE_BASE	      (unsigned long)0x5A010000
 #define STOP_MESSAGE    (unsigned long)0xCDA3D6B9
 #define START_MESSAGE   (unsigned long)0xBFAACABC
@@ -105,6 +108,10 @@
 #define 12page ADDR   1470-1480
 #define EnTextAddrD  0x15D0  0x1600//language set text addr
 ******************************************************/
+
+enum print_status {
+  out_printing,on_printing,stop_printing,
+};
 
 #endif // USE_DWIN_LCD
 #endif // _LCD_FILE_H_

@@ -83,12 +83,23 @@ public:
 
   int get_page_count(void);
   int get_last_page_file_num(void);
-
-  int page_count;
-  int last_page_file_count;
+  int get_current_page_num(void);
+  void set_current_page(int num);
+  void set_current_status(print_status status);
+  print_status get_current_status(void);
+  int get_current_index(void);
 
 private:
   char sort;
+  int file_page_num;
+  int current_page;
+  int last_page_file_count;
+
+  //file
+  int max_file_index;
+  int current_file_index;
+  print_status current_status;
+
   pfile_list_t file_list;
 };
 

@@ -43,6 +43,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
+#include "lcd_process.h"
 
 class lcd_parser
 {
@@ -50,11 +51,22 @@ public:
   lcd_parser(void);
   virtual ~lcd_parser(void) { }
 
+  void lcd_update();
+  void parser_lcd_command(void);
+  void get_command_type(void);
 
-
+  void response_menu_file(void);
+  void response_select_file(void);
+  void response_print_file(void);
+  void response_move_axis(void);
+  void response_set_language(void);
 private:
+  lcd_cmd_type type;
+  unsigned short receive_data;
+  unsigned long receive_addr;
 };
 
+extern lcd_parser dwin_parser;
 
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

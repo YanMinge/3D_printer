@@ -182,6 +182,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
   #include "lcd_process.h"
+  #include "lcd_parser.h"
 #endif //USE_DWIN_LCD
 
 bool Running = true;
@@ -1136,7 +1137,7 @@ void setup() {
 #endif
 
 #if ENABLED(USE_DWIN_LCD)
-  my_lcd_init();
+  LcdFile.file_list_init();
 #endif //USE_DWIN_LCD
 
 }
@@ -1180,7 +1181,7 @@ void loop() {
     idle();
 
 #if ENABLED(USE_DWIN_LCD)
-    lcd_update();
+    dwin_parser.lcd_update();
 #endif //USE_DWIN_LCD
 
 #if ENABLED(USB_DISK_SUPPORT)
