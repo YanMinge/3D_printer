@@ -1185,9 +1185,16 @@ void loop() {
 #endif //USE_DWIN_LCD
 
 #if ENABLED(USB_DISK_SUPPORT)
-    //udisk.ls(LS_SerialPrint, "");
-    //udisk.ls(LS_Count, "libraries/HX711");
-    //delay(1500);
+    static bool pre_usb_status;
+    bool usb_status = udisk.is_usb_detected();
+    if(usb_status != pre_usb_status)
+    {
+      if(usb_status == true)
+      {
+        udisk.ls(LS_COUNT, "/", NULL);
+      }
+      pre_usb_status = usb_status;
+    }
 #endif //USB_DISK_SUPPORT
   }
 }
