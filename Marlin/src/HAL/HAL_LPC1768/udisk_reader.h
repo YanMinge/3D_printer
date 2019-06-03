@@ -57,7 +57,28 @@
 
 enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 
-#define USB_NOT_DETECTED 100;
+#define USB_NOT_DETECTED      100
+
+#define GCODE_SIZE_INDEX      4
+#define SIMAGE_OFFSET_INDEX   12
+#define LIMAGE_OFFSET_INDEX   20
+#define GCODE_OFFSET_INDEX    28
+
+
+union
+{
+  uint8_t byteVal[4];
+  float floatVal;
+  uint32_t uintVal;
+  int32_t intVal;
+}val4byte;
+
+union
+{
+  uint8_t byteVal[2];
+  short shortVal;
+}val2byte;
+
 
 class udisk_reader
 {
@@ -86,8 +107,18 @@ public:
   void pause_udisk_print(void);
   void stop_udisk_print(void);
   bool get_udisk_printing_flag(void);
+  bool is_gm_file_type(char * const path);
+  bool check_gm_file(char * const path);
+  uint32_t get_simage_size(char * const path);
+  uint32_t get_simage_offset(char * const path);
+  uint32_t get_limage_size(char * const path);
+  uint32_t get_limage_offset(char * const path);
+  uint32_t get_gcode_size(char * const path);
+  uint32_t get_gcode_offset(char * const path);
   inline bool eof() { return udisk_pos >= file_size; }
   inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
+  inline void set_index(const uint32_t index) { udisk_pos = index; f_lseek(&file_obj, index); }
+  inline uint32_t get_index() { return udisk_pos; }
 private:
   //Variable definitions
   FATFS fatFS; /* File system object */
@@ -104,6 +135,7 @@ private:
 
   uint32_t udisk_pos;
   uint32_t file_size;
+
   lcd_file file;
   FIL file_obj;
   char *opened_file_name;

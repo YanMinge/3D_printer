@@ -365,6 +365,177 @@ bool udisk_reader::get_udisk_printing_flag(void)
   return udisk_printing;
 }
 
+bool udisk_reader::is_gm_file_type(char * const path)
+{
+  open_file(path, true);
+  set_index(0);
+  char lable_char_1 =  get();
+  char lable_char_2 =  get();
+  if((lable_char_1 != 'G') || (lable_char_2 != 'M'))
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+uint32_t udisk_reader::get_simage_size(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(SIMAGE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t simage_offset = val4byte.uintVal;
+
+  set_index(LIMAGE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t limage_offset = val4byte.uintVal;
+  DEBUGPRINTF("simage_size(%d)\r\n", limage_offset - simage_offset);
+  return limage_offset - simage_offset;
+}
+
+uint32_t udisk_reader::get_simage_offset(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(SIMAGE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t simage_offset = val4byte.uintVal;
+  DEBUGPRINTF("simage_offset(%d)\r\n", simage_offset);
+  return simage_offset;
+}
+
+
+uint32_t udisk_reader::get_limage_size(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(LIMAGE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t limage_offset = val4byte.uintVal;
+
+  set_index(GCODE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t gcode_offset = val4byte.uintVal;
+  DEBUGPRINTF("limage_size(%d)\r\n", gcode_offset - limage_offset);
+  return gcode_offset - limage_offset;
+}
+
+uint32_t udisk_reader::get_limage_offset(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(LIMAGE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t limage_offset = val4byte.uintVal;
+  DEBUGPRINTF("limage_offset(%d)\r\n", limage_offset);
+  return limage_offset;
+}
+
+uint32_t udisk_reader::get_gcode_size(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(GCODE_SIZE_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t gcode_size = val4byte.uintVal;
+  DEBUGPRINTF("gcode_size(%d)\r\n", gcode_size);
+  return gcode_size;
+}
+
+uint32_t udisk_reader::get_gcode_offset(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(GCODE_OFFSET_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  uint32_t gcode_offset = val4byte.uintVal;
+  DEBUGPRINTF("gcode_offset(%d)\r\n", gcode_offset);
+  return gcode_offset;
+}
+
+bool udisk_reader::check_gm_file(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return false;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return false;
+  }
+  if(file_size == (0x50 + get_simage_size(path) + get_limage_size(path) + get_gcode_size(path)))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 void udisk_reader::open_file_test(char * const path, const bool read)
 {
   FRESULT rc;
