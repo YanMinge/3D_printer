@@ -45,11 +45,12 @@
 
 //marco defines have relation with UI layout
 #define PAGE_FILE_NUM   4
+#define SEND_IMAGE_LEN  250
 #define FILE_NAME_LEN   32
 #define FILE_TEXT_LEN   (FILE_NAME_LEN/2)
 #define FILE_NUM_MAX    40
 
-#define DATA_BUF_SIZE		20  //lcd_recive_buf_size
+#define DATA_BUF_SIZE		10  //lcd_recive_buf_size
 #define MAX_SEND_BUF		256
 #define FILE_NUM_MAX    40
 
@@ -66,9 +67,14 @@
 
 /*************Register and Variable addr*****************/
 #define PAGE_BASE	      (unsigned long)0x5A010000
+#define PICTURE_DISPLAY_BASE1 (unsigned long)0x5A018000
+#define PICTURE_DISPLAY_BASE2 (unsigned long)0x00000000
+#define PICTURE_ADDR    0x00A6
 #define STOP_MESSAGE    (unsigned long)0xCDA3D6B9
 #define START_MESSAGE   (unsigned long)0xBFAACABC
 
+//eeprom varaddr
+#define EEPROM_LANGUAGE_ADDR  ((uint8_t*)0x10)
 
 //btn addr
 #define MENU_BUTTONS    0x1200

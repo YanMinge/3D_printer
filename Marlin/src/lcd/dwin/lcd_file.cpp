@@ -30,7 +30,7 @@
  *    3.  void          lcd_file::file_list_insert_tail(pfile_list_t m);
  *    4.  void          lcd_file::file_list_del(void);
  *    5.  void          lcd_file::file_list_clear(void);
- *    6.  void          lcd_file::get_file_page_count(void);
+ *    6.  void          lcd_file::set_file_page_info(void);
  *    7.  bool          lcd_file::file_list_is_empty(void);
  *    8.  int           lcd_file::file_list_len(void);
  *    9.  pfile_list_t  lcd_file::file_list_index(void);
@@ -64,6 +64,9 @@ lcd_file::lcd_file()
   current_file_index = 0;
 }
 
+/**
+ * @breif  create list head for file_list
+ */
 void lcd_file::file_list_init(void)
 {
   pfile_list_t m;
@@ -77,14 +80,18 @@ void lcd_file::file_list_init(void)
   return;
 }
 
-//insert list member after the linklist head
+/**
+ * @breif  insert list a member after the linklist head
+ */
 void lcd_file::file_list_insert(pfile_list_t m)
 {
   m->next_file = file_list->next_file;
   file_list->next_file = m;
 }
 
-//insert list member in the linklist tail
+/**
+ * @breif  insert list a member in the linklist tail
+ */
 void lcd_file::file_list_insert_tail(pfile_list_t m)
 {
   pfile_list_t t;
@@ -96,6 +103,9 @@ void lcd_file::file_list_insert_tail(pfile_list_t m)
   t->next_file = m;
 }
 
+/**
+ * @breif  delete a list member after the linklist head
+ */
 void lcd_file::file_list_del(void)
 {
   pfile_list_t t;
@@ -108,6 +118,9 @@ void lcd_file::file_list_del(void)
   delete (t);
 }
 
+/**
+ * @breif  delete all the member in the linklist,except the linklist head
+ */
 void lcd_file::file_list_clear(void)
 {
   pfile_list_t t,temp;
@@ -121,6 +134,9 @@ void lcd_file::file_list_clear(void)
   file_list->next_file = NULL;
 }
 
+/**
+ * @breif  get a linklist member through the index
+ */
 pfile_list_t lcd_file::file_list_index(int index)
 {
   int i = 0;
@@ -191,57 +207,31 @@ void lcd_file::list_test(void)
   }
 }
 
-void lcd_file::get_file_page_count(void)
+/**
+ * @breif  set page info through the linklist
+ * @detail  set file_page_num
+ * @detail  set last_page_file_count
+ */
+void lcd_file::set_file_page_info(void)
 {
-  int len;
   if(file_list_is_empty())
   {
+    list_len = 0;
     file_page_num = 0;
     last_page_file_count = 0;
     return;
   }
-  len = file_list_len();
-  file_page_num = (len / PAGE_FILE_NUM);
-  if(len % PAGE_FILE_NUM)
+  list_len = file_list_len();
+  file_page_num = (list_len / PAGE_FILE_NUM);
+  last_page_file_count = (list_len % PAGE_FILE_NUM);
+  if(last_page_file_count)
   {
     file_page_num += 1;
   }
-  last_page_file_count = (len % PAGE_FILE_NUM);
-}
-
-int lcd_file::get_page_count(void)
-{
-  return file_page_num;
-}
-int lcd_file::get_last_page_file_num(void)
-{
-  return last_page_file_count;
-}
-
-int lcd_file::get_current_page_num(void)
-{
-  return current_page;
-}
-
-void lcd_file::set_current_page(int num)
-{
-  current_page = num;
-}
-
-void lcd_file::set_current_status(print_status status)
-{
-  current_status = status;
-}
-
-print_status lcd_file::get_current_status(void)
-{
-  return current_status;
-}
-
-
-int lcd_file::get_current_index(void)
-{
-  return (current_page - 1)*PAGE_FILE_NUM;
+  else
+  {
+    last_page_file_count = PAGE_FILE_NUM;
+  }
 }
 
 #endif // USE_DWIN_LCD

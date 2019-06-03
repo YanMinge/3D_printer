@@ -30,7 +30,7 @@
  *    3.  void          lcd_file::file_list_insert_tail(pfile_list_t m);
  *    4.  void          lcd_file::file_list_del(void);
  *    5.  void          lcd_file::file_list_clear(void);
- *    6.  void          lcd_file::get_file_page_count(void);
+ *    6.  void          lcd_file::set_file_page_info(void);
  *    7.  bool          lcd_file::file_list_is_empty(void);
  *    8.  int           lcd_file::file_list_len(void);
  *    9.  pfile_list_t  lcd_file::file_list_index(void);
@@ -75,32 +75,32 @@ public:
   void file_list_insert_tail(pfile_list_t m);
   void file_list_del(void);
   void file_list_clear(void);
-  void get_file_page_count(void);
+  void set_file_page_info(void); //set the page o
   bool file_list_is_empty(void);
   int file_list_len(void);
   pfile_list_t file_list_index(int index);
   void list_test(void);
 
-  int get_page_count(void);
-  int get_last_page_file_num(void);
-  int get_current_page_num(void);
-  void set_current_page(int num);
-  void set_current_status(print_status status);
-  print_status get_current_status(void);
-  int get_current_index(void);
+  inline int get_page_count(){     return file_page_num;}
+  inline int get_last_page_file_num(){return last_page_file_count;}
+  inline int get_current_page_num(){ return current_page;}
+  inline int get_file_list_len(){ return list_len;}
+  inline void set_current_page(int num){ current_page = num;}
+  inline void set_current_status(print_status status){ current_status = status;}
+  inline print_status get_current_status(){ return current_status;}
+  inline int get_current_index(){ return (current_page - 1)*PAGE_FILE_NUM;}
 
 private:
   char sort;
-  int file_page_num;
-  int current_page;
-  int last_page_file_count;
+  int file_page_num; /* number of page that show in lcd*/
+  int current_page; /* the current page that show in lcd*/
+  int last_page_file_count; /* number of the last page files*/
 
-  //file
-  int max_file_index;
+  int list_len; /* number of files in the linklist*/
   int current_file_index;
   print_status current_status;
 
-  pfile_list_t file_list;
+  pfile_list_t file_list; /*file linklist object*/
 };
 
 extern lcd_file LcdFile;

@@ -1138,6 +1138,7 @@ void setup() {
 
 #if ENABLED(USE_DWIN_LCD)
   LcdFile.file_list_init();
+  dwin_process.language_init();
 #endif //USE_DWIN_LCD
 
 }
@@ -1182,6 +1183,7 @@ void loop() {
 
 #if ENABLED(USE_DWIN_LCD)
     dwin_parser.lcd_update();
+    dwin_process.lcd_loop();
 #endif //USE_DWIN_LCD
 
 #if ENABLED(USB_DISK_SUPPORT)

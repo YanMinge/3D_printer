@@ -69,7 +69,6 @@ typedef struct lcd_data_buffer
     unsigned long addr;
     unsigned long bytelen;
     unsigned short data[32];
-    unsigned char reserv[4];
 } lcd_buffer_t;
 
 class lcd_process
@@ -83,6 +82,7 @@ public:
   void clear_recevie_buf(void);
   void clear_send_data_buf(void);
   void lcd_receive_data(void);
+  void lcd_receive_data_clear(void);
   void lcd_send_data(void);
   void lcd_send_data(const String &, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(const char[], unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
@@ -94,6 +94,7 @@ public:
   void lcd_send_data(unsigned int,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(unsigned long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
+  void lcd_show_picture(unsigned short n,unsigned short n1, unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
 
   void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
 
@@ -105,19 +106,29 @@ public:
   void send_next_page_data(void);
   void send_last_page_data(void);
 
-  bool is_have_command();
-  void reset_command(void);
-  void reset_command_type(void);
-  lcd_cmd_type get_command_type(void);
-  unsigned long get_receive_addr(void);
-  unsigned short get_receive_data(void);
+  inline bool is_have_command(){ return is_command;}
+  inline void reset_command(){ is_command = 0;}
+  inline void reset_command_type(){ type = CMD_NULL;}
+  inline lcd_cmd_type get_command_type(){      return type;}
+  inline unsigned long get_receive_addr(){ return recive_data.addr;}
+  inline unsigned short get_receive_data(){ return recive_data.data[0];}
+
+  void lcd_send_image_test(int len,int times, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  void send_image(void);
+  void lcd_loop(void);
+  void set_image_count(void);
+  void set_loop_status(bool status){ loop_status = status;}
+  void set_file_status(bool status){ file_status = status;}
+  void reset_image_parameters(void);
+
+  uint8_t get_language_type(void);
+  void set_language_type(unsigned char type);
+  void language_init(void);
 
 private:
-  //command
-  bool is_command;
-  lcd_cmd_type type;
+  bool is_command; /*whether receive a lcd command*/
+  lcd_cmd_type type; /*the type of the lcd command*/
 
-  //icon up_date_variable
   bool icon_update_status;
   millis_t update_time;
   unsigned int start_icon_count;
@@ -128,6 +139,17 @@ private:
   unsigned char receive_num;
   unsigned char recevie_data_buf[DATA_BUF_SIZE];
   unsigned char send_data_buf[MAX_SEND_BUF];
+
+  //languge
+  uint8_t language_type;
+
+  //image show
+  bool loop_status;
+  bool file_status;
+  uint8_t image_send_count;
+  uint8_t image_current_send_count;
+  uint8_t image_last_count_len;
+  uint8_t send_file_num;
 
 };
 

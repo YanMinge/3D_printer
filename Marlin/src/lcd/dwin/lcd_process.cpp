@@ -64,6 +64,10 @@ lcd_process::lcd_process()
   memset(send_data_buf,0, sizeof(send_data_buf));
 }
 
+/**
+ * @breif  clear recevie_data_buf
+ * @detail  have not receive a command
+ */
 void lcd_process::clear_lcd_data_buf(void)
 {
   receive_num = 0;
@@ -71,6 +75,10 @@ void lcd_process::clear_lcd_data_buf(void)
   memset(recevie_data_buf,0,sizeof(recevie_data_buf));
 }
 
+/**
+ * @breif  clear recevie_data_buf
+ * @detail  have receive a command
+ */
 void lcd_process::clear_lcd_data_buf1(void)
 {
   receive_num = 0;
@@ -93,22 +101,28 @@ void lcd_process::clear_send_data_buf(void)
   send_data.head[1] = HEAD_TWO;
 }
 
+void lcd_process::lcd_receive_data_clear(void)
+{
+  char c;
+  while(MYSERIAL2.available() > 0 )
+  {
+    c = MYSERIAL2.read();
+  }
+}
+
 void lcd_process::lcd_receive_data(void)
 {
   while(MYSERIAL2.available() > 0 )
   {
     recevie_data_buf[receive_num++] = MYSERIAL2.read();
-    //MYSERIAL1.write(recevie_data_buf[receive_num-1]);
-    //data head is not correct
-    if(recevie_data_buf[0] != HEAD_ONE)    //recevie data is wrong
+    MYSERIAL1.write(recevie_data_buf[receive_num-1]);
+
+    if((recevie_data_buf[0] != HEAD_ONE) || \
+      (receive_num > DATA_BUF_SIZE) ||
+      (receive_num == 2) && (HEAD_TWO != recevie_data_buf[1]))
     {
       clear_lcd_data_buf();
       continue;
-    }
-    //recive data num is overflow
-    else if(receive_num > DATA_BUF_SIZE)
-    {
-      clear_lcd_data_buf();
     }
     //recevie a command
     else if((receive_num > 3) && receive_num == (recevie_data_buf[2]+3))
@@ -121,7 +135,9 @@ void lcd_process::lcd_receive_data(void)
 
         if((0x03 == recive_data.len) && (WRITE_REGISTER_ADDR == recive_data.command) && (TAIL_ONE == recevie_data_buf[4]) && (TAIL_TWO == recevie_data_buf[5]))
         {
-          type = CMD_WRITE_REG_OK;
+          //type = CMD_WRITE_REG_OK;
+          clear_lcd_data_buf();
+          continue;
         }
         else if((0x03 == recive_data.len) &&(WRITE_VARIABLE_ADDR == recive_data.command) && (TAIL_ONE == recevie_data_buf[4]) && (TAIL_TWO == recevie_data_buf[5]))
         {
@@ -165,7 +181,7 @@ void lcd_process::lcd_receive_data(void)
       {
         clear_lcd_data_buf();
         type = CMD_ERROR;  //receive the wrong data
-        return;
+        continue;
       }
     }
     else
@@ -372,6 +388,19 @@ void lcd_process::lcd_send_data(unsigned long n, unsigned long addr, unsigned ch
 	lcd_send_data();
 }
 
+void lcd_process::lcd_show_picture(unsigned short y, unsigned short x, unsigned long addr,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
+{
+	send_data.data[0] = PICTURE_DISPLAY_BASE1 >> 16;
+	send_data.data[1] = PICTURE_DISPLAY_BASE1 & 0xFFFF;
+
+	send_data.data[2] = y;
+	send_data.data[3] = x;
+	send_data.len = 11;
+	send_data.command = cmd;
+	send_data.addr = addr;
+	lcd_send_data();
+}
+
 void lcd_process::lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt)
 {
   lcd_send_data(tempbed, TEMP_HOTEND_ADDR);
@@ -400,8 +429,21 @@ void lcd_process::icon_update(void)
     }
     if((start_icon_count += 1) > 100)
     {
+      uint type = get_language_type();
       icon_update_status = 0;
-      lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+      //lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+      if(0xff == type)
+      {
+        lcd_send_data(PAGE_BASE +10, PAGE_ADDR);
+      }
+      else if(0x01 == type)
+      {
+        lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+      }
+      else if(0x00 == type)
+      {
+        lcd_send_data(PAGE_BASE +11, PAGE_ADDR);
+      }
     }
     update_time = ms +10;
   }
@@ -540,34 +582,127 @@ void lcd_process::send_last_page_data(void)
   }
 }
 
-bool lcd_process::is_have_command(void)
+void lcd_process::set_image_count(void)
 {
-  return is_command;
+  uint32_t file_size;
+  if(file_status)
+  {
+    if(0 == send_file_num)
+    {
+      udisk.open_file_test("1.bin", true);
+    }
+    else if(1 == send_file_num)
+    {
+      udisk.open_file_test("2.bin", true);
+    }
+    else if(2 == send_file_num)
+    {
+      udisk.open_file_test("3.bin", true);
+    }
+    else if(3 == send_file_num)
+    {
+      udisk.open_file_test("4.bin", true);
+    }
+
+    file_size = udisk.get_file_size_test();
+    image_send_count = file_size/SEND_IMAGE_LEN;
+    image_last_count_len = file_size % SEND_IMAGE_LEN;
+    if(image_last_count_len > 0)
+    {
+      image_send_count += 1;
+    }
+    DEBUGPRINTF("read i=%d j=%d\r\n",image_send_count,image_last_count_len);
+  }
 }
 
-void lcd_process::reset_command(void)
+void lcd_process::send_image(void)
 {
-  is_command = 0;
+  #define SEND_NUM(X) (X ? X:SEND_IMAGE_LEN)
+  UINT len;
+  if(image_current_send_count == image_send_count -1)
+  {
+    udisk.read_file_test(send_data_buf+6,SEND_NUM(image_last_count_len),&len);
+    lcd_send_image_test(SEND_NUM(image_last_count_len),image_current_send_count);
+
+    lcd_send_data(2,(FILE_ICON_ADDR + send_file_num));
+    lcd_show_picture((0x0020),(0x0020 + send_file_num * 100),PICTURE_ADDR,0X82);
+
+    image_current_send_count = 0;
+    image_send_count = 0;
+    image_last_count_len = 0;
+
+    file_status = true;
+    send_file_num += 1;
+    if(send_file_num > 3)
+    {
+      udisk.close_file_test();
+      loop_status = 0;
+      send_file_num = 0;
+      loop_status = 0;
+      file_status = false;
+    }
+  }
+  if(image_current_send_count == 0)
+  {
+    set_image_count();
+    file_status = false;
+  }
+  if(image_current_send_count < image_send_count -1)
+  {
+    udisk.read_file_test(send_data_buf+6,SEND_IMAGE_LEN,&len);
+    lcd_send_image_test(SEND_IMAGE_LEN,image_current_send_count);
+    udisk.lseek_file_test(SEND_IMAGE_LEN * (image_current_send_count+1));
+    image_current_send_count += 1;
+    DEBUGPRINTF("read time = %d\r\n", image_current_send_count);
+  }
 }
 
-lcd_cmd_type lcd_process::get_command_type(void)
+void lcd_process::lcd_loop(void)
 {
-  return type;
+  if(loop_status)
+  {
+    send_image();
+  }
 }
 
-void lcd_process::reset_command_type(void)
+uint8_t lcd_process::get_language_type(void)
 {
-  type = CMD_NULL;
+  language_type = eeprom_read_byte(EEPROM_LANGUAGE_ADDR);
+  return language_type;
 }
 
-unsigned long lcd_process::get_receive_addr(void)
+void lcd_process::set_language_type(unsigned char type)
 {
-  return recive_data.addr;
+  eeprom_write_byte(EEPROM_LANGUAGE_ADDR,type);
+  language_type = type;
 }
 
-unsigned short lcd_process::get_receive_data(void)
+void lcd_process::language_init(void)
 {
-  return recive_data.data[0];
+  language_type = eeprom_read_byte(EEPROM_LANGUAGE_ADDR);
+}
+
+void lcd_process::reset_image_parameters(void)
+{
+  image_send_count = 0;
+  image_current_send_count = 0;
+  image_last_count_len = 0;
+  send_file_num = 0;
+}
+
+void lcd_process::lcd_send_image_test(int len, int times,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
+{
+	send_data_buf[0] = HEAD_ONE;
+	send_data_buf[1] = HEAD_TWO;
+	send_data_buf[2] = len+3;
+	send_data_buf[3] = cmd;
+	send_data_buf[4] = (0x80 + (125 * times)/256);
+	send_data_buf[5] = (125 * times)%256;
+  for(int i = 0; i < (len + 6); i++)
+  {
+    MYSERIAL2.write(send_data_buf[i]);
+  }
+  clear_send_data_buf();
 }
 
 #endif // USB_DISK_SUPPORT

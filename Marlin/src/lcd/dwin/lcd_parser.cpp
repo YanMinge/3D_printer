@@ -160,33 +160,48 @@ void lcd_parser::response_menu_file(void)
   {
     dwin_process.lcd_send_temperature(172,256,93,48);
     udisk.ls(LS_GET_FILE_NAME, "");
-    LcdFile.get_file_page_count();
+    LcdFile.set_file_page_info();
     LcdFile.set_current_page(0);
     dwin_process.send_first_page_data();
+    dwin_process.lcd_receive_data_clear();
+    dwin_process.set_loop_status(true);
+    dwin_process.set_file_status(true);
+    //dwin_process.image_read_test();
   }
   // return button
   else if(0x0A == receive_data)
   {
     dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+    dwin_process.set_loop_status(false);
+    dwin_process.reset_image_parameters();
+    dwin_process.set_file_status(false);
   }
   // next file page button
   else if(0x0B == receive_data)
   {
     dwin_process.send_next_page_data();
+    dwin_process.reset_image_parameters();
+    dwin_process.set_loop_status(true);
+    dwin_process.set_file_status(true);
   }
   //last file page button
   else if(0x0C == receive_data)
   {
     dwin_process.send_last_page_data();
+    dwin_process.reset_image_parameters();
+    dwin_process.set_loop_status(true);
+    dwin_process.set_file_status(true);
   }
 }
 
 void lcd_parser::response_select_file(void)
 {
   int index = 0;
+  int max_index = 0;
   char file_name[FILE_NAME_LEN];
-  pfile_list_t temp = NULL;
 
+  pfile_list_t temp = NULL;
+  max_index = LcdFile.get_file_list_len();
   memset(file_name,0,FILE_NAME_LEN);
   LcdFile.set_current_status(out_printing);
   index = LcdFile.get_current_index();
@@ -199,17 +214,20 @@ void lcd_parser::response_select_file(void)
   }
   else
   {
-    //add error code
     return;
   }
 
+  if(index > max_index)
+  {
+    return;
+  }
   temp = LcdFile.file_list_index((index));
   strcpy(file_name,temp->file_name);
   if(temp->IsDir)
   {
     LcdFile.file_list_clear();
     LcdFile.list_test();
-    LcdFile.get_file_page_count();
+    LcdFile.set_file_page_info();
     LcdFile.set_current_page(0);
     dwin_process.send_first_page_data();
   }
@@ -285,10 +303,12 @@ void lcd_parser::response_set_language(void)
   if(0x01 == receive_data)
   {
     dwin_process.lcd_send_data(PAGE_BASE + 1, PAGE_ADDR);
+    dwin_process.set_language_type(0x01);
   }
   if(0x02 == receive_data)
   {
     dwin_process.lcd_send_data(PAGE_BASE + 11, PAGE_ADDR);
+    dwin_process.set_language_type(0x00);
   }
 }
 
