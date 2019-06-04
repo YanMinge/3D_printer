@@ -49,7 +49,7 @@ void GcodeSuite::M2020()
       *fn = '\0';
   	}
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, NULL);
+  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".gcode");
   SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
 }
 

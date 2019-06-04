@@ -159,7 +159,7 @@ void lcd_parser::response_menu_file(void)
   if(0x09 == receive_data)
   {
     dwin_process.lcd_send_temperature(172,256,93,48);
-    udisk.ls(LS_GET_FILE_NAME, "");
+    udisk.ls(LS_GET_FILE_NAME, "", ".gcode");
     LcdFile.set_file_page_info();
     LcdFile.set_current_page(0);
     dwin_process.send_first_page_data();
