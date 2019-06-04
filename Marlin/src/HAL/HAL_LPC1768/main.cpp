@@ -27,6 +27,7 @@ void SysTick_Callback() {
     udisk.usb_status_polling();
 #endif
   }
+  disk_timerproc();
 #if PIN_EXISTS(BEEPER)
   if(start_systick == true && beep_times_count)
   {

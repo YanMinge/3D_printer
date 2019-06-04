@@ -105,7 +105,7 @@ public:
   void file_list_sort(void);
   uint16_t ls_dive(const char *path = "", const char * const match = NULL);
   uint16_t get_num_Files(const char *path = "", const char * const match = NULL);
-  char* get_file_name(void); 
+  char* get_file_name(void);
   void open_file(char * const path, const bool read);
   inline uint32_t get_file_size_test() { return file_size;}
   void print_file_name();
