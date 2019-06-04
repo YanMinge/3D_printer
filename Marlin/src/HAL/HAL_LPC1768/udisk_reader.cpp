@@ -134,11 +134,11 @@ void udisk_reader::file_list_sort(void)
   {
     file_info_t file_info_temp;
     int i, j;
-    for(i=0; i<file_count-1; i++)
+    for(i=0; i<(file_count-1); i++)
     {
-      for (j=0; j<file_count-1-i; j++)
-      { 
-        if (file_list_array[j].ftime < file_list_array[j+1].ftime) 
+      for (j=0; j<(file_count-1-i); j++)
+      {
+        if (file_list_array[j].ftime > file_list_array[j+1].ftime)
         {
           file_info_temp = file_list_array[j];
           file_list_array[j] = file_list_array[j+1];
@@ -200,7 +200,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       }
       else
       {
-        memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1); 
+        memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1);
         file_list_array[file_count].fname[FILE_NAME_LEN - 1] = '\0';
       }
       file_count++;
@@ -264,7 +264,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
   {
     SERIAL_PRINTF("file_count(%d)\r\n",file_count);
     return file_count;
-  } 
+  }
   return rc;
 }
 

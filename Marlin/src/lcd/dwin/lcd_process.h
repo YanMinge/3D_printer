@@ -71,6 +71,21 @@ typedef struct lcd_data_buffer
     unsigned short data[32];
 } lcd_buffer_t;
 
+typedef struct
+{
+  uint8_t image_send_count;
+  uint8_t image_current_send_count;
+  uint8_t image_last_count_len;
+  uint8_t send_file_num;
+
+  int page_count;
+  int current_page;
+  int last_page_file;
+  int current_index;
+
+  pfile_list_t current_file;
+} data_info_t;
+
 class lcd_process
 {
 public:
@@ -100,6 +115,7 @@ public:
 
   inline void clear_page(unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
   inline void send_page(unsigned long addr,int page,int num, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  void get_file_info(void);
 
   void icon_update(void);
   void send_first_page_data(void);
@@ -114,10 +130,13 @@ public:
   inline unsigned short get_receive_data(){ return recive_data.data[0];}
 
   void lcd_send_image_test(int len,int times, unsigned char cmd = WRITE_VARIABLE_ADDR);
-  void send_image(void);
+  void send_simage(void);
+  void send_limage(void);
   void lcd_loop(void);
-  void set_image_count(void);
-  void set_loop_status(bool status){ loop_status = status;}
+  void set_limage_count(int index);
+  void set_simage_count(void);
+  void set_simage_status(bool status){ simage_status = status;}
+  void set_limage_status(bool status){ limage_status = status;}
   void set_file_status(bool status){ file_status = status;}
   void reset_image_parameters(void);
 
@@ -145,15 +164,11 @@ private:
   uint8_t language_type;
 
   //image show
-  bool loop_status;
+  bool simage_status;
+  bool limage_status;
   bool file_status;
-  uint8_t image_send_count;
-  uint8_t image_current_send_count;
-  uint8_t image_last_count_len;
-  uint8_t send_file_num;
+  data_info_t file_info;
 
-  //file_list_t
-  pfile_list_t current_file;
   uint32_t offset;
 };
 
