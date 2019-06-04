@@ -16,7 +16,7 @@ extern "C" {
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
 extern "C" int isLPC1769();
 extern "C" void disk_timerproc(void);
-
+extern uint32_t beep_times_count;
 static int start_systick = false;
 void SysTick_Callback() {
   //disk_timerproc();
@@ -28,6 +28,16 @@ void SysTick_Callback() {
 #endif
   }
   disk_timerproc();
+#if PIN_EXISTS(BEEPER)
+  if(start_systick == true && beep_times_count)
+  {
+    beep_times_count--;
+    if(0 == beep_times_count)
+    {
+      analogWrite(BEEPER_PIN,0);
+    }
+  }
+#endif
 }
 
 void HAL_init() {

@@ -763,6 +763,11 @@ void GcodeSuite::process_parsed_command(
         case 2026: M2026(); break;
         case 2027: M2027(); break;
       #endif
+
+      #if PIN_EXISTS(BEEPER)
+        case 2033: M2033(); break;
+      #endif
+
       default: parser.unknown_command_error(); break;
     }
     break;

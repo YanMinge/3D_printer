@@ -243,7 +243,7 @@
  * on the LCD display during accesses of the SD card. The menus/code has been arranged so
  * that the garbage/lines are erased immediately after the SD card accesses are completed.
  */
-
+#define BEEPER_PIN P1_21
 #if ENABLED(ULTRA_LCD)
   #define BEEPER_PIN       P1_31   // EXP1.1
   #define BTN_ENC          P1_30   // EXP1.2
