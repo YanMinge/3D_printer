@@ -57,12 +57,15 @@
 
 enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 
-#define USB_NOT_DETECTED      100
+#define USB_NOT_DETECTED             100
 
-#define GCODE_SIZE_INDEX      4
-#define SIMAGE_OFFSET_INDEX   12
-#define LIMAGE_OFFSET_INDEX   20
-#define GCODE_OFFSET_INDEX    28
+#define MAX_ELEMENT_FOR_FILES_LIST   40
+
+
+#define GCODE_SIZE_INDEX             4
+#define SIMAGE_OFFSET_INDEX          12
+#define LIMAGE_OFFSET_INDEX          20
+#define GCODE_OFFSET_INDEX           28
 
 
 union
@@ -73,12 +76,19 @@ union
   int32_t intVal;
 }val4byte;
 
-union
-{
-  uint8_t byteVal[2];
-  short shortVal;
-}val2byte;
+// union
+// {
+//   uint8_t byteVal[2];
+//   short shortVal;
+// }val2byte;
 
+typedef struct
+{ 
+  uint32_t ftime;
+  uint32_t fsize;
+  bool ftype;
+  char fname[FILE_NAME_LEN];
+}file_info_t;
 
 class udisk_reader
 {
@@ -92,13 +102,15 @@ public:
   bool is_usb_Initialized(void);
   void usb_status_polling(void);
   uint16_t ls(is_action_t action, const char *path = "", const char * const match = NULL);
+  void file_list_sort(void);
   uint16_t ls_dive(const char *path = "", const char * const match = NULL);
   uint16_t get_num_Files(const char *path = "", const char * const match = NULL);
+  char* get_file_name(void);
   void open_file(char * const path, const bool read);
   void open_file_test(char * const path, const bool read);
   void read_file_test(void * buff, UINT len, UINT * len_read);
   void close_file_test(void);
-  void lseek_file_test(FSIZE_t      len);
+  void lseek_file_test(FSIZE_t len);
   inline uint32_t get_file_size_test() { return file_size;}
   void print_file_name();
   void report_status();
@@ -139,6 +151,7 @@ private:
   lcd_file file;
   FIL file_obj;
   char *opened_file_name;
+  file_info_t file_list_array[MAX_ELEMENT_FOR_FILES_LIST];
 };
 
 #define IS_UDISK_PRINTING() udisk.get_udisk_printing_flag()

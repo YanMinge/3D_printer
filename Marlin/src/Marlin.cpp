@@ -1193,7 +1193,7 @@ void loop() {
     {
       if(usb_status == true)
       {
-        udisk.ls(LS_COUNT, "/", NULL);
+        udisk.ls(LS_COUNT, "/", ".gcode");
       }
       pre_usb_status = usb_status;
     }

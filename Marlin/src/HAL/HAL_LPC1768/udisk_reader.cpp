@@ -71,6 +71,8 @@ udisk_reader::udisk_reader(void)
 void udisk_reader::init(void)
 {
   SetupHardware();
+  file_count = 0;
+  memset(file_list_array, 0, sizeof(file_list_array));
   Initialized = true;
 }
 
@@ -126,9 +128,30 @@ uint16_t udisk_reader::ls(is_action_t action, const char *path, const char * con
   return ls_dive(path, match);
 }
 
+void udisk_reader::file_list_sort(void)
+{
+  if(file_count != 0)
+  {
+    file_info_t file_info_temp;
+    int i, j;
+    for(i=0; i<file_count-1; i++)
+    {
+      for (j=0; j<file_count-1-i; j++)
+      { 
+        if (file_list_array[j].ftime < file_list_array[j+1].ftime) 
+        {
+          file_info_temp = file_list_array[j];
+          file_list_array[j] = file_list_array[j+1];
+          file_list_array[j+1] = file_info_temp;
+        }
+      }
+    }
+  }
+}
+
 uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL*/)
 {
-  FRESULT rc = FR_OK; 	/* Result code */
+  FRESULT rc = FR_OK;   /* Result code */
   DIR dir;        /* Directory object */
   char *lsdata = NULL;
   FILINFO fno;    /* File information object */
@@ -148,16 +171,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
   else
   {
     file_count = 0;
-    if(is_action == LS_SERIAL_PRINT)
-    {
-      SERIAL_PRINTF("List files in path: %s\r\n", path);
-      lsdata = new char[100];
-      memset(lsdata, 0, sizeof(100));
-    }
-    if(is_action == LS_GET_FILE_NAME)
-    {
-      LcdFile.file_list_clear();
-    }
+    memset(file_list_array, 0, sizeof(file_list_array));
     for(;; )
     {
       /* Read a directory item */
@@ -166,66 +180,109 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       {
         break;                  /* Error or end of dir */
       }
+      if((match != NULL) && (strstr(fno.fname, match) == NULL) && (!(fno.fattrib & AM_DIR)))
+      {
+        continue;
+      }
+      file_list_array[file_count].ftime = ((fno.fdate & 0xffff) << 16) + (fno.ftime & 0xffff);
+      file_list_array[file_count].fsize = fno.fsize;
+      if(fno.fattrib & AM_DIR)
+      {
+        file_list_array[file_count].ftype = true;
+      }
+      else
+      {
+        file_list_array[file_count].ftype = false;
+      }
+      if(strlen(fno.fname) < FILE_NAME_LEN)
+      {
+        strcpy(file_list_array[file_count].fname, fno.fname);
+      }
+      else
+      {
+        memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1); 
+        file_list_array[file_count].fname[FILE_NAME_LEN - 1] = '\0';
+      }
       file_count++;
-      if(is_action == LS_SERIAL_PRINT && lsdata != NULL)
-      {
-        uint16_t year = ((fno.fdate >> 9) & 0x3f) + 1980;
-        uint16_t month = ((fno.fdate >> 5) & 0x0f);
-        uint16_t date = (fno.fdate & 0x1f);
-
-        uint16_t hour = ((fno.ftime >> 11) & 0x1f);
-        uint16_t min = ((fno.ftime >> 5) & 0x3f);
-        if (fno.fattrib & AM_DIR)
-        {
-          sprintf(lsdata, " <DIR> %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
-        }
-        else
-        {
-          sprintf(lsdata, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, fno.fsize, fno.fname);
-        }
-        SERIAL_PRINTF(lsdata);
-        delete[] lsdata;
-      }
-      else if(is_action == LS_GET_FILE_NAME)
-      {
-        file_list_data = (pfile_list_t) new char[(sizeof(file_list_t))];
-        memset(file_list_data, 0, sizeof(file_list_t));
-        if(fno.fattrib & AM_DIR)
-        {
-          file_list_data->IsDir = true;
-        }
-        else
-        {
-          file_list_data->IsDir = false;
-        }
-        if(strlen(fno.fname) <= FILE_NAME_LEN)
-        {
-          strcpy(file_list_data->file_name, fno.fname);
-        }
-        else
-        {
-          memcpy(file_list_data->file_name, fno.fname, FILE_NAME_LEN);
-          file_list_data->file_name[FILE_NAME_LEN] = '\0';
-        }
-        LcdFile.file_list_insert(file_list_data);
-      }
     }
     if (rc)
     {
       DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
+      return rc;
     }
-    else if(is_action == LS_COUNT)
-    {
-      SERIAL_PRINTF("file_count(%d)\r\n",file_count);
-      return file_count;
-    }
-    return rc;
+    file_list_sort();
   }
+
+  if(is_action == LS_SERIAL_PRINT)
+  {
+    SERIAL_PRINTF("List files in path: %s\r\n", path);
+    lsdata = new char[100];
+    memset(lsdata, 0, sizeof(100));
+
+    for(int i = 0; i < file_count; i++)
+    {
+      uint16_t fdata = (file_list_array[i].ftime >> 16) & 0xffff;
+      uint16_t year = ((fdata >> 9) & 0x3f) + 1980;
+      uint16_t month = ((fdata >> 5) & 0x0f);
+      uint16_t date = (fdata & 0x1f);
+
+      uint16_t ftime = file_list_array[i].ftime & 0xffff;
+      uint16_t hour = ((ftime >> 11) & 0x1f);
+      uint16_t min = ((ftime >> 5) & 0x3f);
+      if(file_list_array[file_count].ftype == true)
+      {
+        sprintf(lsdata, " <DIR> %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, file_list_array[i].fsize, file_list_array[i].fname);
+      }
+      else
+      {
+        sprintf(lsdata, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, file_list_array[i].fsize, file_list_array[i].fname);
+      }
+      SERIAL_PRINTF(lsdata);
+      delete[] lsdata;
+    }
+  }
+  else if(is_action == LS_GET_FILE_NAME)
+  {
+    LcdFile.file_list_clear();
+    for(int i = 0; i < file_count; i++)
+    {
+      file_list_data = (pfile_list_t) new char[(sizeof(file_list_t))];
+      memset(file_list_data, 0, sizeof(file_list_t));
+      if(file_list_array[file_count].ftype == true)
+      {
+        file_list_data->IsDir = true;
+      }
+      else
+      {
+        file_list_data->IsDir = false;
+      }
+      strcpy(file_list_data->file_name, file_list_array[i].fname);
+      LcdFile.file_list_insert(file_list_data);
+    }
+  }
+  else if(is_action == LS_COUNT)
+  {
+    SERIAL_PRINTF("file_count(%d)\r\n",file_count);
+    return file_count;
+  } 
+  return rc;
 }
 
 uint16_t udisk_reader::get_num_Files(const char *path, const char * const match)
 {
   return ls(LS_COUNT, path, match);
+}
+
+char* udisk_reader::get_file_name(void)
+{
+  if(is_file_open())
+  {
+    if(opened_file_name != NULL)
+    {
+      return opened_file_name;
+    }
+  }
+  return NULL;
 }
 
 void udisk_reader::open_file(char * const path, const bool read)
@@ -290,7 +347,7 @@ void udisk_reader::open_file(char * const path, const bool read)
   }
 }
 
-void udisk_reader::print_file_name()
+void udisk_reader::print_file_name(void)
 {
   if(opened_file_name != NULL)
   {
@@ -304,7 +361,7 @@ void udisk_reader::print_file_name()
   SERIAL_EOL();
 }
 
-void udisk_reader::report_status()
+void udisk_reader::report_status(void)
 {
   DEBUGPRINTF("report_status\r\n");
   for(uint32_t i = 0; i< file_size; i++)
@@ -572,25 +629,25 @@ void udisk_reader::open_file_test(char * const path, const bool read)
     if (rc)
     {
       DEBUGPRINTF("Unable to open file: %s from USB Disk\r\n", path);
-	  return;
-	}
-	else
+      return;
+    }
+    else
     {
       if(strlen(path) <= FILE_NAME_LEN * 4)
       {
-	    opened_file_name = new char[strlen(path)];
+        opened_file_name = new char[strlen(path)];
         strcpy(opened_file_name, path);
         DEBUGPRINTF(" open file: %s from USB Disk\r\n", path);
       }
-	  else
+      else
       {
         opened_file_name = new char[FILE_NAME_LEN * 4];
-	    memcpy(opened_file_name, path, FILE_NAME_LEN * 4);
-		opened_file_name[FILE_NAME_LEN * 4] = '\0';
+        memcpy(opened_file_name, path, FILE_NAME_LEN * 4);
+        opened_file_name[FILE_NAME_LEN * 4] = '\0';
       }
-	  is_file_opened = true;
+      is_file_opened = true;
       file_size = file_obj.obj.objsize;
-	  udisk_pos = 0;
+      udisk_pos = 0;
       SERIAL_ECHOLNPAIR(MSG_SD_FILE_OPENED, opened_file_name, MSG_SD_SIZE, file_size);
       SERIAL_ECHOLNPGM(MSG_SD_FILE_SELECTED);
     }
@@ -605,7 +662,7 @@ void udisk_reader::read_file_test(void * buff, UINT len, UINT * len_read)
   if(rc)
   {
     DEBUGPRINTF("Unable to open file: %s from USB Disk\r\n", "50bin");
-	  return;
+    return;
   }
 }
 
@@ -617,7 +674,7 @@ void udisk_reader::close_file_test(void)
   if(rc)
   {
     DEBUGPRINTF("Unable to close file: %s from USB Disk\r\n", "50bin");
-	  return;
+    return;
   }
 }
 
@@ -629,10 +686,9 @@ void udisk_reader::lseek_file_test(FSIZE_t  len)
   if(rc)
   {
     DEBUGPRINTF("Unable to open file: %s from USB Disk\r\n", "50bin");
-	  return;
+    return;
   }
 }
-
 
 #endif // USB_DISK_SUPPORT
 #endif // TARGET_LPC1768

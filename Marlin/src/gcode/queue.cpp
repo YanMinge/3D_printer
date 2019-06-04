@@ -828,6 +828,9 @@ inline void get_udisk_commands(void) {
 
   if (commands_in_queue == 0) stop_buffering = false;
   uint16_t udsik_count = 0;
+  if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name()))){
+    udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
+  }
 
   bool udisk_eof = udisk.eof();
 
