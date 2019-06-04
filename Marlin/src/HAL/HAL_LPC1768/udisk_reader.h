@@ -95,10 +95,6 @@ public:
   uint16_t ls_dive(const char *path = "", const char * const match = NULL);
   uint16_t get_num_Files(const char *path = "", const char * const match = NULL);
   void open_file(char * const path, const bool read);
-  void open_file_test(char * const path, const bool read);
-  void read_file_test(void * buff, UINT len, UINT * len_read);
-  void close_file_test(void);
-  void lseek_file_test(FSIZE_t      len);
   inline uint32_t get_file_size_test() { return file_size;}
   void print_file_name();
   void report_status();

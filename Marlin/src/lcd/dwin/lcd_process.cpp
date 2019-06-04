@@ -115,7 +115,7 @@ void lcd_process::lcd_receive_data(void)
   while(MYSERIAL2.available() > 0 )
   {
     recevie_data_buf[receive_num++] = MYSERIAL2.read();
-    MYSERIAL1.write(recevie_data_buf[receive_num-1]);
+    //MYSERIAL1.write(recevie_data_buf[receive_num-1]);
 
     if((recevie_data_buf[0] != HEAD_ONE) || \
       (receive_num > DATA_BUF_SIZE) ||
@@ -585,33 +585,28 @@ void lcd_process::send_last_page_data(void)
 void lcd_process::set_image_count(void)
 {
   uint32_t file_size;
+  int page_count;
+  int current_page;
+  int index;
+
+  page_count = LcdFile.get_page_count();
+  current_page = LcdFile.get_current_page_num();
+  index = 4*(current_page - 1) + (send_file_num+1);
+  current_file = LcdFile.file_list_index(index);
+
   if(file_status)
   {
-    if(0 == send_file_num)
-    {
-      udisk.open_file_test("1.bin", true);
-    }
-    else if(1 == send_file_num)
-    {
-      udisk.open_file_test("2.bin", true);
-    }
-    else if(2 == send_file_num)
-    {
-      udisk.open_file_test("3.bin", true);
-    }
-    else if(3 == send_file_num)
-    {
-      udisk.open_file_test("4.bin", true);
-    }
+    udisk.open_file(current_file->file_name, true);
+    file_size = udisk.get_limage_size(current_file->file_name);
 
-    file_size = udisk.get_file_size_test();
     image_send_count = file_size/SEND_IMAGE_LEN;
     image_last_count_len = file_size % SEND_IMAGE_LEN;
+
     if(image_last_count_len > 0)
     {
       image_send_count += 1;
     }
-    DEBUGPRINTF("read i=%d j=%d\r\n",image_send_count,image_last_count_len);
+    DEBUGPRINTF("read image_send_count = %d image_last_count_len = %d\r\n",image_send_count,image_last_count_len);
   }
 }
 
@@ -621,7 +616,15 @@ void lcd_process::send_image(void)
   UINT len;
   if(image_current_send_count == image_send_count -1)
   {
-    udisk.read_file_test(send_data_buf+6,SEND_NUM(image_last_count_len),&len);
+    int page_count;
+    int current_page;
+    int last_file;
+
+    last_file = LcdFile.get_last_page_file_num();
+    page_count = LcdFile.get_page_count();
+    current_page = LcdFile.get_current_page_num();
+
+    get_image_data(SEND_NUM(image_last_count_len));
     lcd_send_image_test(SEND_NUM(image_last_count_len),image_current_send_count);
 
     lcd_send_data(2,(FILE_ICON_ADDR + send_file_num));
@@ -633,25 +636,40 @@ void lcd_process::send_image(void)
 
     file_status = true;
     send_file_num += 1;
-    if(send_file_num > 3)
+    if(current_page == page_count)
     {
-      udisk.close_file_test();
-      loop_status = 0;
-      send_file_num = 0;
-      loop_status = 0;
-      file_status = false;
+      if(send_file_num > (last_file - 1))
+      {
+        loop_status = 0;
+        send_file_num = 0;
+        loop_status = 0;
+        file_status = false;
+      }
+    }
+    else if(current_page < page_count)
+    {
+      if(send_file_num > (PAGE_FILE_NUM - 1))
+      {
+        loop_status = 0;
+        send_file_num = 0;
+        loop_status = 0;
+        file_status = false;
+      }
     }
   }
+
   if(image_current_send_count == 0)
   {
     set_image_count();
     file_status = false;
+    uint32_t offset = udisk.get_limage_offset(current_file->file_name);
+    udisk.set_index(offset);
   }
+
   if(image_current_send_count < image_send_count -1)
   {
-    udisk.read_file_test(send_data_buf+6,SEND_IMAGE_LEN,&len);
+    get_image_data(SEND_IMAGE_LEN);
     lcd_send_image_test(SEND_IMAGE_LEN,image_current_send_count);
-    udisk.lseek_file_test(SEND_IMAGE_LEN * (image_current_send_count+1));
     image_current_send_count += 1;
     DEBUGPRINTF("read time = %d\r\n", image_current_send_count);
   }
@@ -688,6 +706,23 @@ void lcd_process::reset_image_parameters(void)
   image_current_send_count = 0;
   image_last_count_len = 0;
   send_file_num = 0;
+}
+
+void lcd_process::get_image_data(int len)
+{
+  char c;
+  for(int i = 0; i < len; i++)
+  {
+    //udisk.set_index(index+i+offset);
+    c = udisk.get();
+    if(c < 0)
+    {
+      //read error
+      DEBUGPRINTF("get char error\r\n");
+      return;
+    }
+    send_data_buf[6+i] = c;
+  }
 }
 
 void lcd_process::lcd_send_image_test(int len, int times,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)

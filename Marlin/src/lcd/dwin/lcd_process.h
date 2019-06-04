@@ -124,6 +124,7 @@ public:
   uint8_t get_language_type(void);
   void set_language_type(unsigned char type);
   void language_init(void);
+  void get_image_data(int len);
 
 private:
   bool is_command; /*whether receive a lcd command*/
@@ -151,6 +152,9 @@ private:
   uint8_t image_last_count_len;
   uint8_t send_file_num;
 
+  //file_list_t
+  pfile_list_t current_file;
+  uint32_t offset;
 };
 
 extern lcd_process dwin_process;

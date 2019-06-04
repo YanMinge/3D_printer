@@ -883,6 +883,10 @@ private:
     static void M2026();
     static void M2027();
   #endif
+  
+  #if PIN_EXISTS(BEEPER)
+    static void M2033();
+  #endif
   static void T(const uint8_t tool_index);
 
 };
