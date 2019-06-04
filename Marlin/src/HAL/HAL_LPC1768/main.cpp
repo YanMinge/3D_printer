@@ -27,6 +27,7 @@ void SysTick_Callback() {
     udisk.usb_status_polling();
 #endif
   }
+  disk_timerproc();
 }
 
 void HAL_init() {
