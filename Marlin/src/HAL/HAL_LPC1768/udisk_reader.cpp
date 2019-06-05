@@ -161,9 +161,9 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
 {
   FRESULT rc = FR_OK;   /* Result code */
   DIR dir;        /* Directory object */
-  char *lsdata = NULL;
   FILINFO fno;    /* File information object */
   pfile_list_t file_list_data;
+  char lsdata[100];
   rc = f_opendir(&dir, path);
   if (rc)
   {
@@ -235,9 +235,6 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     if(is_action == LS_SERIAL_PRINT)
     {
       SERIAL_PRINTF("List files in path: %s\r\n", path);
-      lsdata = new char[100];
-      memset(lsdata, 0, sizeof(100));
-
       for(int i = 0; i < file_count; i++)
       {
         uint16_t fdata = (file_list_array[i].ftime >> 16) & 0xffff;
@@ -257,7 +254,6 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
           sprintf(lsdata, "       %d\\%02d\\%02d %02d:%02d  %12ld    %.32s\r\n", year, month, date, hour, min, file_list_array[i].fsize, file_list_array[i].fname);
         }
         SERIAL_PRINTF(lsdata);
-        delete[] lsdata;
       }
     }
     else if(is_action == LS_GET_FILE_NAME)
