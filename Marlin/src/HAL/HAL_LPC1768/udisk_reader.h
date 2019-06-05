@@ -67,26 +67,11 @@ enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 #define LIMAGE_OFFSET_INDEX          20
 #define GCODE_OFFSET_INDEX           28
 
-
-union
-{
-  uint8_t byteVal[4];
-  float floatVal;
-  uint32_t uintVal;
-  int32_t intVal;
-}val4byte;
-
-// union
-// {
-//   uint8_t byteVal[2];
-//   short shortVal;
-// }val2byte;
-
 typedef struct
 { 
   uint32_t ftime;
   uint32_t fsize;
-  bool ftype;
+  file_type_t ftype;
   char fname[FILE_NAME_LEN];
 }file_info_t;
 

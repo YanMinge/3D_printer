@@ -59,6 +59,14 @@ extern "C" bool is_usb_connected(void);
 extern "C" usb_error_info_type get_usb_error_info(void);
 extern "C"  void set_disk_status(DSTATUS status);
 
+union
+{
+  uint8_t byteVal[4];
+  float floatVal;
+  uint32_t uintVal;
+  int32_t intVal;
+}val4byte;
+
 udisk_reader::udisk_reader(void)
 {
   detected = false;
@@ -166,6 +174,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       dwin_process.lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
       return USB_NOT_DETECTED;
     }
+    DEBUGPRINTF("f_opendir error(%d)\r\n", path);
   }
   else
   {
@@ -187,12 +196,25 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       file_list_array[file_count].fsize = fno.fsize;
       if(fno.fattrib & AM_DIR)
       {
-        file_list_array[file_count].ftype = true;
+        file_list_array[file_count].ftype = TYPE_FOLDER;
       }
       else
       {
-        file_list_array[file_count].ftype = false;
+        char * file_path = new char[strlen(path) + strlen(fno.fname) + 1];
+        strcpy(file_path, path);
+        file_path[strlen(path)] = '/';
+        strcpy(file_path + strlen(path) + 1, fno.fname);
+        if(check_gm_file(file_path))
+        {
+          file_list_array[file_count].ftype = TYPE_MAKEBLOCK_GM;
+        }
+        else
+        {
+          file_list_array[file_count].ftype = TYPE_OTHER_GCODE;
+        }
+        delete[] file_path;
       }
+
       if(strlen(fno.fname) < FILE_NAME_LEN)
       {
         strcpy(file_list_array[file_count].fname, fno.fname);
@@ -245,14 +267,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       {
         file_list_data = (pfile_list_t) new char[(sizeof(file_list_t))];
         memset(file_list_data, 0, sizeof(file_list_t));
-        if(file_list_array[file_count].ftype == true)
-        {
-          file_list_data->IsDir = true;
-        }
-        else
-        {
-          file_list_data->IsDir = false;
-        }
+        file_list_data->file_type = file_list_array[i].ftype;
         strcpy(file_list_data->file_name, file_list_array[i].fname);
         LcdFile.file_list_insert(file_list_data);
       }
@@ -262,7 +277,6 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       return file_count;
     } 
   }
-  DEBUGPRINTF("f_opendir error(%d)\r\n", rc);
   return rc;
 }
 

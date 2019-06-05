@@ -55,10 +55,17 @@
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
 
+enum file_type_t : uint8_t 
+{ 
+  TYPE_FOLDER, 
+  TYPE_MAKEBLOCK_GM, 
+  TYPE_OTHER_GCODE,
+  TYPE_FIRMWARE,
+};
+
 typedef struct usb_file
 {
-  bool IsDir;
-  unsigned long Time;
+  file_type_t file_type;
   struct usb_file* next_file;
   char file_name[FILE_NAME_LEN];
 }file_list_t, *pfile_list_t;

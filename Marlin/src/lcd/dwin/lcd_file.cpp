@@ -192,12 +192,12 @@ void lcd_file::list_test(void)
     if(i == 0)
     {
       strcpy(m->file_name, "make");
-      m->IsDir = 1;
+      m->file_type = TYPE_FOLDER;
     }
     if(i == 1)
     {
       strcpy(m->file_name, "block");
-      m->IsDir = 1;
+      m->file_type = TYPE_FOLDER;
     }
     if((i == 2) || (i == 3))
     {
