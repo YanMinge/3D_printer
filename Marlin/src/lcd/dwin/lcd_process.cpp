@@ -104,10 +104,9 @@ void lcd_process::clear_send_data_buf(void)
 
 void lcd_process::lcd_receive_data_clear(void)
 {
-  char c;
   while(MYSERIAL2.available() > 0 )
   {
-    c = MYSERIAL2.read();
+    MYSERIAL2.read();
   }
 }
 
@@ -120,7 +119,7 @@ void lcd_process::lcd_receive_data(void)
 
     if((recevie_data_buf[0] != HEAD_ONE) || \
       (receive_num > DATA_BUF_SIZE) ||
-      (receive_num == 2) && (HEAD_TWO != recevie_data_buf[1]))
+      ((receive_num == 2) && (HEAD_TWO != recevie_data_buf[1])))
     {
       clear_lcd_data_buf();
       continue;
@@ -280,7 +279,7 @@ void lcd_process::lcd_send_data(const char *str, unsigned long addr, unsigned ch
 	}
 }
 
-void lcd_process::lcd_send_data_clear(unsigned long addr,int len, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
+void lcd_process::lcd_text_clear(unsigned long addr,int len, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
 {
 	if( len > 0)
 	{
@@ -414,7 +413,7 @@ inline void lcd_process::clear_page(unsigned long addr, unsigned char cmd/*= WRI
 {
   for(int i = 0; i < PAGE_FILE_NUM; i++)
   {
-    lcd_send_data_clear((addr + FILE_TEXT_LEN*i), FILE_NAME_LEN);
+    lcd_text_clear((addr + FILE_TEXT_LEN*i), FILE_NAME_LEN);
     lcd_send_data(2,(FILE_ICON_ADDR + i));
   }
 }
@@ -575,83 +574,84 @@ void lcd_process::send_last_page_data(void)
 
 void lcd_process::set_simage_count(void)
 {
-  uint32_t file_size;
-
-  get_file_info();
-  file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.send_file_num+1);
-  file_info.current_file = LcdFile.file_list_index(file_info.current_index);
-
   if(file_status)
   {
-    udisk.open_file(file_info.current_file->file_name, true);
-    file_size = udisk.get_limage_size(file_info.current_file->file_name);
+    uint32_t file_size;
 
-    file_info.image_send_count = file_size/SEND_IMAGE_LEN;
-    file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
+    get_file_info();
+    file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.send_file_num+1);
+    current_file = LcdFile.file_list_index(file_info.current_index);
 
-    if(file_info.image_last_count_len > 0)
+    if(0 == current_file->IsDir)
     {
-      file_info.image_send_count += 1;
+      file_size = udisk.get_limage_size(current_file->file_name);
+      file_info.image_send_count = file_size/SEND_IMAGE_LEN;
+      file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
+
+      file_status = false;
+      simage_send_status = true;
+      uint32_t offset = udisk.get_limage_offset(current_file->file_name);
+      udisk.set_index(offset);
+
+      if(file_info.image_last_count_len > 0)
+      {
+        file_info.image_send_count += 1;
+      }
+      DEBUGPRINTF("read image_send_count = %d image_last_count_len = %d\r\n",file_info.image_send_count,file_info.image_last_count_len);
     }
-    DEBUGPRINTF("read image_send_count = %d image_last_count_len = %d\r\n",file_info.image_send_count,file_info.image_last_count_len);
+    else
+    {
+      file_status = true;
+      simage_send_status = false;
+      file_info.send_file_num += 1;
+    }
   }
 }
 
 void lcd_process::send_simage(void)
 {
-  UINT len;
-
   #define SEND_NUM(X) (X ? X:SEND_IMAGE_LEN)
-
-  if(file_info.image_current_send_count == file_info.image_send_count -1)
+  if(simage_send_status)
   {
-    get_file_info();
-    get_image_data(SEND_NUM(file_info.image_last_count_len));
-    lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
-
-    lcd_send_data(2,(FILE_ICON_ADDR + file_info.send_file_num));
-    lcd_show_picture((0x0020),(0x0020 + file_info.send_file_num * 100),PICTURE_ADDR,0X82);
-
-    file_info.image_current_send_count = 0;
-    file_info.image_send_count = 0;
-    file_info.image_last_count_len = 0;
-
-    file_status = true;
-    file_info.send_file_num += 1;
-    if(file_info.current_page == file_info.page_count)
+    if(file_info.image_current_send_count == file_info.image_send_count -1)
     {
-      if(file_info.send_file_num > (file_info.last_page_file - 1))
+      get_image_data(SEND_NUM(file_info.image_last_count_len));
+      lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
+
+      lcd_send_data(2,(FILE_ICON_ADDR + file_info.send_file_num));
+      lcd_show_picture((0x0020),(0x0020 + file_info.send_file_num * 100),PICTURE_ADDR,0X82);
+      DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
+      file_info.image_current_send_count = 0;
+      file_info.image_send_count = 0;
+      file_info.image_last_count_len = 0;
+
+      file_info.send_file_num += 1;
+      file_status = true;
+      simage_send_status = false;
+
+      if((file_info.current_page == file_info.page_count) && \
+        (file_info.send_file_num > (file_info.last_page_file - 1)))
       {
-        simage_status = 0;
-        file_info.send_file_num = 0;
-        file_status = false;
+          simage_status = 0;
+          file_info.send_file_num = 0;
+          file_status = false;
+      }
+      else if((file_info.current_page < file_info.page_count) && \
+             (file_info.send_file_num > (PAGE_FILE_NUM - 1)))
+      {
+          simage_status = 0;
+          file_info.send_file_num = 0;
+          file_status = false;
       }
     }
-    else if(file_info.current_page < file_info.page_count)
+
+    if(file_info.image_current_send_count < file_info.image_send_count -1)
     {
-      if(file_info.send_file_num > (PAGE_FILE_NUM - 1))
-      {
-        simage_status = 0;
-        file_info.send_file_num = 0;
-        file_status = false;
-      }
+      get_image_data(SEND_IMAGE_LEN);
+      lcd_send_image_test(SEND_IMAGE_LEN,file_info.image_current_send_count);
+      file_info.image_current_send_count += 1;
+      DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
-  }
-
-  if(file_info.image_current_send_count == 0)
-  {
-    set_simage_count();
-    file_status = false;
-    uint32_t offset = udisk.get_limage_offset(file_info.current_file->file_name);
-    udisk.set_index(offset);
-  }
-
-  if(file_info.image_current_send_count < file_info.image_send_count -1)
-  {
-    get_image_data(SEND_IMAGE_LEN);
-    lcd_send_image_test(SEND_IMAGE_LEN,file_info.image_current_send_count);
-    file_info.image_current_send_count += 1;
-    DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
   }
 }
 
@@ -661,10 +661,10 @@ void lcd_process::set_limage_count(int index)
 
   get_file_info();
   file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (index);
-  file_info.current_file = LcdFile.file_list_index(file_info.current_index);
+  current_file = LcdFile.file_list_index(file_info.current_index);
 
-  udisk.open_file(file_info.current_file->file_name, true);
-  file_size = udisk.get_limage_size(file_info.current_file->file_name);
+  udisk.open_file(current_file->file_name, true);
+  file_size = udisk.get_limage_size(current_file->file_name);
 
   file_info.image_send_count = file_size/SEND_IMAGE_LEN;
   file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
@@ -678,7 +678,6 @@ void lcd_process::set_limage_count(int index)
 
 void lcd_process::send_limage(void)
 {
-  UINT len;
   #define SEND_NUM(X) (X ? X:SEND_IMAGE_LEN)
 
   if(file_info.image_current_send_count == file_info.image_send_count -1)
@@ -699,7 +698,7 @@ void lcd_process::send_limage(void)
 
   if(file_info.image_current_send_count == 0)
   {
-    uint32_t offset = udisk.get_limage_offset(file_info.current_file->file_name);
+    uint32_t offset = udisk.get_limage_offset(current_file->file_name);
     udisk.set_index(offset);
   }
 
@@ -716,6 +715,7 @@ void lcd_process::lcd_loop(void)
 {
   if(simage_status)
   {
+    set_simage_count();
     send_simage();
   }
   if(limage_status)

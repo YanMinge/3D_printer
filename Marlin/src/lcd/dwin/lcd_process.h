@@ -73,17 +73,15 @@ typedef struct lcd_data_buffer
 
 typedef struct
 {
-  uint8_t image_send_count;
-  uint8_t image_current_send_count;
-  uint8_t image_last_count_len;
-  uint8_t send_file_num;
+  uint8_t image_send_count; /*the number of times needed for send a picture*/
+  uint8_t image_current_send_count; /*the number of times have already sended*/
+  uint8_t image_last_count_len; /*the length of bytes needed to be send in the last send var(0-250)*/
+  uint8_t send_file_num; /*the number of pictures have already send  var(0-4)*/
 
-  int page_count;
-  int current_page;
-  int last_page_file;
-  int current_index;
-
-  pfile_list_t current_file;
+  int page_count; /*the number of page need to show in lcd pannel*/
+  int current_page; /*the page number which now showing in lcd pannel*/
+  int last_page_file; /*the number of files in last page*/
+  int current_index; /*the file number which now is selected*/
 } data_info_t;
 
 class lcd_process
@@ -101,7 +99,7 @@ public:
   void lcd_send_data(void);
   void lcd_send_data(const String &, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(const char[], unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
-  void lcd_send_data_clear(unsigned long addr,int len, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  void lcd_text_clear(unsigned long addr,int len, unsigned char cmd = WRITE_VARIABLE_ADDR);
   void lcd_send_data(char, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(unsigned char*, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(int, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
@@ -166,8 +164,14 @@ private:
   //image show
   bool simage_status;
   bool limage_status;
+  bool simage_send_status;
+  bool limage_send_status;
+  bool simage_set_status;
+  bool limage_set_status;
+
   bool file_status;
   data_info_t file_info;
+  pfile_list_t current_file; /*the file_struct which now the file is selected*/
 
   uint32_t offset;
 };
