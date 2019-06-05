@@ -164,33 +164,28 @@ void lcd_parser::response_menu_file(void)
     LcdFile.set_current_page(0);
     dwin_process.send_first_page_data();
     dwin_process.lcd_receive_data_clear();
-    dwin_process.set_simage_status(true);
-    dwin_process.set_file_status(true);
-    //dwin_process.image_read_test();
+    dwin_process.simage_send_start();
   }
   // return button
   else if(0x0A == receive_data)
   {
     dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-    dwin_process.set_simage_status(false);
     dwin_process.reset_image_parameters();
-    dwin_process.set_file_status(false);
+    dwin_process.simage_send_end();
   }
   // next file page button
   else if(0x0B == receive_data)
   {
     dwin_process.send_next_page_data();
     dwin_process.reset_image_parameters();
-    dwin_process.set_simage_status(true);
-    dwin_process.set_file_status(true);
+    dwin_process.simage_send_start();
   }
   //last file page button
   else if(0x0C == receive_data)
   {
     dwin_process.send_last_page_data();
     dwin_process.reset_image_parameters();
-    dwin_process.set_simage_status(true);
-    dwin_process.set_file_status(true);
+    dwin_process.simage_send_start();
   }
 }
 
@@ -199,10 +194,6 @@ void lcd_parser::response_select_file(void)
   int index = 0;
   int max_index = 0;
   char file_name[FILE_NAME_LEN];
-
-  dwin_process.set_simage_status(false);
-  dwin_process.reset_image_parameters();
-  dwin_process.set_file_status(false);
 
   pfile_list_t temp = NULL;
   max_index = LcdFile.get_file_list_len();
@@ -239,9 +230,10 @@ void lcd_parser::response_select_file(void)
   {
     dwin_process.lcd_send_data(file_name,(FILE_TEXT_ADDR_D));
     dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
+    dwin_process.reset_image_parameters();
+    dwin_process.set_select_file_num(receive_data);
+    dwin_process.limage_send_start();
     //UserExecution.cmd_M2023(file_name);
-    dwin_process.set_limage_count(receive_data);
-    dwin_process.set_limage_status(true);
   }
 }
 

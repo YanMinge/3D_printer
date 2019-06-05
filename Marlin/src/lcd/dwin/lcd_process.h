@@ -77,12 +77,23 @@ typedef struct
   uint8_t image_current_send_count; /*the number of times have already sended*/
   uint8_t image_last_count_len; /*the length of bytes needed to be send in the last send var(0-250)*/
   uint8_t send_file_num; /*the number of pictures have already send  var(0-4)*/
+  uint8_t select_file_num; /*file number of the current page which is clicked*/
 
   int page_count; /*the number of page need to show in lcd pannel*/
   int current_page; /*the page number which now showing in lcd pannel*/
   int last_page_file; /*the number of files in last page*/
   int current_index; /*the file number which now is selected*/
 } data_info_t;
+
+typedef struct
+{
+  bool simage_status;
+  bool limage_status;
+  bool simage_send_status;
+  bool limage_send_status;
+  bool simage_set_status;
+  bool limage_set_status;
+} send_status_t;
 
 class lcd_process
 {
@@ -131,11 +142,20 @@ public:
   void send_simage(void);
   void send_limage(void);
   void lcd_loop(void);
-  void set_limage_count(int index);
+
+  void set_limage_count(void);
   void set_simage_count(void);
-  void set_simage_status(bool status){ simage_status = status;}
-  void set_limage_status(bool status){ limage_status = status;}
-  void set_file_status(bool status){ file_status = status;}
+  void set_simage_status(bool status){ image_status.simage_status = status;}
+  void set_limage_status(bool status){ image_status.limage_status = status;}
+  void set_simage_send_status(bool status){ image_status.simage_send_status = status;}
+  void set_limage_send_status(bool status){ image_status.limage_send_status = status;}
+  void set_simage_set_status(bool status){ image_status.simage_set_status = status;}
+  void set_limage_set_status(bool status){ image_status.limage_set_status = status;}
+  void simage_send_start(){ image_status.simage_status = true;image_status.simage_set_status = true;}
+  void limage_send_start(){ image_status.limage_status = true;image_status.limage_set_status = true;}
+  void simage_send_end(){ image_status.simage_status = false;image_status.simage_set_status = false;}
+  void limage_send_end(){ image_status.limage_status = false;image_status.limage_set_status = false;}
+  void set_select_file_num(uint8_t index){ file_info.select_file_num = index;}
   void reset_image_parameters(void);
 
   uint8_t get_language_type(void);
@@ -162,14 +182,7 @@ private:
   uint8_t language_type;
 
   //image show
-  bool simage_status;
-  bool limage_status;
-  bool simage_send_status;
-  bool limage_send_status;
-  bool simage_set_status;
-  bool limage_set_status;
-
-  bool file_status;
+  send_status_t image_status;
   data_info_t file_info;
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
 
