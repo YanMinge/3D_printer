@@ -227,7 +227,7 @@ void lcd_parser::response_select_file(void)
   }
   temp = LcdFile.file_list_index((index));
   strcpy(file_name,temp->file_name);
-  if(temp->IsDir)
+  if(temp->file_type == TYPE_FOLDER)
   {
     LcdFile.file_list_clear();
     LcdFile.list_test();

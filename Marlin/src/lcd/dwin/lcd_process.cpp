@@ -458,7 +458,7 @@ inline void lcd_process::send_page(unsigned long addr,int page,int num, unsigned
   for(int i = page*4; i < (page*4 + num); i++)
   {
     temp = LcdFile.file_list_index((i+1));
-    if(temp->IsDir == 1)
+    if(temp->file_type == TYPE_FOLDER)
     {
       lcd_send_data(1,(FILE_ICON_ADDR + PAGE(i,page)));
     }
