@@ -725,7 +725,7 @@ void lcd_process::send_limage(void)
       lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
 
       lcd_send_data(2,(FILE_ICON_ADDR + 4));
-      lcd_show_picture((0x0005),(0x0020),PICTURE_DISPLAY_BASE1,PICTURE_ADDR,0X82);
+      lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
 
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;
