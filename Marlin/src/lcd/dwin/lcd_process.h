@@ -93,6 +93,7 @@ typedef struct
   bool limage_send_status;
   bool simage_set_status;
   bool limage_set_status;
+  bool simage_delay_status;
 } send_status_t;
 
 class lcd_process
@@ -157,6 +158,7 @@ public:
   void limage_send_end(){ image_status.limage_status = false;image_status.limage_set_status = false;}
   void set_select_file_num(uint8_t index){ file_info.select_file_num = index;}
   void reset_image_parameters(void);
+  void image_send_delay(void);
 
   uint8_t get_language_type(void);
   void set_language_type(unsigned char type);

@@ -496,6 +496,15 @@ void lcd_process::send_first_page_data(void)
     send_page(FILE_TEXT_ADDR_1,file_info.current_page,file_info.last_page_file);
     lcd_send_data(PAGE_BASE + 2, PAGE_ADDR);
   }
+  else if((file_info.page_count == 0))
+  {
+    if(0 == file_info.last_page_file)
+    {
+      file_info.last_page_file = PAGE_FILE_NUM;
+    }
+    send_page(FILE_TEXT_ADDR_1,file_info.current_page,file_info.last_page_file);
+    lcd_send_data(PAGE_BASE + 2, PAGE_ADDR);
+  }
   LcdFile.set_current_page(1);
 }
 
@@ -581,9 +590,11 @@ void lcd_process::set_simage_count(void)
     get_file_info();
     file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.send_file_num+1);
     current_file = LcdFile.file_list_index(file_info.current_index);
-
+    DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
     {
+      image_status.simage_delay_status = false;
+
       file_size = udisk.get_simage_size(current_file->file_name);
       file_info.image_send_count = file_size/SEND_IMAGE_LEN;
       file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
@@ -604,6 +615,12 @@ void lcd_process::set_simage_count(void)
       image_status.simage_set_status = true;
       image_status.simage_send_status = false;
       file_info.send_file_num += 1;
+      if(file_info.send_file_num > 3)
+      {
+        image_status.simage_send_status = false;
+        image_status.simage_set_status = false;
+        image_status.simage_status = false;
+      }
     }
   }
 }
@@ -621,6 +638,11 @@ void lcd_process::send_simage(void)
       lcd_send_data(2,(FILE_ICON_ADDR + file_info.send_file_num));
       lcd_show_picture((0x0020),(0x0020 + file_info.send_file_num * 100),PICTURE_ADDR,0X82);
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
+      DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
+      //file_info.shadow_image_current_count = file_info.image_current_send_count;
+      //file_info.shadow_image_send_count = file_info.image_send_count;
+
+      image_status.simage_delay_status = true;
 
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;
@@ -703,7 +725,7 @@ void lcd_process::send_limage(void)
       lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
 
       lcd_send_data(2,(FILE_ICON_ADDR + 4));
-      lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
+      lcd_show_picture((0x0005),(0x0020),PICTURE_DISPLAY_BASE1,PICTURE_ADDR,0X82);
 
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;
@@ -713,7 +735,6 @@ void lcd_process::send_limage(void)
       UserExecution.cmd_M2023(current_file->file_name);
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
-
     if(file_info.image_current_send_count < file_info.image_send_count -1)
     {
       get_image_data(SEND_IMAGE_LEN);
@@ -724,12 +745,27 @@ void lcd_process::send_limage(void)
   }
 }
 
+void lcd_process::image_send_delay(void)
+{
+  if(image_status.simage_delay_status)
+  {
+    delay(100);
+    //file_info.shadow_image_current_count = 0;
+    //file_info.shadow_image_send_count = 0;
+    DEBUGPRINTF("\r\nimage_send_delay happened\r\n");
+  }
+}
+
 void lcd_process::lcd_loop(void)
 {
   if(image_status.simage_status)
   {
     set_simage_count();
     send_simage();
+  }
+  else
+  {
+    image_status.simage_delay_status = false;
   }
   if(image_status.limage_status)
   {

@@ -60,10 +60,17 @@ public:
   void response_print_file(void);
   void response_move_axis(void);
   void response_set_language(void);
+
+  void select_file(pfile_list_t temp);
+  void next_path_fresh(char* name);
+  bool last_path_fresh(void);
+
 private:
   lcd_cmd_type type;
   unsigned short receive_data;
   unsigned long receive_addr;
+
+  char * current_path;
 };
 
 extern lcd_parser dwin_parser;
