@@ -44,6 +44,7 @@
 #ifdef TARGET_LPC1768
 #include "udisk_reader.h"
 #include "lcd_process.h"
+#include "lcd_parser.h"
 #include "../../gcode/queue.h"
 
 #include HAL_PATH(.., HAL.h)
@@ -119,11 +120,17 @@ void udisk_reader::usb_status_polling(void)
       f_unmount("/");
       set_disk_status(STA_NOINIT);
       detected = false;
+	  LcdFile.file_list_clear();
+  	  if(dwin_parser.get_file_show_status())
+	  {
+	  	dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+		dwin_parser.set_file_show_status(false);
+	  }
     }
     else
     {
       f_mount(&fatFS, "/" , 0);     /* Register volume work area (never fails) */
-      detected = true;;
+      detected = true;
     }
     DEBUGPRINTF("usb_status(%d)\r\n", usb_status);
     pre_usb_status = usb_status;

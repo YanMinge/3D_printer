@@ -69,7 +69,8 @@
        * @brief Turn off a digital PIN
        * @details Alias of digitalWrite(PIN, LOW) using FastIO
        */
-      FORCE_INLINE static void off() { WRITE(BEEPER_PIN, LOW); }
+      //FORCE_INLINE static void off() { WRITE(BEEPER_PIN, LOW); }
+      FORCE_INLINE static void off() { analogWrite(BEEPER_PIN, 0); }
 
       /**
        * @brief Turn on a digital PIN

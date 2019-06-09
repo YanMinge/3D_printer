@@ -55,6 +55,10 @@ public:
   void parser_lcd_command(void);
   void get_command_type(void);
 
+	void response_print_button(void);
+	void response_return_button(void);
+	void response_next_page_button(void);
+	void response_last_page_button(void);
   void response_menu_file(void);
   void response_select_file(void);
   void response_print_file(void);
@@ -65,12 +69,17 @@ public:
   void next_path_fresh(char* name);
   bool last_path_fresh(void);
 
+	inline bool get_file_show_status(void){return file_show_status;}
+	inline void set_file_show_status(bool status){ file_show_status = status;}
+	
 private:
   lcd_cmd_type type;
   unsigned short receive_data;
   unsigned long receive_addr;
 
   char * current_path;
+
+	bool file_show_status;
 };
 
 extern lcd_parser dwin_parser;

@@ -34,7 +34,7 @@
 
 #include "../gcode.h"
 
-uint32_t beep_times_count;
+uint8_t beep_status = 1;
 /**
  * M2027: Get SD Card status
  *      OR, with 'S<seconds>' set the SD status auto-report interval. (Requires AUTO_REPORT_SD_STATUS)
@@ -42,32 +42,10 @@ uint32_t beep_times_count;
  */
 void GcodeSuite::M2033()
 {
-  bool s;
-  uint32_t beep_frequency;
   if (parser.seen('S'))
   {
     SERIAL_ECHOPGM("M2033:\r\n");
-    s = parser.value_bool();
-    if(s)
-    {
-      analogWrite(BEEPER_PIN,100);
-    }
-    else
-    {
-      analogWrite(BEEPER_PIN,0);
-    }
-  }
-  if (parser.seen('T'))
-  {
-    SERIAL_ECHOPGM("M2033:\r\n");
-    beep_times_count = parser.value_int();
-    beep_times_count *= 1000;
-  }
-  if (parser.seen('F'))
-  {
-    SERIAL_ECHOPGM("M2033:\r\n");
-    beep_frequency = parser.value_ulong();
-    pwm_set_frequency(BEEPER_PIN,beep_frequency);
+    beep_status = parser.value_byte();
   }
 }
 

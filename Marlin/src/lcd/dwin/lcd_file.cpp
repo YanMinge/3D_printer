@@ -177,36 +177,6 @@ int lcd_file::file_list_len(void)
   return i;
 }
 
-void lcd_file::list_test(void)
-{
-  int i;
-  pfile_list_t m;
-  for(i = 0; i < 4; i++)
-  {
-    m = (pfile_list_t) new char[(sizeof(file_list_t))];
-    memset(m,0,sizeof(file_list_t));
-    if(NULL == m)
-    {
-      return;
-    }
-    if(i == 0)
-    {
-      strcpy(m->file_name, "make");
-      m->file_type = TYPE_FOLDER;
-    }
-    if(i == 1)
-    {
-      strcpy(m->file_name, "block");
-      m->file_type = TYPE_FOLDER;
-    }
-    if((i == 2) || (i == 3))
-    {
-      strcpy(m->file_name, "makeblock.gcode");
-    }
-    file_list_insert_tail(m);
-  }
-}
-
 /**
  * @breif  set page info through the linklist
  * @detail  set file_page_num

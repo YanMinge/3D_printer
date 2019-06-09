@@ -429,21 +429,8 @@ void lcd_process::icon_update(void)
     }
     if((start_icon_count += 1) > 100)
     {
-      uint type = get_language_type();
-      icon_update_status = 0;
-      //lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-      if(0xff == type)
-      {
-        lcd_send_data(PAGE_BASE +10, PAGE_ADDR);
-      }
-      else if(0x01 == type)
-      {
-        lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-      }
-      else if(0x00 == type)
-      {
-        lcd_send_data(PAGE_BASE +11, PAGE_ADDR);
-      }
+			icon_update_status = 0;
+			move_main_page();
     }
     update_time = ms +10;
   }
@@ -496,13 +483,8 @@ void lcd_process::send_first_page_data(void)
     send_page(FILE_TEXT_ADDR_1,file_info.current_page,file_info.last_page_file);
     lcd_send_data(PAGE_BASE + 2, PAGE_ADDR);
   }
-  else if((file_info.page_count == 0))
+  else if((file_info.page_count == 0) && (file_info.current_page == 0))
   {
-    if(0 == file_info.last_page_file)
-    {
-      file_info.last_page_file = PAGE_FILE_NUM;
-    }
-    send_page(FILE_TEXT_ADDR_1,file_info.current_page,file_info.last_page_file);
     lcd_send_data(PAGE_BASE + 2, PAGE_ADDR);
   }
   LcdFile.set_current_page(1);
@@ -596,6 +578,11 @@ void lcd_process::set_simage_count(void)
       image_status.simage_delay_status = false;
 
       file_size = udisk.get_simage_size(current_file->file_name);
+			if(-1 == file_size)
+			{
+				//usb is not inserted
+				
+			}
       file_info.image_send_count = file_size/SEND_IMAGE_LEN;
       file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
 
@@ -776,7 +763,6 @@ void lcd_process::lcd_loop(void)
 
 uint8_t lcd_process::get_language_type(void)
 {
-  language_type = eeprom_read_byte(EEPROM_LANGUAGE_ADDR);
   return language_type;
 }
 
@@ -789,6 +775,35 @@ void lcd_process::set_language_type(unsigned char type)
 void lcd_process::language_init(void)
 {
   language_type = eeprom_read_byte(EEPROM_LANGUAGE_ADDR);
+}
+
+void lcd_process::move_main_page(void)
+{      
+  //lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+  if(0xff == language_type)
+  {
+    lcd_send_data(PAGE_BASE +10, PAGE_ADDR);
+  }
+  else if(0x01 == language_type)
+  {
+    lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+  }
+  else if(0x00 == language_type)
+  {
+    lcd_send_data(PAGE_BASE +11, PAGE_ADDR);
+  }
+}
+
+void lcd_process::move_usb_hint_page(void)
+{      
+  if(0x01 == language_type)
+  {
+    lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
+  }
+  else if(0x00 == language_type)
+  {
+  	lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
+  }
 }
 
 void lcd_process::reset_image_parameters(void)

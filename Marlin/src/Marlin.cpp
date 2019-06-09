@@ -1181,11 +1181,6 @@ void loop() {
     endstops.event_handler();
     idle();
 
-#if ENABLED(USE_DWIN_LCD)
-    dwin_parser.lcd_update();
-    dwin_process.lcd_loop();
-#endif //USE_DWIN_LCD
-
 #if ENABLED(USB_DISK_SUPPORT)
     static bool pre_usb_status;
     bool usb_status = udisk.is_usb_detected();
@@ -1193,10 +1188,17 @@ void loop() {
     {
       if(usb_status == true)
       {
-        udisk.ls(LS_COUNT, "/", ".gcode");
+        //udisk.ls(LS_COUNT, "/", ".gcode");
+        udisk.ls(LS_GET_FILE_NAME, "/", ".gcode");
       }
       pre_usb_status = usb_status;
     }
 #endif //USB_DISK_SUPPORT
+
+#if ENABLED(USE_DWIN_LCD)
+			dwin_parser.lcd_update();
+			dwin_process.lcd_loop();
+#endif //USE_DWIN_LCD
+
   }
 }

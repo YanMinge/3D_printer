@@ -35,6 +35,10 @@ Buzzer::state_t Buzzer::state;
 CircularQueue<tone_t, TONE_QUEUE_LENGTH> Buzzer::buffer;
 Buzzer buzzer;
 
+#if ENABLED(TARGET_LPC1768)
+	extern uint8_t beep_status;
+#endif
+
 /**
  * @brief Add a tone to the queue
  * @details Adds a tone_t structure to the ring buffer, will block IO if the
@@ -70,6 +74,12 @@ void Buzzer::tick() {
         CRITICAL_SECTION_START;
         ::tone(BEEPER_PIN, state.tone.frequency, state.tone.duration);
         CRITICAL_SECTION_END;
+			#elif ENABLED(TARGET_LPC1768)
+				if(beep_status)
+				{
+					pwm_set_frequency(BEEPER_PIN,state.tone.frequency);
+					analogWrite(BEEPER_PIN,10);
+				}
       #else
         on();
       #endif

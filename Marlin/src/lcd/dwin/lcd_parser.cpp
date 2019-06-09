@@ -157,55 +157,124 @@ void lcd_parser::parser_lcd_command(void)
   }
 }
 
+void lcd_parser::response_print_button(void)
+{
+	bool usb_status = udisk.is_usb_detected();
+	
+	if(!usb_status)
+	{
+		// usb have not insert
+		dwin_process.move_usb_hint_page();
+		return;
+	}
+	
+	set_file_show_status(true);
+	LcdFile.set_file_page_info();
+	LcdFile.set_current_page(0);
+	dwin_process.send_first_page_data();
+	dwin_process.lcd_receive_data_clear();
+	dwin_process.simage_send_start();
+}
+
+void lcd_parser::response_return_button(void)
+{
+	bool usb_status = udisk.is_usb_detected();
+
+	dwin_process.reset_image_parameters();
+	dwin_process.simage_send_end();
+	dwin_process.image_send_delay();
+
+	if(!usb_status)
+	{
+		// usb have not insert
+		dwin_process.move_usb_hint_page();
+		return;
+	}
+	
+	if(last_path_fresh())
+	{
+		uint16_t value;
+		SERIAL_PRINTF("enter new path folder...\r\n");
+
+		value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
+		if(USB_NOT_DETECTED == value)
+		{
+			set_file_show_status(false);
+			return;
+		}
+		
+		LcdFile.set_file_page_info();
+		LcdFile.set_current_page(0);
+		dwin_process.send_first_page_data();
+		dwin_process.lcd_receive_data_clear();
+		dwin_process.simage_send_start();
+	}
+	else
+	{
+		dwin_process.move_main_page();
+		set_file_show_status(false);
+	}
+}
+
+void lcd_parser::response_next_page_button(void)
+{
+	bool usb_status = udisk.is_usb_detected();
+	
+	if(!usb_status)
+	{
+		// usb have not insert
+		dwin_process.move_usb_hint_page();
+		set_file_show_status(false);
+		return;
+	}
+	dwin_process.image_send_delay();
+	dwin_process.send_next_page_data();
+	dwin_process.reset_image_parameters();
+	dwin_process.simage_send_start();
+}
+
+void lcd_parser::response_last_page_button(void)
+{
+	bool usb_status = udisk.is_usb_detected();
+	
+	if(!usb_status)
+	{
+		// usb have not insert
+		dwin_process.move_usb_hint_page();
+		set_file_show_status(false);
+		return;
+	}
+	
+	dwin_process.image_send_delay();
+	dwin_process.send_last_page_data();
+	dwin_process.reset_image_parameters();
+	dwin_process.simage_send_start();
+}
+
+
+
+
 void lcd_parser::response_menu_file(void)
 {
   //main page print button
   if(0x09 == receive_data)
   {
-    dwin_process.lcd_send_temperature(172,256,93,48);
-    udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
-    LcdFile.set_file_page_info();
-    LcdFile.set_current_page(0);
-    dwin_process.send_first_page_data();
-    dwin_process.lcd_receive_data_clear();
-    dwin_process.simage_send_start();
+		response_print_button();
   }
   // return button
   else if(0x0A == receive_data)
   {
-    dwin_process.reset_image_parameters();
-    dwin_process.simage_send_end();
-    if(last_path_fresh())
-    {
-      SERIAL_PRINTF("return home ...\r\n");
-      dwin_process.lcd_send_temperature(172,256,93,48);
-      udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
-      LcdFile.set_file_page_info();
-      LcdFile.set_current_page(0);
-      dwin_process.send_first_page_data();
-      dwin_process.lcd_receive_data_clear();
-      dwin_process.simage_send_start();
-    }
-    else
-    {
-      dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-    }
+  	response_return_button();
   }
   // next file page button
   else if(0x0B == receive_data)
   {
-    dwin_process.image_send_delay();
-    dwin_process.send_next_page_data();
-    dwin_process.reset_image_parameters();
-    dwin_process.simage_send_start();
+  	response_next_page_button();
   }
   //last file page button
   else if(0x0C == receive_data)
   {
-    dwin_process.image_send_delay();
-    dwin_process.send_last_page_data();
-    dwin_process.reset_image_parameters();
-    dwin_process.simage_send_start();
+		response_last_page_button();
   }
 }
 
