@@ -131,6 +131,7 @@ void udisk_reader::usb_status_polling(void)
     {
       f_mount(&fatFS, "/" , 0);     /* Register volume work area (never fails) */
       detected = true;
+      dwin_parser.set_file_read_status(false);
     }
     DEBUGPRINTF("usb_status(%d)\r\n", usb_status);
     pre_usb_status = usb_status;
@@ -199,37 +200,33 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       {
         continue;
       }
-      file_list_array[file_count].ftime = ((fno.fdate & 0xffff) << 16) + (fno.ftime & 0xffff);
-      file_list_array[file_count].fsize = fno.fsize;
-      if(fno.fattrib & AM_DIR)
+      if(is_action != LS_COUNT)
       {
-        file_list_array[file_count].ftype = TYPE_FOLDER;
-      }
-      else
-      {
-        char * file_path = new char[strlen(path) + strlen(fno.fname) + 1];
-        strcpy(file_path, path);
-        file_path[strlen(path)] = '/';
-        strcpy(file_path + strlen(path) + 1, fno.fname);
-        if(check_gm_file(file_path))
+        file_list_array[file_count].ftime = ((fno.fdate & 0xffff) << 16) + (fno.ftime & 0xffff);
+        file_list_array[file_count].fsize = fno.fsize;
+        if(fno.fattrib & AM_DIR)
         {
-          file_list_array[file_count].ftype = TYPE_MAKEBLOCK_GM;
+          file_list_array[file_count].ftype = TYPE_FOLDER;
         }
         else
         {
-          file_list_array[file_count].ftype = TYPE_OTHER_GCODE;
+          char * file_path = new char[strlen(path) + strlen(fno.fname) + 1];
+          strcpy(file_path, path);
+          file_path[strlen(path)] = '/';
+          strcpy(file_path + strlen(path) + 1, fno.fname);
+          file_list_array[file_count].ftype = TYPE_DEFAULT_FILE;
+          delete[] file_path;
         }
-        delete[] file_path;
-      }
 
-      if(strlen(fno.fname) < FILE_NAME_LEN)
-      {
-        strcpy(file_list_array[file_count].fname, fno.fname);
-      }
-      else
-      {
-        memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1); 
-        file_list_array[file_count].fname[FILE_NAME_LEN - 1] = '\0';
+        if(strlen(fno.fname) < FILE_NAME_LEN)
+        {
+          strcpy(file_list_array[file_count].fname, fno.fname);
+        }
+        else
+        {
+          memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1);
+          file_list_array[file_count].fname[FILE_NAME_LEN - 1] = '\0';
+        }
       }
       file_count++;
     }
@@ -278,7 +275,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     else if(is_action == LS_COUNT)
     {
       return file_count;
-    } 
+    }
   }
   return rc;
 }
@@ -378,7 +375,7 @@ void udisk_reader::print_file_name(void)
 
 void udisk_reader::report_status(void)
 {
-  if (IS_UDISK_PRINTING()) 
+  if (IS_UDISK_PRINTING())
   {
     SERIAL_ECHOPGM(MSG_SD_PRINTING_BYTE);
     SERIAL_ECHO(udisk_pos - get_gcode_offset(get_file_name()));

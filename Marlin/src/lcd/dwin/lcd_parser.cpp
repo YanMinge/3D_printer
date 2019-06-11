@@ -49,7 +49,7 @@
 #include "user_execution.h"
 
 lcd_parser dwin_parser;
-const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120E,0x1210,0x1212,0x1214,0x1216,0x1218, 0};
+const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120E,0x1210,0x1212,0x1214,0x1216,0x1218,0x121A,0};
 
 lcd_parser::lcd_parser(void)
 {
@@ -102,6 +102,10 @@ void lcd_parser::get_command_type(void)
         {
           type = CMD_SET_LANGUAGE;
         }
+        else if(FILEMENT_BTN == button_addr[i])
+        {
+          type = CMD_FILAMENT;
+        }
         else
         {
           type = CMD_NULL;
@@ -144,6 +148,10 @@ void lcd_parser::parser_lcd_command(void)
         response_set_language();
         break;
 
+      case CMD_FILAMENT:
+        response_filament();
+        break;
+
       case CMD_WRITE_REG_OK:case CMD_WRITE_VAR_OK:case CMD_READ_REG:
         type = CMD_NULL;
         break;
@@ -159,15 +167,27 @@ void lcd_parser::parser_lcd_command(void)
 
 void lcd_parser::response_print_button(void)
 {
+    uint16_t value;
 	bool usb_status = udisk.is_usb_detected();
-	
+
 	if(!usb_status)
 	{
 		// usb have not insert
 		dwin_process.move_usb_hint_page();
 		return;
 	}
-	
+
+  if(!file_read_status)
+  {
+    value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
+    if(USB_NOT_DETECTED == value)
+    {
+      set_file_show_status(false);
+      return;
+    }
+    file_read_status = true;
+  }
+
 	set_file_show_status(true);
 	LcdFile.set_file_page_info();
 	LcdFile.set_current_page(0);
@@ -190,7 +210,7 @@ void lcd_parser::response_return_button(void)
 		dwin_process.move_usb_hint_page();
 		return;
 	}
-	
+
 	if(last_path_fresh())
 	{
 		uint16_t value;
@@ -202,7 +222,7 @@ void lcd_parser::response_return_button(void)
 			set_file_show_status(false);
 			return;
 		}
-		
+
 		LcdFile.set_file_page_info();
 		LcdFile.set_current_page(0);
 		dwin_process.send_first_page_data();
@@ -219,7 +239,7 @@ void lcd_parser::response_return_button(void)
 void lcd_parser::response_next_page_button(void)
 {
 	bool usb_status = udisk.is_usb_detected();
-	
+
 	if(!usb_status)
 	{
 		// usb have not insert
@@ -236,7 +256,7 @@ void lcd_parser::response_next_page_button(void)
 void lcd_parser::response_last_page_button(void)
 {
 	bool usb_status = udisk.is_usb_detected();
-	
+
 	if(!usb_status)
 	{
 		// usb have not insert
@@ -244,7 +264,7 @@ void lcd_parser::response_last_page_button(void)
 		set_file_show_status(false);
 		return;
 	}
-	
+
 	dwin_process.image_send_delay();
 	dwin_process.send_last_page_data();
 	dwin_process.reset_image_parameters();
@@ -320,11 +340,15 @@ void lcd_parser::response_print_file(void)
 
   if(0x01 == receive_data)
   {
+  	// first press print button, should initlize
     if(status == out_printing)
     {
       LcdFile.set_current_status(on_printing);
       dwin_process.lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
       UserExecution.cmd_M2024();
+
+      //change to prepare show picture
+      //dwin_process.lcd_send_data(PAGE_BASE + 13, PAGE_ADDR);
     }
     else if(status == on_printing )
     {
@@ -386,6 +410,14 @@ void lcd_parser::response_set_language(void)
   }
 }
 
+void lcd_parser::response_filament(void)
+{
+  if(0x03 == receive_data)
+  {
+    dwin_process.lcd_send_data(PAGE_BASE + 17, PAGE_ADDR);
+  }
+}
+
 void lcd_parser::select_file(pfile_list_t temp)
 {
   if(temp->file_type == TYPE_FOLDER)
@@ -404,8 +436,9 @@ void lcd_parser::select_file(pfile_list_t temp)
     dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
     dwin_process.set_select_file_num(receive_data);
     dwin_process.limage_send_start();
+    dwin_process.send_print_time(2020);
   }
-  else if(temp->file_type == TYPE_OTHER_GCODE)
+  else if(temp->file_type == TYPE_DEFAULT_FILE)
   {
     dwin_process.lcd_send_data(temp->file_name,(FILE_TEXT_ADDR_D));
     dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);

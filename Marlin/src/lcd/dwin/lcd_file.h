@@ -55,11 +55,11 @@
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
 
-enum file_type_t : uint8_t 
-{ 
-  TYPE_FOLDER, 
-  TYPE_MAKEBLOCK_GM, 
-  TYPE_OTHER_GCODE,
+enum file_type_t : uint8_t
+{
+  TYPE_FOLDER,
+  TYPE_DEFAULT_FILE,
+  TYPE_MAKEBLOCK_GM,
   TYPE_FIRMWARE,
 };
 

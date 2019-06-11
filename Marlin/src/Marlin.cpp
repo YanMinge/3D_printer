@@ -1188,8 +1188,7 @@ void loop() {
     {
       if(usb_status == true)
       {
-        //udisk.ls(LS_COUNT, "/", ".gcode");
-        udisk.ls(LS_GET_FILE_NAME, "/", ".gcode");
+        udisk.ls(LS_SERIAL_PRINT, "/", ".gcode");
       }
       pre_usb_status = usb_status;
     }

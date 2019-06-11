@@ -64,14 +64,16 @@ public:
   void response_print_file(void);
   void response_move_axis(void);
   void response_set_language(void);
+  void response_filament(void);
 
   void select_file(pfile_list_t temp);
   void next_path_fresh(char* name);
   bool last_path_fresh(void);
 
-	inline bool get_file_show_status(void){return file_show_status;}
-	inline void set_file_show_status(bool status){ file_show_status = status;}
-	
+  inline bool get_file_show_status(void){return file_show_status;}
+  inline void set_file_show_status(bool status){ file_show_status = status;}
+  inline void set_file_read_status(bool status){ file_read_status = status;}
+
 private:
   lcd_cmd_type type;
   unsigned short receive_data;
@@ -79,7 +81,8 @@ private:
 
   char * current_path;
 
-	bool file_show_status;
+  bool file_show_status;
+  bool file_read_status;
 };
 
 extern lcd_parser dwin_parser;

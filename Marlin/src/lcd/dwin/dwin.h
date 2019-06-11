@@ -87,6 +87,7 @@
 #define Z_AXIS_MOVE_BTN 0x1214
 #define HOME_MOVE_BTN   0x1216
 #define LANGUAGE_SET_BTN   0x1218
+#define FILEMENT_BTN   	   0x121A
 
 //var addr
 #define	PAGE_ADDR	            0x0084
@@ -94,6 +95,7 @@
 #define START_ICON_ADDR       0x1002
 #define FILE_ICON_ADDR        0x1004
 
+#define PREPARE_ICON_ADDR       0x1010
 #define VOICE_ICON_ADDR         0x1020
 #define TEMP_HOTEND_ADDR        0X1300
 #define TEMP_HOTEND_TARGET_ADDR 0X1302

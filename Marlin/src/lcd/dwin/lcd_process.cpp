@@ -567,12 +567,21 @@ void lcd_process::set_simage_count(void)
 {
   if(image_status.simage_set_status)
   {
-    uint32_t file_size;
+    int file_size;
 
     get_file_info();
     file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.send_file_num+1);
     current_file = LcdFile.file_list_index(file_info.current_index);
     DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
+
+
+    if(TYPE_DEFAULT_FILE == current_file->file_type)
+    {
+      if(udisk.check_gm_file(current_file->file_name))
+      {
+        current_file->file_type = TYPE_MAKEBLOCK_GM;
+      }
+    }
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
     {
       image_status.simage_delay_status = false;
@@ -581,7 +590,7 @@ void lcd_process::set_simage_count(void)
 			if(-1 == file_size)
 			{
 				//usb is not inserted
-				
+
 			}
       file_info.image_send_count = file_size/SEND_IMAGE_LEN;
       file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
@@ -743,6 +752,20 @@ void lcd_process::image_send_delay(void)
   }
 }
 
+void lcd_process::send_print_time(uint32_t time)
+{
+  char str[6];
+
+  itoa(time,str,10);
+  str[5] = '\0';
+  str[4] = str[3];
+  str[3] = str[2];
+  str[2] = ':';
+
+  lcd_send_data(str,0x1616);
+  DEBUGPRINTF("\r\n time = %s\r\n",str);
+}
+
 void lcd_process::lcd_loop(void)
 {
   if(image_status.simage_status)
@@ -778,7 +801,7 @@ void lcd_process::language_init(void)
 }
 
 void lcd_process::move_main_page(void)
-{      
+{
   //lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
   if(0xff == language_type)
   {

@@ -59,6 +59,8 @@ enum lcd_cmd_type : unsigned char {
   CMD_PRINT_FILE,
   CMD_AXIS_MOVE,
   CMD_SET_LANGUAGE,
+
+  CMD_FILAMENT,
 };
 
 typedef struct lcd_data_buffer
@@ -159,6 +161,7 @@ public:
   void set_select_file_num(uint8_t index){ file_info.select_file_num = index;}
   void reset_image_parameters(void);
   void image_send_delay(void);
+  void send_print_time(uint32_t time);
 
   uint8_t get_language_type(void);
   void set_language_type(unsigned char type);

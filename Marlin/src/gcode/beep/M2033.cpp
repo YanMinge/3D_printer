@@ -44,7 +44,6 @@ void GcodeSuite::M2033()
 {
   if (parser.seen('S'))
   {
-    SERIAL_ECHOPGM("M2033:\r\n");
     beep_status = parser.value_byte();
   }
 }
