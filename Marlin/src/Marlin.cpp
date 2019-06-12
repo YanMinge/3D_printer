@@ -733,6 +733,12 @@ void idle(
   #if ENABLED(PRUSA_MMU2)
     mmu2.mmuLoop();
   #endif
+
+#if ENABLED(USE_DWIN_LCD)
+  dwin_parser.lcd_update();
+  dwin_process.lcd_loop();
+#endif //USE_DWIN_LCD
+
 }
 
 /**
