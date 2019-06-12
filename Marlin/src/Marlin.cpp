@@ -1195,8 +1195,8 @@ void loop() {
 #endif //USB_DISK_SUPPORT
 
 #if ENABLED(USE_DWIN_LCD)
-			dwin_parser.lcd_update();
-			dwin_process.lcd_loop();
+    dwin_parser.lcd_update();
+    dwin_process.lcd_loop();
 #endif //USE_DWIN_LCD
 
   }

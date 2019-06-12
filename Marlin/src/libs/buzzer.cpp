@@ -74,12 +74,12 @@ void Buzzer::tick() {
         CRITICAL_SECTION_START;
         ::tone(BEEPER_PIN, state.tone.frequency, state.tone.duration);
         CRITICAL_SECTION_END;
-			#elif ENABLED(TARGET_LPC1768)
-				if(beep_status)
-				{
-					pwm_set_frequency(BEEPER_PIN,state.tone.frequency);
-					analogWrite(BEEPER_PIN,10);
-				}
+      #elif ENABLED(TARGET_LPC1768)
+        if(beep_status)
+        {
+          pwm_set_frequency(BEEPER_PIN,state.tone.frequency);
+          analogWrite(BEEPER_PIN,10);
+       }
       #else
         on();
       #endif

@@ -429,8 +429,8 @@ void lcd_process::icon_update(void)
     }
     if((start_icon_count += 1) > 100)
     {
-			icon_update_status = 0;
-			move_main_page();
+      icon_update_status = 0;
+      move_main_page();
     }
     update_time = ms +10;
   }
@@ -587,11 +587,11 @@ void lcd_process::set_simage_count(void)
       image_status.simage_delay_status = false;
 
       file_size = udisk.get_simage_size(current_file->file_name);
-			if(-1 == file_size)
-			{
-				//usb is not inserted
+      if(-1 == file_size)
+      {
+        //usb is not inserted
 
-			}
+      }
       file_info.image_send_count = file_size/SEND_IMAGE_LEN;
       file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
 
@@ -825,7 +825,7 @@ void lcd_process::move_usb_hint_page(void)
   }
   else if(0x00 == language_type)
   {
-  	lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
+    lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
   }
 }
 

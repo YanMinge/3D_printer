@@ -55,10 +55,10 @@ public:
   void parser_lcd_command(void);
   void get_command_type(void);
 
-	void response_print_button(void);
-	void response_return_button(void);
-	void response_next_page_button(void);
-	void response_last_page_button(void);
+  void response_print_button(void);
+  void response_return_button(void);
+  void response_next_page_button(void);
+  void response_last_page_button(void);
   void response_menu_file(void);
   void response_select_file(void);
   void response_print_file(void);

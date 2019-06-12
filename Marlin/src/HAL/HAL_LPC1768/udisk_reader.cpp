@@ -120,7 +120,7 @@ void udisk_reader::usb_status_polling(void)
       f_unmount("/");
       set_disk_status(STA_NOINIT);
       detected = false;
-	  LcdFile.file_list_clear();
+      LcdFile.file_list_clear();
   	  if(dwin_parser.get_file_show_status())
 	  {
 	  	dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
