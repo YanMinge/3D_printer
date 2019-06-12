@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2020.cpp
+ * @file    M2027.cpp
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/05/24
- * @brief   source code for USB HOST mass storge driver.
+ * @brief   source code for M2027.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,7 +19,7 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * Command to list the files in usb disk.
+ * Get SD Card status.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
@@ -48,7 +48,9 @@ void GcodeSuite::M2027()
     udisk.print_file_name();
   }
   else
+  {
     udisk.report_status();
+  }
 }
 
 #endif // USB_DISK_SUPPORT

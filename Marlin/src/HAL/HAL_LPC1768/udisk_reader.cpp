@@ -235,9 +235,9 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
       return rc;
     }
-    file_list_sort();
     if(is_action == LS_SERIAL_PRINT)
     {
+      file_list_sort();
       SERIAL_PRINTF("List files in path: %s\r\n", path);
       for(int i = 0; i < file_count; i++)
       {
@@ -262,6 +262,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     }
     else if(is_action == LS_GET_FILE_NAME)
     {
+      file_list_sort();
       LcdFile.file_list_clear();
       for(int i = 0; i < file_count; i++)
       {
@@ -312,19 +313,28 @@ void udisk_reader::open_file(char * const path, const bool read)
     {
       DEBUGPRINTF("The file: %s has been opened\r\n",opened_file_name);
     }
-    doing = 1;
+
+	if(strcmp(opened_file_name, path))
+    {
+      DEBUGPRINTF("opened_file_name not path\r\n");
+      doing = 1;
+    }
   }
   else
   {
     doing = 2;
   }
 
-  if (doing)
+  if(doing)
   {
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM("Now ");
     serialprintPGM(doing == 1 ? PSTR("doing") : PSTR("fresh"));
     SERIAL_ECHOLNPAIR(" file: ", path);
+  }
+  else
+  {
+    return;
   }
 
   stop_udisk_print();

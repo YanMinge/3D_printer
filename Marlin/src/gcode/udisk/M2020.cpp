@@ -4,7 +4,7 @@
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/05/24
- * @brief   source code for USB HOST mass storge driver.
+ * @brief   source code for M2020.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,7 +19,7 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * Command to list the files in usb disk.
+ * List usb disk files to serial output.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`

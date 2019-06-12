@@ -42,6 +42,10 @@
   #include "../../../feature/prusa_MMU2/mmu2.h"
 #endif
 
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  #include "../../feature/pause.h"
+#endif
+
 /**
  * M701: Load filament
  *

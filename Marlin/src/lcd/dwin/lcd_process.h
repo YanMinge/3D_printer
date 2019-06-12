@@ -165,8 +165,8 @@ public:
 
   uint8_t get_language_type(void);
   void set_language_type(unsigned char type);
-	void move_main_page(void);
-	void move_usb_hint_page(void);
+  void move_main_page(void);
+  void move_usb_hint_page(void);
   void language_init(void);
   void get_image_data(int len);
 

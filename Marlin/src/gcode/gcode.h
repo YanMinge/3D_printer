@@ -887,6 +887,11 @@ private:
   #if PIN_EXISTS(BEEPER)
     static void M2033();
   #endif
+
+  #if ENABLED(USE_MATERIAL_MOTION_CHECK)
+    static void M2032();
+    static void M2034();
+  #endif
   static void T(const uint8_t tool_index);
 
 };

@@ -768,6 +768,11 @@ void GcodeSuite::process_parsed_command(
         case 2033: M2033(); break;
       #endif
 
+      #if ENABLED(USE_MATERIAL_MOTION_CHECK)
+	    case 2032: M2032(); break;
+        case 2034: M2034(); break;
+      #endif
+
       default: parser.unknown_command_error(); break;
     }
     break;

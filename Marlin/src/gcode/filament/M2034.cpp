@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2024_M2025.cpp
+ * @file    M2034.cpp
  * @author  Mark Yan
  * @version V1.0.0
- * @date    2019/05/24
- * @brief   source code for M2024_M2025.
+ * @date    2019/06/11
+ * @brief   source code for M2034.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,52 +19,31 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * Start or Pause USB Disk Print.
+ * enable/disable filamen runout report.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/05/24     1.0.0            Initial function design.
+ * Mark Yan         2019/06/11     1.0.0            Initial function design.
  * </pre>
  *
  */
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USB_DISK_SUPPORT)
+#if ENABLED(USE_MATERIAL_MOTION_CHECK)
 
 #include "../gcode.h"
-#include "../../module/printcounter.h"
-#include "udisk_reader.h"
+#include "material_check.h"
 
 /**
- * M2024: Start or Resume USB Disk Print
+ * M2034: enable/disable filamen runout report
  */
-void GcodeSuite::M2024()
+void GcodeSuite::M2034()
 {
-  if (udisk.is_file_open())
+  if (parser.seen('S'))
   {
-    if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name())))
-    {
-      udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
-    }
-	else
-    {
-      udisk.set_index(0);
-	}
-    udisk.start_udisk_print();
-    print_job_timer.start();
-  }
-}
 
-/**
- * M2025: Pause USB Disk Print
- */
-void GcodeSuite::M2025() 
-{
-  if(IS_UDISK_PRINTING())
-  {
-    udisk.pause_udisk_print();
-    print_job_timer.pause();
+    MaterialCheck.set_filamen_runout_report_status(parser.value_bool());
   }
 }
 

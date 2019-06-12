@@ -13,19 +13,48 @@ extern "C" {
   #include "udisk_reader.h"
 #endif
 
+#ifdef USE_MATERIAL_MOTION_CHECK
+  #include "material_check.h"
+  #include "../../module/motion.h"
+  #include "../../module/planner.h"
+#endif
+
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
 extern "C" int isLPC1769();
 extern "C" void disk_timerproc(void);
 static int start_systick = false;
-void SysTick_Callback() {
-  //disk_timerproc();
+static bool pre_filamen_runout_status; 
+static uint32_t cur_time;
 
+
+
+void SysTick_Callback() {
   if(start_systick == true && udisk.is_usb_Initialized() == true)
   {
 #if ENABLED(USB_DISK_SUPPORT)
     udisk.usb_status_polling();
 #endif
   }
+  
+#ifdef USE_MATERIAL_MOTION_CHECK
+  if(MaterialCheck.get_filamen_runout_report_status())
+  {
+    bool filamen_runout_status = MaterialCheck.is_filamen_runout();
+    if(filamen_runout_status != pre_filamen_runout_status)
+    {
+    SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
+    pre_filamen_runout_status = filamen_runout_status;
+    }
+  }
+  if(MaterialCheck.get_filamen_motion_report_status())
+  {
+    SERIAL_PRINTF("M2032 E%d\r\n", MaterialCheck.is_filamen_runout());
+  }
+ 
+  cur_time++;
+  MaterialCheck.code_wheel_step_update();
+  MaterialCheck.material_extrusion_update();
+#endif 
   disk_timerproc();
 }
 
@@ -61,6 +90,10 @@ void HAL_init() {
   #if PIN_EXISTS(SS)
     WRITE(SS_PIN, HIGH);
     SET_OUTPUT(SS_PIN);
+  #endif
+
+  #ifdef USE_MATERIAL_MOTION_CHECK
+    MaterialCheck.init();
   #endif
 
   #if defined(ONBOARD_SD_CS) && ONBOARD_SD_CS > -1

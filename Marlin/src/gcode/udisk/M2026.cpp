@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2020.cpp
+ * @file    M2026.cpp
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/05/24
- * @brief   source code for USB HOST mass storge driver.
+ * @brief   source code for M2026.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,7 +19,7 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * Command to list the files in usb disk.
+ * Set USB Disk file index.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
