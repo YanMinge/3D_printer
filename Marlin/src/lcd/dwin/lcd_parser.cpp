@@ -414,7 +414,11 @@ void lcd_parser::response_filament(void)
 {
   if(0x03 == receive_data)
   {
-    dwin_process.lcd_send_data(PAGE_BASE + 17, PAGE_ADDR);
+    dwin_process.lcd_send_data(PAGE_BASE + 15, PAGE_ADDR);
+  }
+  else if(0x02 == receive_data)
+  {
+    wait_for_user = false;
   }
 }
 
