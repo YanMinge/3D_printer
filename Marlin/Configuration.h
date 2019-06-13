@@ -388,7 +388,7 @@
 //#define TEMP_SENSOR_1_AS_REDUNDANT
 #define MAX_REDUNDANT_TEMP_SENSOR_DIFF 10
 
-#define TEMP_RESIDENCY_TIME     10  // (seconds) Time to wait for hotend to "settle" in M109
+#define TEMP_RESIDENCY_TIME      3  // (seconds) Time to wait for hotend to "settle" in M109
 #define TEMP_WINDOW              3  // (°C) Temperature proximity for the "temperature reached" timer
 #define TEMP_HYSTERESIS          6  // (°C) Temperature proximity considered "close enough" to the target
 
@@ -526,7 +526,7 @@
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
 #define PREVENT_LENGTHY_EXTRUDE
-#define EXTRUDE_MAXLENGTH 200
+#define EXTRUDE_MAXLENGTH 300
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================

@@ -427,12 +427,12 @@ void lcd_parser::response_filament(void)
   }
   else if(0x02 == receive_data)
   {
-    UserExecution.cmd_M108();
+    UserExecution.user_stop();
     dwin_process.set_progress_start_status(false);
   }
   else if(0x01 == receive_data)
   {
-    UserExecution.cmd_M108();
+    UserExecution.user_stop();
     dwin_process.set_progress_load_ok_status(true);
   }
 }

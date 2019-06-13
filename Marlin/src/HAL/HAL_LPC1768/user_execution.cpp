@@ -43,6 +43,7 @@
 #if ENABLED(USE_DWIN_LCD)
 #include HAL_PATH(.., HAL.h)
 #include "../../gcode/queue.h"
+#include "../../Marlin.h" 
 
 user_execution UserExecution;
 
@@ -70,9 +71,11 @@ void user_execution::cmd_g28(void)
   enqueue_and_echo_command("G28");
 }
 
-void user_execution::cmd_M108(void)
+void user_execution::user_stop(void)
 {
-  enqueue_and_echo_command(PSTR("M108"));
+  wait_for_user = false;
+  wait_for_heatup = false;
+  clear_command_queue();
 }
 
 void user_execution::cmd_M109_M701(void)
