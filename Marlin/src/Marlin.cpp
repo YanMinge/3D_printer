@@ -739,6 +739,16 @@ void idle(
   dwin_process.lcd_loop();
 #endif //USE_DWIN_LCD
 
+#if ENABLED(USE_DWIN_LCD)
+  static long previous_time = 0;
+  //Report the temperature every 2 seconds
+  if(millis() - previous_time > 2000)
+  {
+    dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
+	//SERIAL_PRINTF("BED:%d, HOTEND:%d\r\n", 50, int(thermalManager.degHotend(HOTEND_INDEX)));
+    previous_time = millis();
+  }
+#endif
 }
 
 /**

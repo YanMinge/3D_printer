@@ -43,14 +43,6 @@ void GcodeSuite::M2024()
 {
   if (udisk.is_file_open())
   {
-    if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name())))
-    {
-      udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
-    }
-	else
-    {
-      udisk.set_index(0);
-	}
     udisk.start_udisk_print();
     print_job_timer.start();
   }

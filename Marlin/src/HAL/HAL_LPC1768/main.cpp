@@ -19,11 +19,6 @@ extern "C" {
   #include "../../module/planner.h"
 #endif
 
-#if ENABLED(USE_DWIN_LCD)
-  #include "../../module/temperature.h"
-  #include "lcd_process.h"
-#endif
-
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
 extern "C" int isLPC1769();
 extern "C" void disk_timerproc(void);
@@ -34,11 +29,6 @@ static int start_systick = false;
 
 #ifdef USE_MATERIAL_MOTION_CHECK
 static bool pre_filamen_runout_status;
-#endif
-
-#if ENABLED(USE_DWIN_LCD)
-static long previous_time;
-static long time_count;
 #endif
 
 void SysTick_Callback() {
@@ -69,18 +59,7 @@ void SysTick_Callback() {
   MaterialCheck.material_extrusion_update();
 #endif
 
-#if ENABLED(USE_DWIN_LCD)
-  if(time_count - previous_time > 1000)
-  {
-    dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
-	//SERIAL_PRINTF("BED:%d, HOTEND:%d\r\n", 50, int(thermalManager.degHotend(HOTEND_INDEX)));
-    previous_time = time_count;
-  }
-  time_count++;
-#endif
-
   disk_timerproc();
-
 }
 
 void HAL_init() {

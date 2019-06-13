@@ -43,6 +43,18 @@ void GcodeSuite::M2023()
   // Simplify3D includes the size, so zero out all spaces (#7227)
   for (char *fn = parser.string_arg; *fn; ++fn) if (*fn == ' ') *fn = '\0';
   udisk.open_file(parser.string_arg, true);
+
+  if (udisk.is_file_open())
+  {
+    if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name())))
+    {
+      udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
+    }
+    else
+    {
+      udisk.set_index(0);
+    }
+  }
 }
 
 #endif // USB_DISK_SUPPORT

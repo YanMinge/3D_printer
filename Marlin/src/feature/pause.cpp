@@ -232,8 +232,11 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
     #if ENABLED(HOST_PROMPT_SUPPORT)
       host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Continuous Purge Running..."), PSTR("Continue"));
     #endif
-    for (float purge_count = purge_length; purge_count > 0 && wait_for_user; --purge_count)
-      do_pause_e_move(1, ADVANCED_PAUSE_PURGE_FEEDRATE);
+
+    for (float purge_count = purge_length; purge_count > 0 && wait_for_user; --purge_count){
+      do_pause_e_move(2, ADVANCED_PAUSE_PURGE_FEEDRATE);
+	  idle();
+    }
     wait_for_user = false;
 
   #else

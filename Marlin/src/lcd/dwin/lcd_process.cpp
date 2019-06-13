@@ -411,8 +411,8 @@ void lcd_process::lcd_send_temperature(int tempbed, int tempbedt, int temphotend
 
 void lcd_process::send_current_temperature(int tempbed, int temphotend)
 {
-  lcd_send_data(tempbed, TEMP_HOTEND_ADDR);
-  lcd_send_data(temphotend, TEMP_BED_ADDR);
+  lcd_send_data(tempbed, TEMP_BED_ADDR);
+  lcd_send_data(temphotend, TEMP_HOTEND_ADDR);
 }
 
 inline void lcd_process::clear_page(unsigned long addr, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
