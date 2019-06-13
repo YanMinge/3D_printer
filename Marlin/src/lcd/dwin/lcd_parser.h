@@ -83,6 +83,7 @@ private:
 
   bool file_show_status;
   bool file_read_status;
+  int current_page_index;
 };
 
 extern lcd_parser dwin_parser;

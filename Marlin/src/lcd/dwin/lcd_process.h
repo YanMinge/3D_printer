@@ -124,6 +124,7 @@ public:
   void lcd_show_picture(unsigned short n,unsigned short n1, unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
 
   void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
+  void send_current_temperature(int tempbed, int temphotend);
 
   inline void clear_page(unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
   inline void send_page(unsigned long addr,int page,int num, unsigned char cmd = WRITE_VARIABLE_ADDR);

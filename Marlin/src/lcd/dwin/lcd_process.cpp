@@ -409,6 +409,12 @@ void lcd_process::lcd_send_temperature(int tempbed, int tempbedt, int temphotend
   lcd_send_data(temphotendt, TEMP_BED_TARGET_ADDR);
 }
 
+void lcd_process::send_current_temperature(int tempbed, int temphotend)
+{
+  lcd_send_data(tempbed, TEMP_HOTEND_ADDR);
+  lcd_send_data(temphotend, TEMP_BED_ADDR);
+}
+
 inline void lcd_process::clear_page(unsigned long addr, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
 {
   for(int i = 0; i < PAGE_FILE_NUM; i++)
@@ -818,7 +824,7 @@ void lcd_process::move_main_page(void)
 }
 
 void lcd_process::move_usb_hint_page(void)
-{      
+{
   if(0x01 == language_type)
   {
     lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
