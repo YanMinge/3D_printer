@@ -19,22 +19,36 @@ extern "C" {
   #include "../../module/planner.h"
 #endif
 
+#if ENABLED(USE_DWIN_LCD)
+  #include "../../module/temperature.h"
+  #include "lcd_process.h"
+#endif
+
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
 extern "C" int isLPC1769();
 extern "C" void disk_timerproc(void);
+
+#if ENABLED(USB_DISK_SUPPORT)
 static int start_systick = false;
-static bool pre_filamen_runout_status; 
-static uint32_t cur_time;
+#endif
 
+#ifdef USE_MATERIAL_MOTION_CHECK
+static bool pre_filamen_runout_status;
+#endif
 
+#if ENABLED(USE_DWIN_LCD)
+static long previous_time;
+static long time_count;
+#endif
 
 void SysTick_Callback() {
+
+#if ENABLED(USB_DISK_SUPPORT)
   if(start_systick == true && udisk.is_usb_Initialized() == true)
   {
-#if ENABLED(USB_DISK_SUPPORT)
     udisk.usb_status_polling();
-#endif
   }
+#endif
   
 #ifdef USE_MATERIAL_MOTION_CHECK
   if(MaterialCheck.get_filamen_runout_report_status())
@@ -42,8 +56,8 @@ void SysTick_Callback() {
     bool filamen_runout_status = MaterialCheck.is_filamen_runout();
     if(filamen_runout_status != pre_filamen_runout_status)
     {
-    SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
-    pre_filamen_runout_status = filamen_runout_status;
+      SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
+      pre_filamen_runout_status = filamen_runout_status;
     }
   }
   if(MaterialCheck.get_filamen_motion_report_status())
@@ -51,11 +65,22 @@ void SysTick_Callback() {
     SERIAL_PRINTF("M2032 E%d\r\n", MaterialCheck.is_filamen_runout());
   }
  
-  cur_time++;
   MaterialCheck.code_wheel_step_update();
   MaterialCheck.material_extrusion_update();
-#endif 
+#endif
+
+#if ENABLED(USE_DWIN_LCD)
+  if(time_count - previous_time > 1000)
+  {
+    dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
+	//SERIAL_PRINTF("BED:%d, HOTEND:%d\r\n", 50, int(thermalManager.degHotend(HOTEND_INDEX)));
+    previous_time = time_count;
+  }
+  time_count++;
+#endif
+
   disk_timerproc();
+
 }
 
 void HAL_init() {
