@@ -98,6 +98,14 @@ typedef struct
   bool simage_delay_status;
 } send_status_t;
 
+typedef struct
+{
+  bool start_stop_status;
+  bool temp_page_status;
+  bool load_filament_page_status;
+  bool load_ok_status;
+} progress_show_status_t;
+
 class lcd_process
 {
 public:
@@ -164,6 +172,15 @@ public:
   void image_send_delay(void);
   void send_print_time(uint32_t time);
 
+  void set_progress_start_status(bool status){ progress_status.start_stop_status         = status;}
+  void set_progress_temp_page_status(bool status){ progress_status.temp_page_status         = status;}
+  void set_progress_load_page_status(bool status){ progress_status.load_filament_page_status         = status;}
+  bool set_progress_load_ok_status(bool status){ return progress_status.load_ok_status = status;}
+  bool get_progress_start_status(void){ return progress_status.start_stop_status        ;}
+  bool get_progress_temp_page_status(void){ return progress_status.temp_page_status         ;}
+  bool get_progress_load_page_status(void){ return progress_status.load_filament_page_status         ;}
+  bool get_progress_load_ok_status(void){ return progress_status.load_ok_status         ;}
+
   uint8_t get_language_type(void);
   void set_language_type(unsigned char type);
   void move_main_page(void);
@@ -191,6 +208,8 @@ private:
 
   //image show
   send_status_t image_status;
+  progress_show_status_t progress_status;
+
   data_info_t file_info;
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
 

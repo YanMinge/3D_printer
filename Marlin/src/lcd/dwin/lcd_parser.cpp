@@ -421,11 +421,19 @@ void lcd_parser::response_filament(void)
 {
   if(0x03 == receive_data)
   {
-    dwin_process.lcd_send_data(PAGE_BASE + 15, PAGE_ADDR);
+    UserExecution.cmd_M109_M701();
+    dwin_process.set_progress_start_status(true);
+    dwin_process.set_progress_temp_page_status(true);
   }
   else if(0x02 == receive_data)
   {
-    //wait_for_user = false;
+    UserExecution.cmd_M108();
+    dwin_process.set_progress_start_status(false);
+  }
+  else if(0x01 == receive_data)
+  {
+    UserExecution.cmd_M108();
+    dwin_process.set_progress_load_ok_status(true);
   }
 }
 

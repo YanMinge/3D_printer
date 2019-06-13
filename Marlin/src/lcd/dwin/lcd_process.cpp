@@ -788,6 +788,29 @@ void lcd_process::lcd_loop(void)
     set_limage_count();
     send_limage();
   }
+
+  if(progress_status.start_stop_status)
+  {
+    if(progress_status.temp_page_status)
+    {
+      progress_status.temp_page_status = false;
+      lcd_send_data(PAGE_BASE +17, PAGE_ADDR);
+    }
+
+    if(progress_status.load_filament_page_status)
+    {
+      lcd_send_data(PAGE_BASE +15, PAGE_ADDR);
+      progress_status.load_filament_page_status = false;
+    }
+
+    if(progress_status.load_ok_status)
+    {
+      lcd_send_data(PAGE_BASE +14, PAGE_ADDR);
+       progress_status.temp_page_status = false;
+       progress_status.load_filament_page_status = false;
+       progress_status.load_ok_status = false;
+    }
+  }
 }
 
 uint8_t lcd_process::get_language_type(void)

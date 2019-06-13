@@ -35,6 +35,10 @@
   #include "../../module/tool_change.h"
 #endif
 
+#if ENABLED(NEWPANEL)
+  #include "lcd_process.h"
+#endif
+
 /**
  * M104: Set hot end temperature
  */
@@ -137,4 +141,11 @@ void GcodeSuite::M109() {
 
   if (set_temp)
     (void)thermalManager.wait_for_hotend(target_extruder, no_wait_for_cooling);
+
+  #if ENABLED(NEWPANEL)
+    if(dwin_process.get_progress_start_status())
+    {
+      dwin_process.set_progress_load_page_status(true);
+    }
+  #endif
 }

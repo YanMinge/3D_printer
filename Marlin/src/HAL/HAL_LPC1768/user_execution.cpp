@@ -70,6 +70,16 @@ void user_execution::cmd_g28(void)
   enqueue_and_echo_command("G28");
 }
 
+void user_execution::cmd_M108(void)
+{
+  enqueue_and_echo_command(PSTR("M108"));
+}
+
+void user_execution::cmd_M109_M701(void)
+{
+  enqueue_and_echo_commands_P(PSTR("M109 S210\nM701"));
+}
+
 void user_execution::cmd_M2023(char *file_name)
 {
   char cmd[32];
