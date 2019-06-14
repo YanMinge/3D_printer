@@ -47,7 +47,7 @@
 #endif
 
 #if ENABLED(NEWPANEL)
-  #include "lcd_process.h"
+  #include "filament_ui.h"
 #endif
 
 /**
@@ -120,12 +120,9 @@ void GcodeSuite::M701() {
     lcd_pause_show_message(PAUSE_MESSAGE_STATUS);
   #endif
 
-#if ENABLED(NEWPANEL)
-    if(dwin_process.get_progress_start_status())
-    {
-      dwin_process.set_progress_load_ok_status(true);
-    }
-#endif
+  #if ENABLED(NEWPANEL)
+    filament_show.show_load_end_page();
+  #endif
 
 }
 
@@ -202,10 +199,7 @@ void GcodeSuite::M702() {
   #endif
 
   #if ENABLED(NEWPANEL)
-    if(dwin_process.get_progress_start_status() && !dwin_process.get_progress_load_return_status())
-    {
-      dwin_process.set_progress_load_ok_status(true);
-    }
+    filament_show.show_unload_end_page();
   #endif
 
   // Show status screen

@@ -36,7 +36,7 @@
 #endif
 
 #if ENABLED(NEWPANEL)
-  #include "lcd_process.h"
+  #include "filament_ui.h"
 #endif
 
 /**
@@ -143,9 +143,6 @@ void GcodeSuite::M109() {
     (void)thermalManager.wait_for_hotend(target_extruder, no_wait_for_cooling);
 
   #if ENABLED(NEWPANEL)
-    if(dwin_process.get_progress_start_status() && !dwin_process.get_progress_load_return_status())
-    {
-      dwin_process.set_progress_load_page_status(true);
-    }
+    filament_show.show_load_unload_start_page();
   #endif
 }

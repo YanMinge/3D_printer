@@ -43,6 +43,7 @@
 #include "lcd_parser.h"
 #include "lcd_file.h"
 #include "lcd_process.h"
+#include "filament_ui.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -428,17 +429,28 @@ void lcd_parser::response_filament(void)
   else if(0x03 == receive_data)
   {
     UserExecution.cmd_M109_M701();
-    dwin_process.set_progress_start_status(true);
-    dwin_process.set_progress_temp_page_status(true);
+    filament_show.set_progress_start_status(true);
+    filament_show.set_progress_heat_cool_status(true);
+    filament_show.show_heat_prepare_page();
   }
   else if(0x02 == receive_data)
   {
     UserExecution.user_stop();
-    dwin_process.set_progress_load_return_status(true);
+    UserExecution.user_hardware_stop();
+    filament_show.set_progress_load_return_status(true);
   }
   else if(0x01 == receive_data)
   {
     UserExecution.user_stop();
+    UserExecution.user_hardware_stop();
+  }
+
+  else if(0x05 == receive_data)
+  {
+    UserExecution.cmd_M109_M702();
+    filament_show.set_progress_start_status(true);
+    filament_show.set_progress_heat_cool_status(false);
+    filament_show.show_heat_prepare_page();
   }
 }
 

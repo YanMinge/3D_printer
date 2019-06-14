@@ -58,7 +58,9 @@ public:
   void cmd_g1(float x, float y, float z, float e);
   void cmd_g28(void);
   void user_stop(void);
+  void user_hardware_stop(void);
   void cmd_M109_M701(void);
+  void cmd_M109_M702(void);
   void cmd_M2023(char *file_name);
   void cmd_M2024(void);
   void cmd_M2025(void);

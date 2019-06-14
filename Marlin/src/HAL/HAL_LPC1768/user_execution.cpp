@@ -78,9 +78,19 @@ void user_execution::user_stop(void)
   clear_command_queue();
 }
 
+void user_execution::user_hardware_stop(void)
+{
+  enqueue_and_echo_command(PSTR("M105 S0"));
+}
+
 void user_execution::cmd_M109_M701(void)
 {
   enqueue_and_echo_commands_P(PSTR("M109 S210\nM701"));
+}
+
+void user_execution::cmd_M109_M702(void)
+{
+  enqueue_and_echo_commands_P(PSTR("M109 S210\nM702"));
 }
 
 void user_execution::cmd_M2023(char *file_name)
