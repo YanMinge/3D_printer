@@ -104,5 +104,12 @@ void user_execution::cmd_M2025(void)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_M500(void)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M500"));
+  enqueue_and_echo_command(cmd);
+}
+
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

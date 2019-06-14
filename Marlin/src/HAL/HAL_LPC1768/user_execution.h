@@ -62,6 +62,7 @@ public:
   void cmd_M2023(char *file_name);
   void cmd_M2024(void);
   void cmd_M2025(void);
+  void cmd_M500(void);
 };
 
 extern user_execution UserExecution;

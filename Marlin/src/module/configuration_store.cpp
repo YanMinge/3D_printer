@@ -97,6 +97,10 @@
   #define TMC_GET_PWMTHRS(A,Q) _tmc_thrs(stepper##Q.microsteps(), stepper##Q.TPWMTHRS(), planner.settings.axis_steps_per_mm[_AXIS(A)])
 #endif
 
+#if ENABLED(USE_DWIN_LCD)
+  #include "lcd_process.h"
+#endif
+
 #pragma pack(push, 1) // No padding between variables
 
 typedef struct { uint16_t X, Y, Z, X2, Y2, Z2, Z3, E0, E1, E2, E3, E4, E5; } tmc_stepper_current_t;
@@ -1087,6 +1091,13 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(toolchange_settings);
     #endif
 
+    #if ENABLED(USE_DWIN_LCD)
+      language_type language_current_type = LAN_NULL;
+      language_current_type = dwin_process.get_language_type();
+      _FIELD_TEST(language_current_type);
+      EEPROM_WRITE(language_current_type);
+    #endif
+
     //
     // Validate CRC and Data Size
     //
@@ -1801,6 +1812,13 @@ void MarlinSettings::postprocess() {
       #if EXTRUDERS > 1
         _FIELD_TEST(toolchange_settings);
         EEPROM_READ(toolchange_settings);
+      #endif
+
+      #if ENABLED(USE_DWIN_LCD)
+	    language_type language_current_type = LAN_NULL;
+        _FIELD_TEST(language_current_type);
+        EEPROM_READ(language_current_type);
+		dwin_process.set_language_type(language_current_type);
       #endif
 
       eeprom_error = size_error(eeprom_index - (EEPROM_OFFSET));
@@ -3113,6 +3131,11 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_HEADING("Tool-changing:");
       CONFIG_ECHO_START();
       M217_report(true);
+    #endif
+
+    #if ENABLED(USE_DWIN_LCD)
+        SERIAL_ECHOPAIR("  M2050 L", dwin_process.get_language_type());
+        SERIAL_EOL();
     #endif
   }
 

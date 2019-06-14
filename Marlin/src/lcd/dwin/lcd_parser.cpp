@@ -408,12 +408,14 @@ void lcd_parser::response_set_language(void)
   if(0x01 == receive_data)
   {
     dwin_process.lcd_send_data(PAGE_BASE + 1, PAGE_ADDR);
-    dwin_process.set_language_type(0x01);
+    dwin_process.set_language_type(LAN_CHINESE);
+    UserExecution.cmd_M500();
   }
   if(0x02 == receive_data)
   {
     dwin_process.lcd_send_data(PAGE_BASE + 11, PAGE_ADDR);
-    dwin_process.set_language_type(0x00);
+    dwin_process.set_language_type(LAN_ENGLISH);
+    UserExecution.cmd_M500();
   }
 }
 

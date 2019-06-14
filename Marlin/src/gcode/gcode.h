@@ -892,6 +892,11 @@ private:
     static void M2032();
     static void M2034();
   #endif
+
+  #if ENABLED(USE_DWIN_LCD)
+    static void M2050();
+  #endif
+
   static void T(const uint8_t tool_index);
 
 };

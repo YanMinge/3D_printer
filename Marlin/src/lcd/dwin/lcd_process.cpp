@@ -813,34 +813,28 @@ void lcd_process::lcd_loop(void)
   }
 }
 
-uint8_t lcd_process::get_language_type(void)
+language_type lcd_process::get_language_type(void)
 {
-  return language_type;
+  return ui_language;
 }
 
-void lcd_process::set_language_type(unsigned char type)
+void lcd_process::set_language_type(language_type type)
 {
-  eeprom_write_byte(EEPROM_LANGUAGE_ADDR,type);
-  language_type = type;
-}
-
-void lcd_process::language_init(void)
-{
-  language_type = eeprom_read_byte(EEPROM_LANGUAGE_ADDR);
+  ui_language = type;
 }
 
 void lcd_process::move_main_page(void)
 {
   //lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-  if(0xff == language_type)
+  if(LAN_NULL == ui_language)
   {
     lcd_send_data(PAGE_BASE +10, PAGE_ADDR);
   }
-  else if(0x01 == language_type)
+  else if(LAN_CHINESE == ui_language)
   {
     lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
   }
-  else if(0x00 == language_type)
+  else if(LAN_ENGLISH == ui_language)
   {
     lcd_send_data(PAGE_BASE +11, PAGE_ADDR);
   }
@@ -848,11 +842,11 @@ void lcd_process::move_main_page(void)
 
 void lcd_process::move_usb_hint_page(void)
 {
-  if(0x01 == language_type)
+  if(LAN_CHINESE == ui_language)
   {
     lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
   }
-  else if(0x00 == language_type)
+  else if(LAN_ENGLISH == ui_language)
   {
     lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
   }
