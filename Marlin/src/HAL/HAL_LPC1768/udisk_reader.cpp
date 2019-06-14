@@ -599,6 +599,48 @@ uint32_t udisk_reader::get_gcode_offset(char * const path)
   return gcode_offset;
 }
 
+uint32_t udisk_reader::update_print_time(char * const path)
+{
+  if (!is_usb_detected())
+  {
+    return -1;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return -1;
+  }
+  set_index(PRINT_TIME_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  print_time = val4byte.uintVal;
+  DEBUGPRINTF("print_time(%d)\r\n", print_time);
+  return print_time;
+}
+
+uint32_t udisk_reader::get_print_time(void)
+{
+  if((print_time == 0) && ((file_size - udisk_pos) > 0))
+  {
+    print_time = 1;
+  }
+  return print_time;
+}
+
+void udisk_reader::print_time_countdown(void)
+{
+  static uint16_t print_time_count = 0;
+
+  //count every 1s clock
+  if((print_time_count >= 1000) && (print_time > 0))
+  {
+    print_time--;
+	print_time_count = 0;
+  }
+  print_time_count++;
+}
+
 bool udisk_reader::check_gm_file(char * const path)
 {
   if (!is_usb_detected())

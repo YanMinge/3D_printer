@@ -66,6 +66,9 @@ enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 #define SIMAGE_OFFSET_INDEX          12
 #define LIMAGE_OFFSET_INDEX          20
 #define GCODE_OFFSET_INDEX           28
+#define PRINT_DIST_INDEX             40
+#define PRINT_TIME_INDEX             44
+#define PRINT_MATERIAL_INDEX         48
 
 typedef struct
 { 
@@ -108,6 +111,9 @@ public:
   uint32_t get_limage_offset(char * const path);
   uint32_t get_gcode_size(char * const path);
   uint32_t get_gcode_offset(char * const path);
+  uint32_t update_print_time(char * const path);
+  uint32_t get_print_time(void);
+  void print_time_countdown(void);
   inline bool eof() { return udisk_pos >= file_size; }
   inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
   inline void set_index(const uint32_t index) { udisk_pos = index; f_lseek(&file_obj, index); }
@@ -128,6 +134,7 @@ private:
 
   uint32_t udisk_pos;
   uint32_t file_size;
+  uint32_t print_time;
 
   lcd_file file;
   FIL file_obj;

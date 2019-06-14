@@ -48,6 +48,7 @@ void GcodeSuite::M2023()
   {
     if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name())))
     {
+      udisk.update_print_time(udisk.get_file_name());
       udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
     }
     else

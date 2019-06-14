@@ -768,16 +768,13 @@ void lcd_process::image_send_delay(void)
 
 void lcd_process::send_print_time(uint32_t time)
 {
-  char str[6];
+  char str[11];
 
-  itoa(time,str,10);
-  str[5] = '\0';
-  str[4] = str[3];
-  str[3] = str[2];
-  str[2] = ':';
-
+  int8_t hour = time/3600;
+  int8_t min = (time % 3600) / 60;
+  int8_t sec = (time % 3600) % 60;
+  sprintf_P(str,"%02d:%02d:%02d", hour, min, sec);
   lcd_send_data(str,0x1616);
-  DEBUGPRINTF("\r\n time = %s\r\n",str);
 }
 
 void lcd_process::send_temperature_percentage(uint16_t percentage)

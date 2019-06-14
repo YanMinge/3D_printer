@@ -389,11 +389,17 @@ void lcd_parser::response_move_axis(void)
     dwin_process.lcd_send_data(PAGE_BASE + 9, PAGE_ADDR);
     UserExecution.cmd_g92(0, 0, 0, 0);
   }
-  else if((X_AXIS_MOVE_BTN == receive_addr)|| \
-         (Y_AXIS_MOVE_BTN == receive_addr) || \
-         (Z_AXIS_MOVE_BTN == receive_addr))
+  else if(X_AXIS_MOVE_BTN == receive_addr)
   {
-    UserExecution.cmd_g1((float)receive_data/10, (float)receive_data/10, (float)receive_data/10, 0);
+    UserExecution.cmd_g1_x((float)receive_data/10);
+  }
+  else if(Y_AXIS_MOVE_BTN == receive_addr)
+  {
+    UserExecution.cmd_g1_y((float)receive_data/10);
+  }
+  else if(Z_AXIS_MOVE_BTN == receive_addr)
+  {
+    UserExecution.cmd_g1_z(-(float)receive_data/10);
   }
   else if(HOME_MOVE_BTN == receive_addr)
   {
@@ -401,7 +407,6 @@ void lcd_parser::response_move_axis(void)
     SERIAL_PRINTF("go hmoenow ...\r\n");
     UserExecution.cmd_g28();
   }
-
 }
 
 void lcd_parser::response_set_language(void)
@@ -474,7 +479,6 @@ void lcd_parser::select_file(pfile_list_t temp)
     dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
     dwin_process.set_select_file_num(receive_data);
     dwin_process.limage_send_start();
-    dwin_process.send_print_time(2020);
   }
   else if(temp->file_type == TYPE_DEFAULT_FILE)
   {

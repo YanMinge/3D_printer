@@ -38,6 +38,7 @@ void SysTick_Callback() {
   {
     udisk.usb_status_polling();
   }
+  udisk.print_time_countdown();
 #endif
   
 #ifdef USE_MATERIAL_MOTION_CHECK

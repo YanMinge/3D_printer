@@ -66,6 +66,27 @@ void user_execution::cmd_g1(float x, float y, float z, float e)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_g1_x(float x)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 X%4.1f"), x);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_g1_y(float y)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 Y%4.1f"), y);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_g1_z(float z)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 Z%4.1f"), z);
+  enqueue_and_echo_command(cmd);
+}
+
 void user_execution::cmd_g28(void)
 {
   enqueue_and_echo_command("G28");

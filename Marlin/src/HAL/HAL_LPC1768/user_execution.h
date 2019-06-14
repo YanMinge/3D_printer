@@ -56,6 +56,9 @@ public:
   virtual ~user_execution(void) { }
   void cmd_g92(float x, float y, float z, float e);
   void cmd_g1(float x, float y, float z, float e);
+  void cmd_g1_x(float x);
+  void cmd_g1_y(float y);
+  void cmd_g1_z(float z);
   void cmd_g28(void);
   void user_stop(void);
   void user_hardware_stop(void);

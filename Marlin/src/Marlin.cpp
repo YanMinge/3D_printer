@@ -745,8 +745,11 @@ void idle(
   if(millis() - previous_time > 2000)
   {
     dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
-	//SERIAL_PRINTF("BED:%d, HOTEND:%d\r\n", 50, int(thermalManager.degHotend(HOTEND_INDEX)));
     previous_time = millis();
+	if(IS_UDISK_PRINTING())
+    {
+	  dwin_process.send_print_time(udisk.get_print_time());
+    }
   }
 #endif
 }
