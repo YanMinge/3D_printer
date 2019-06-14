@@ -143,7 +143,7 @@ void GcodeSuite::M109() {
     (void)thermalManager.wait_for_hotend(target_extruder, no_wait_for_cooling);
 
   #if ENABLED(NEWPANEL)
-    if(dwin_process.get_progress_start_status())
+    if(dwin_process.get_progress_start_status() && !dwin_process.get_progress_load_return_status())
     {
       dwin_process.set_progress_load_page_status(true);
     }

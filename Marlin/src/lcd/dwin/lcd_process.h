@@ -104,6 +104,7 @@ typedef struct
   bool temp_page_status;
   bool load_filament_page_status;
   bool load_ok_status;
+  bool load_return_status;
 } progress_show_status_t;
 
 class lcd_process
@@ -139,6 +140,7 @@ public:
   void get_file_info(void);
 
   void icon_update(void);
+  void temperature_progress_update(unsigned int percentage);
   void send_first_page_data(void);
   void send_next_page_data(void);
   void send_last_page_data(void);
@@ -154,6 +156,7 @@ public:
   void send_simage(void);
   void send_limage(void);
   void lcd_loop(void);
+  void send_temperature_percentage(uint16_t percentage);
 
   void set_limage_count(void);
   void set_simage_count(void);
@@ -175,11 +178,13 @@ public:
   void set_progress_start_status(bool status){ progress_status.start_stop_status         = status;}
   void set_progress_temp_page_status(bool status){ progress_status.temp_page_status         = status;}
   void set_progress_load_page_status(bool status){ progress_status.load_filament_page_status         = status;}
-  bool set_progress_load_ok_status(bool status){ return progress_status.load_ok_status = status;}
+  void set_progress_load_ok_status(bool status){  progress_status.load_ok_status = status;}
+  void set_progress_load_return_status(bool status){  progress_status.load_return_status = status        ;}
   bool get_progress_start_status(void){ return progress_status.start_stop_status        ;}
   bool get_progress_temp_page_status(void){ return progress_status.temp_page_status         ;}
   bool get_progress_load_page_status(void){ return progress_status.load_filament_page_status         ;}
   bool get_progress_load_ok_status(void){ return progress_status.load_ok_status         ;}
+  bool get_progress_load_return_status(void){ return progress_status.load_return_status         ;}
 
   uint8_t get_language_type(void);
   void set_language_type(unsigned char type);

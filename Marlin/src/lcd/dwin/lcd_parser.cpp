@@ -419,7 +419,11 @@ void lcd_parser::response_set_language(void)
 
 void lcd_parser::response_filament(void)
 {
-  if(0x03 == receive_data)
+  if(0x04 == receive_data)
+  {
+    dwin_process.move_main_page();
+  }
+  else if(0x03 == receive_data)
   {
     UserExecution.cmd_M109_M701();
     dwin_process.set_progress_start_status(true);
@@ -428,12 +432,11 @@ void lcd_parser::response_filament(void)
   else if(0x02 == receive_data)
   {
     UserExecution.user_stop();
-    dwin_process.set_progress_start_status(false);
+    dwin_process.set_progress_load_return_status(true);
   }
   else if(0x01 == receive_data)
   {
     UserExecution.user_stop();
-    dwin_process.set_progress_load_ok_status(true);
   }
 }
 

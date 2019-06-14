@@ -46,6 +46,10 @@
   #include "../../feature/pause.h"
 #endif
 
+#if ENABLED(NEWPANEL)
+  #include "lcd_process.h"
+#endif
+
 /**
  * M701: Load filament
  *
@@ -115,6 +119,14 @@ void GcodeSuite::M701() {
   #if HAS_LCD_MENU
     lcd_pause_show_message(PAUSE_MESSAGE_STATUS);
   #endif
+
+#if ENABLED(NEWPANEL)
+    if(dwin_process.get_progress_start_status())
+    {
+      dwin_process.set_progress_load_ok_status(true);
+    }
+#endif
+
 }
 
 /**
@@ -187,6 +199,13 @@ void GcodeSuite::M702() {
     // Restore toolhead if it was changed
     if (active_extruder_before_filament_change != active_extruder)
       tool_change(active_extruder_before_filament_change, 0, false);
+  #endif
+
+  #if ENABLED(NEWPANEL)
+    if(dwin_process.get_progress_start_status() && !dwin_process.get_progress_load_return_status())
+    {
+      dwin_process.set_progress_load_ok_status(true);
+    }
   #endif
 
   // Show status screen

@@ -436,10 +436,18 @@ void lcd_process::icon_update(void)
     if((start_icon_count += 1) > 100)
     {
       icon_update_status = 0;
+      start_icon_count = 0;
       move_main_page();
+      lcd_send_data(start_icon_count, START_ICON_ADDR);
     }
     update_time = ms +10;
   }
+}
+
+void lcd_process::temperature_progress_update(unsigned int percentage)
+{
+  lcd_send_data(percentage, START_ICON_ADDR);
+  send_temperature_percentage((uint16_t)percentage);
 }
 
 inline void lcd_process::send_page(unsigned long addr,int page,int num, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
@@ -772,6 +780,22 @@ void lcd_process::send_print_time(uint32_t time)
   DEBUGPRINTF("\r\n time = %s\r\n",str);
 }
 
+void lcd_process::send_temperature_percentage(uint16_t percentage)
+{
+  char str[4];
+
+  itoa(percentage,str,10);
+  if(percentage < 100)
+  {
+    str[2] = str[1];
+    str[1] = str[0];
+    str[0] = ' ';
+  }
+  str[3] = '\0';
+
+  lcd_send_data(str,0x1650);
+}
+
 void lcd_process::lcd_loop(void)
 {
   if(image_status.simage_status)
@@ -809,6 +833,16 @@ void lcd_process::lcd_loop(void)
        progress_status.temp_page_status = false;
        progress_status.load_filament_page_status = false;
        progress_status.load_ok_status = false;
+       progress_status.start_stop_status = false;
+    }
+    if(progress_status.load_return_status)
+    {
+       move_main_page();
+       progress_status.temp_page_status = false;
+       progress_status.load_filament_page_status = false;
+       progress_status.load_ok_status = false;
+       progress_status.load_return_status = false;
+       progress_status.start_stop_status = false;
     }
   }
 }
