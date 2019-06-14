@@ -63,6 +63,12 @@ enum lcd_cmd_type : unsigned char {
   CMD_FILAMENT,
 };
 
+enum language_type : uint8_t {
+  LAN_NULL = 0,
+  LAN_CHINESE,
+  LAN_ENGLISH,
+};
+
 typedef struct lcd_data_buffer
 {
     unsigned char head[2];
@@ -186,11 +192,10 @@ public:
   bool get_progress_load_ok_status(void){ return progress_status.load_ok_status         ;}
   bool get_progress_load_return_status(void){ return progress_status.load_return_status         ;}
 
-  uint8_t get_language_type(void);
-  void set_language_type(unsigned char type);
+  language_type get_language_type(void);
+  void set_language_type(language_type type);
   void move_main_page(void);
   void move_usb_hint_page(void);
-  void language_init(void);
   void get_image_data(int len);
 
 private:
@@ -209,7 +214,7 @@ private:
   unsigned char send_data_buf[MAX_SEND_BUF];
 
   //languge
-  uint8_t language_type;
+  language_type ui_language;
 
   //image show
   send_status_t image_status;

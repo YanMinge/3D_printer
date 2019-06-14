@@ -773,6 +773,10 @@ void GcodeSuite::process_parsed_command(
         case 2034: M2034(); break;
       #endif
 
+      #if ENABLED(USE_DWIN_LCD)
+        case 2050: M2050(); break;
+      #endif
+
       default: parser.unknown_command_error(); break;
     }
     break;

@@ -1154,7 +1154,6 @@ void setup() {
 
 #if ENABLED(USE_DWIN_LCD)
   LcdFile.file_list_init();
-  dwin_process.language_init();
 #endif //USE_DWIN_LCD
 
 }
