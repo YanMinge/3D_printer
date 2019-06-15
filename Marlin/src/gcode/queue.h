@@ -96,7 +96,7 @@ void enqueue_and_echo_commands_P(PGM_P const pgcode);
 bool enqueue_and_echo_command(const char* cmd);
 
 #define HAS_LCD_QUEUE_NOW (ENABLED(MALYAN_LCD) || (HAS_LCD_MENU && ANY(AUTO_BED_LEVELING_UBL, PID_AUTOTUNE_MENU, ADVANCED_PAUSE_FEATURE)))
-#define HAS_QUEUE_NOW (ENABLED(SDSUPPORT) || HAS_LCD_QUEUE_NOW)
+#define HAS_QUEUE_NOW (ENABLED(SDSUPPORT) || HAS_LCD_QUEUE_NOW || ENABLED(USB_DISK_SUPPORT))
 
 #if HAS_QUEUE_NOW
   /**

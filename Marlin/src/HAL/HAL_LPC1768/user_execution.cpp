@@ -43,7 +43,12 @@
 #if ENABLED(USE_DWIN_LCD)
 #include HAL_PATH(.., HAL.h)
 #include "../../gcode/queue.h"
-#include "../../Marlin.h" 
+#include "../../Marlin.h"
+
+#if ENABLED(USB_DISK_SUPPORT)
+#include "udisk_reader.h"
+#include "../../module/printcounter.h"
+#endif
 
 user_execution UserExecution;
 
@@ -128,11 +133,15 @@ void user_execution::cmd_M2024(void)
   enqueue_and_echo_command(cmd);
 }
 
-void user_execution::cmd_M2025(void)
+void user_execution::pause_udisk_print(void)
 {
-  char cmd[32];
-  sprintf_P(cmd, PSTR("M2025"));
-  enqueue_and_echo_command(cmd);
+#if ENABLED(USB_DISK_SUPPORT)
+  if(IS_UDISK_PRINTING())
+  {
+    udisk.pause_udisk_print();
+    print_job_timer.pause();
+  }
+#endif
 }
 
 void user_execution::cmd_M500(void)
