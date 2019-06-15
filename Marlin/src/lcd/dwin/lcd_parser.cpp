@@ -377,7 +377,7 @@ void lcd_parser::response_print_file(void)
     {
       LcdFile.set_current_status(stop_printing);
       dwin_process.lcd_send_data(START_MESSAGE,START_STOP_ICON_ADDR);
-      UserExecution.cmd_M2025();
+      UserExecution.pause_udisk_print();
     }
     else if(status == stop_printing)
     {

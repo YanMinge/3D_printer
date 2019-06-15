@@ -748,7 +748,7 @@ void idle(
     previous_time = millis();
 	if(IS_UDISK_PRINTING())
     {
-	  dwin_process.send_print_time(udisk.get_print_time());
+	  dwin_process.send_print_time(udisk.get_print_time_dynamic());
     }
   }
 #endif

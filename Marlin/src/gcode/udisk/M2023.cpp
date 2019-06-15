@@ -35,6 +35,11 @@
 #include "../gcode.h"
 #include "udisk_reader.h"
 
+#if ENABLED(USE_DWIN_LCD)
+#include "lcd_process.h"
+#endif
+
+
 /**
  * M2023: Open a file
  */
@@ -48,7 +53,10 @@ void GcodeSuite::M2023()
   {
     if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name())))
     {
-      udisk.update_print_time(udisk.get_file_name());
+      uint32_t initial_time = udisk.get_print_time(udisk.get_file_name());
+#if ENABLED(USE_DWIN_LCD)
+	  dwin_process.send_print_time(initial_time);
+#endif
       udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
     }
     else

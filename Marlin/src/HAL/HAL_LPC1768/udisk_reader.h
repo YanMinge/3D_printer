@@ -111,8 +111,8 @@ public:
   uint32_t get_limage_offset(char * const path);
   uint32_t get_gcode_size(char * const path);
   uint32_t get_gcode_offset(char * const path);
-  uint32_t update_print_time(char * const path);
-  uint32_t get_print_time(void);
+  uint32_t get_print_time(char * const path);
+  uint32_t get_print_time_dynamic(void);
   void print_time_countdown(void);
   inline bool eof() { return udisk_pos >= file_size; }
   inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
@@ -134,7 +134,7 @@ private:
 
   uint32_t udisk_pos;
   uint32_t file_size;
-  uint32_t print_time;
+  uint32_t print_time_dynamic;
 
   lcd_file file;
   FIL file_obj;

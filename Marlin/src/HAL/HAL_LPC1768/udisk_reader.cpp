@@ -42,7 +42,6 @@
  */
 
 #ifdef TARGET_LPC1768
-#include "udisk_reader.h"
 #include "lcd_process.h"
 #include "lcd_parser.h"
 #include "../../gcode/queue.h"
@@ -50,6 +49,8 @@
 #include HAL_PATH(.., HAL.h)
 
 #if ENABLED(USB_DISK_SUPPORT)
+#include "udisk_reader.h"
+
 
 udisk_reader udisk;
 
@@ -598,7 +599,7 @@ uint32_t udisk_reader::get_gcode_offset(char * const path)
   return gcode_offset;
 }
 
-uint32_t udisk_reader::update_print_time(char * const path)
+uint32_t udisk_reader::get_print_time(char * const path)
 {
   if (!is_usb_detected())
   {
@@ -613,31 +614,34 @@ uint32_t udisk_reader::update_print_time(char * const path)
   val4byte.byteVal[1] = get();
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
-  print_time = val4byte.uintVal;
+  uint32_t print_time = val4byte.uintVal;
   DEBUGPRINTF("print_time(%d)\r\n", print_time);
+  print_time_dynamic = print_time;
   return print_time;
 }
 
-uint32_t udisk_reader::get_print_time(void)
+uint32_t udisk_reader::get_print_time_dynamic(void)
 {
-  if((print_time == 0) && ((file_size - udisk_pos) > 0))
+  if((print_time_dynamic == 0) && ((file_size - udisk_pos) > 0))
   {
-    print_time = 1;
+    print_time_dynamic = 1;
   }
-  return print_time;
+  return print_time_dynamic;
 }
 
 void udisk_reader::print_time_countdown(void)
 {
   static uint16_t print_time_count = 0;
-
   //count every 1s clock
-  if((print_time_count >= 1000) && (print_time > 0))
+  if(IS_UDISK_PRINTING())
   {
-    print_time--;
-	print_time_count = 0;
+    if((print_time_count >= 1000) && (print_time_dynamic > 0))
+    {
+      print_time_dynamic--;
+	  print_time_count = 0;
+    }
+    print_time_count++;
   }
-  print_time_count++;
 }
 
 bool udisk_reader::check_gm_file(char * const path)

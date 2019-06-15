@@ -67,7 +67,7 @@ public:
   void cmd_M109_M702(void);
   void cmd_M2023(char *file_name);
   void cmd_M2024(void);
-  void cmd_M2025(void);
+  void pause_udisk_print(void);
   void cmd_M500(void);
   void cmd_M300(uint16_t frequency, uint16_t duration);
   void cmd_M2033(bool val);
