@@ -101,6 +101,10 @@
   #include "lcd_process.h"
 #endif
 
+#if ENABLED(FACTORY_MACHINE_UUID)
+#include "machine_uuid.h"
+#endif
+
 #if ENABLED(TARGET_LPC1768)
 #if PIN_EXISTS(BEEPER)
   #include "../libs/buzzer.h"
@@ -1104,6 +1108,13 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(language_current_type);
     #endif
 
+    #if ENABLED(FACTORY_MACHINE_UUID)
+      uint8_t uuid[8];
+      memcpy(uuid, MachineUuid.get_uuid(), 8);
+      _FIELD_TEST(uuid);
+      EEPROM_WRITE(uuid);
+    #endif
+
     #if ENABLED(TARGET_LPC1768)
     #if PIN_EXISTS(BEEPER)
       bool buzzer_status = false;
@@ -1836,6 +1847,13 @@ void MarlinSettings::postprocess() {
 		dwin_process.set_language_type(language_current_type);
       #endif
 
+      #if ENABLED(FACTORY_MACHINE_UUID)
+	    uint8_t uuid[8];
+        _FIELD_TEST(uuid);
+        EEPROM_READ(uuid);
+		MachineUuid.set_uuid(uuid);
+      #endif
+
       #if ENABLED(TARGET_LPC1768)
       #if PIN_EXISTS(BEEPER)
         bool buzzer_status = false;
@@ -1843,16 +1861,16 @@ void MarlinSettings::postprocess() {
         _FIELD_TEST(buzzer_status);
         EEPROM_READ(buzzer_status);
 	    buzzer.set_buzzer_switch(buzzer_status);
-	    #if ENABLED(USE_DWIN_LCD)
-	    if(buzzer_status)
-	    {
-        dwin_process.lcd_send_data(2,VOICE_ICON_ADDR);
-	    }
-	    else
-	    {
-        dwin_process.lcd_send_data(1,VOICE_ICON_ADDR);
-	    }
-	    #endif
+        #if ENABLED(USE_DWIN_LCD)
+        if(buzzer_status)
+        {
+          dwin_process.lcd_send_data(2,VOICE_ICON_ADDR);
+        }
+        else
+        {
+          dwin_process.lcd_send_data(1,VOICE_ICON_ADDR);
+        }
+        #endif
       #endif
       #endif
 
@@ -3171,6 +3189,11 @@ void MarlinSettings::reset() {
     #if ENABLED(USE_DWIN_LCD)
       SERIAL_ECHOPAIR("  M2050 L", dwin_process.get_language_type());
       SERIAL_EOL();
+    #endif
+
+    #if ENABLED(FACTORY_MACHINE_UUID)
+      SERIAL_ECHOPGM("  M2060 ");
+      MachineUuid.print_info();
     #endif
 
     #if ENABLED(TARGET_LPC1768)

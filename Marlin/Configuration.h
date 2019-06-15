@@ -141,7 +141,7 @@
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
-//#define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
+#define MACHINE_UUID "000000-0123456789"
 
 // @section extruder
 
@@ -2108,6 +2108,7 @@
 #define USE_MATERIAL_MOTION_CHECK
 #define SOFTWARE_RESET_SUPPORT
 #define USE_DWIN_LCD
+#define FACTORY_MACHINE_UUID
 #ifdef USE_DWIN_LCD
   #define NEWPANEL
 /**

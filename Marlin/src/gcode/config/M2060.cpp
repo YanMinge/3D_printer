@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2034.cpp
+ * @file    M2060.cpp
  * @author  Mark Yan
  * @version V1.0.0
- * @date    2019/06/11
- * @brief   source code for M2034.
+ * @date    2019/05/24
+ * @brief   source code for M2060.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,31 +19,44 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * enable/disable filamen runout report.
+ * Set/Query the product uuid.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/06/11     1.0.0            Initial function design.
+ * Mark Yan         2019/06/14     1.0.0            Initial function design.
  * </pre>
  *
  */
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USE_MATERIAL_MOTION_CHECK)
+#if ENABLED(FACTORY_MACHINE_UUID)
 
 #include "../gcode.h"
-#include "material_check.h"
+#include "machine_uuid.h"
 
 /**
- * M2034: enable/disable filamen runout report
+ * M2060: Set/Query the product uuid.
+ *      OR, with 'String data' set product uuid.
+ *      OR, with 'NULL parameters' get the current product uuid.
  */
-void GcodeSuite::M2034()
+void GcodeSuite::M2060()
 {
-  if (parser.seen('S'))
+  for (char *fn = parser.string_arg; *fn; ++fn) if (*fn == ' ') *fn = '\0';
+  uint8_t str_len = strlen(parser.string_arg);
+  if(str_len <= 2)
   {
-    MaterialCheck.set_filamen_runout_report_status(parser.value_bool());
+    SERIAL_ECHOPGM("uuid: ");
+  	MachineUuid.print_info();
+  }
+  else
+  {
+    bool ret = MachineUuid.set_uuid_from_str(parser.string_arg);
+	if(ret == false)
+    {
+      SERIAL_ECHOLNPGM("wrong parameter input");
+    }
   }
 }
 
-#endif // USB_DISK_SUPPORT
+#endif // FACTORY_MACHINE_UUID

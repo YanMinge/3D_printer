@@ -23,6 +23,10 @@
 #include "../gcode.h"
 #include "../../inc/MarlinConfig.h"
 
+#if ENABLED(FACTORY_MACHINE_UUID)
+#include "machine_uuid.h"
+#endif
+
 #if ENABLED(EXTENDED_CAPABILITIES_REPORT)
   static void cap_line(PGM_P const name, bool ena=false) {
     SERIAL_ECHOPGM("Cap:");
@@ -37,7 +41,12 @@
  */
 void GcodeSuite::M115() {
 
-  SERIAL_ECHOLNPGM(MSG_M115_REPORT);
+  SERIAL_ECHOPGM(MSG_M115_REPORT);
+#if ENABLED(FACTORY_MACHINE_UUID)
+  	MachineUuid.print_info();
+#else
+  SERIAL_ECHOLNPGM(MACHINE_UUID);
+#endif
 
   #if ENABLED(EXTENDED_CAPABILITIES_REPORT)
 

@@ -897,6 +897,10 @@ private:
     static void M2050();
   #endif
 
+  #if ENABLED(FACTORY_MACHINE_UUID)
+    static void M2060();
+  #endif
+
   static void T(const uint8_t tool_index);
 
 };

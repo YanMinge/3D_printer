@@ -777,6 +777,10 @@ void GcodeSuite::process_parsed_command(
         case 2050: M2050(); break;
       #endif
 
+      #if ENABLED(FACTORY_MACHINE_UUID)
+        case 2060: M2060(); break;
+      #endif
+
       default: parser.unknown_command_error(); break;
     }
     break;
