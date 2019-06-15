@@ -69,8 +69,8 @@ void filament_ui_show::show_load_end_page(void)
       dwin_process.lcd_send_data(PAGE_BASE +18, PAGE_ADDR);
     }
     reset_progress_status();
-    UserExecution.cmd_M2033(300,500);
-    UserExecution.cmd_M2033(500,1000);
+    UserExecution.cmd_M300(300,500);
+    UserExecution.cmd_M300(500,1000);
   }
 }
 
