@@ -69,6 +69,10 @@ enum language_type : uint8_t {
   LAN_ENGLISH,
 };
 
+enum usb_status : char {
+  USB_NO_INSERT = 0,
+  USB_INSERT,
+};
 typedef struct lcd_data_buffer
 {
     unsigned char head[2];
@@ -137,7 +141,7 @@ public:
   void get_file_info(void);
 
   void icon_update(void);
-  void temperature_progress_update(unsigned int percentage);
+  void temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt);
   void send_first_page_data(void);
   void send_next_page_data(void);
   void send_last_page_data(void);

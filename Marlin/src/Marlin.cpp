@@ -1206,7 +1206,12 @@ void loop() {
     {
       if(usb_status == true)
       {
+        dwin_process.lcd_send_data(USB_INSERT,USB_ICON_ADDR);
         udisk.ls(LS_COUNT, "/", ".gcode");
+      }
+      else
+      {
+        dwin_process.lcd_send_data(USB_NO_INSERT,USB_ICON_ADDR);
       }
       pre_usb_status = usb_status;
     }

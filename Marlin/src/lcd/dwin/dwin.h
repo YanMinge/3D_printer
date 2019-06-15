@@ -93,6 +93,7 @@
 #define	PAGE_ADDR	            0x0084
 #define MAKEBLOCK_ICON_ADDR   0x1000
 #define START_ICON_ADDR       0x1002
+#define USB_ICON_ADDR         0x1003
 #define FILE_ICON_ADDR        0x1004
 
 #define PREPARE_ICON_ADDR       0x1010

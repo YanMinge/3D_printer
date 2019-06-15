@@ -444,10 +444,11 @@ void lcd_process::icon_update(void)
   }
 }
 
-void lcd_process::temperature_progress_update(unsigned int percentage)
+void lcd_process::temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt)
 {
   lcd_send_data(percentage, START_ICON_ADDR);
   send_temperature_percentage((uint16_t)percentage);
+  lcd_send_temperature(tempbed,tempbedt,temphotend,temphotendt);
 }
 
 inline void lcd_process::send_page(unsigned long addr,int page,int num, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
