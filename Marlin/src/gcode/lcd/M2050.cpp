@@ -38,11 +38,15 @@
 /**
  * M2050: Set/Query the language type of the LCD UI.
  *      OR, with 'L<type>' set the language type.
- *      OR, with 'C' get the current language type.
+ *      OR, with 'NULL parameters' get the current language type.
  */
 void GcodeSuite::M2050()
 {
-  if (parser.seen('C'))
+  if (parser.seen('L'))
+  {
+    dwin_process.set_language_type((language_type)parser.value_byte());
+  }
+  else
   {
     SERIAL_ECHOPGM("Current language: ");
     if(dwin_process.get_language_type() == LAN_CHINESE)
@@ -57,10 +61,6 @@ void GcodeSuite::M2050()
     {
        SERIAL_ECHOLNPGM("not yet set ");
     }
-  }
-  else if (parser.seen('L'))
-  {
-    dwin_process.set_language_type((language_type)parser.value_byte());
   }
 }
 

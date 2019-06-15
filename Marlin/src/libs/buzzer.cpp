@@ -36,7 +36,13 @@ CircularQueue<tone_t, TONE_QUEUE_LENGTH> Buzzer::buffer;
 Buzzer buzzer;
 
 #if ENABLED(TARGET_LPC1768)
-	extern uint8_t beep_status;
+void Buzzer::set_buzzer_switch(bool status) {
+  buzzer_enable = status;
+}
+
+bool Buzzer::get_buzzer_switch(void) {
+  return buzzer_enable;
+}
 #endif
 
 /**
@@ -75,7 +81,7 @@ void Buzzer::tick() {
         ::tone(BEEPER_PIN, state.tone.frequency, state.tone.duration);
         CRITICAL_SECTION_END;
       #elif ENABLED(TARGET_LPC1768)
-        if(beep_status)
+        if(buzzer.get_buzzer_switch())
         {
           pwm_set_frequency(BEEPER_PIN,state.tone.frequency);
           analogWrite(BEEPER_PIN,10);

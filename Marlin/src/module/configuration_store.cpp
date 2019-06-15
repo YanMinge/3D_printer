@@ -101,6 +101,12 @@
   #include "lcd_process.h"
 #endif
 
+#if ENABLED(TARGET_LPC1768)
+#if PIN_EXISTS(BEEPER)
+  #include "../libs/buzzer.h"
+#endif
+#endif
+
 #pragma pack(push, 1) // No padding between variables
 
 typedef struct { uint16_t X, Y, Z, X2, Y2, Z2, Z3, E0, E1, E2, E3, E4, E5; } tmc_stepper_current_t;
@@ -1098,6 +1104,15 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(language_current_type);
     #endif
 
+    #if ENABLED(TARGET_LPC1768)
+    #if PIN_EXISTS(BEEPER)
+      bool buzzer_status = false;
+      buzzer_status = buzzer.get_buzzer_switch();
+      _FIELD_TEST(buzzer_status);
+      EEPROM_WRITE(buzzer_status);
+    #endif
+    #endif
+
     //
     // Validate CRC and Data Size
     //
@@ -1819,6 +1834,16 @@ void MarlinSettings::postprocess() {
         _FIELD_TEST(language_current_type);
         EEPROM_READ(language_current_type);
 		dwin_process.set_language_type(language_current_type);
+      #endif
+
+      #if ENABLED(TARGET_LPC1768)
+      #if PIN_EXISTS(BEEPER)
+        bool buzzer_status = false;
+        buzzer_status = buzzer.get_buzzer_switch();
+        _FIELD_TEST(buzzer_status);
+        EEPROM_READ(buzzer_status);
+	    buzzer.set_buzzer_switch(buzzer_status);
+      #endif
       #endif
 
       eeprom_error = size_error(eeprom_index - (EEPROM_OFFSET));
@@ -3134,8 +3159,15 @@ void MarlinSettings::reset() {
     #endif
 
     #if ENABLED(USE_DWIN_LCD)
-        SERIAL_ECHOPAIR("  M2050 L", dwin_process.get_language_type());
-        SERIAL_EOL();
+      SERIAL_ECHOPAIR("  M2050 L", dwin_process.get_language_type());
+      SERIAL_EOL();
+    #endif
+
+    #if ENABLED(TARGET_LPC1768)
+    #if PIN_EXISTS(BEEPER)
+      SERIAL_ECHOPAIR("  M2033 S", buzzer.get_buzzer_switch());
+      SERIAL_EOL();
+    #endif
     #endif
   }
 

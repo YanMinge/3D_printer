@@ -29,23 +29,35 @@
  */
 
 #include "../../inc/MarlinConfig.h"
-
+#if ENABLED(TARGET_LPC1768)
 #if PIN_EXISTS(BEEPER)
 
 #include "../gcode.h"
+#include "../../libs/buzzer.h"
 
-uint8_t beep_status = 1;
 /**
- * M2027: Get SD Card status
- *      OR, with 'S<seconds>' set the SD status auto-report interval. (Requires AUTO_REPORT_SD_STATUS)
- *      OR, with 'C' get the current filename.
+ * M2030: Set/Query the buzzer enable status.
+ *      OR, with 'L<type>' set the buzzer status.
+ *      OR, with 'NULL parameters' get the current buzzer status.
  */
 void GcodeSuite::M2033()
 {
   if (parser.seen('S'))
   {
-    beep_status = parser.value_byte();
+    buzzer.set_buzzer_switch(parser.value_bool());
+  }
+  else
+  {
+    SERIAL_ECHOPGM("buzzer: ");
+    if(buzzer.get_buzzer_switch() == true)
+    {
+       SERIAL_ECHOLNPGM("enable");
+    }
+    else
+    {
+       SERIAL_ECHOLNPGM("disable");
+    }
   }
 }
-
+#endif //BEEPER
 #endif //PIN_EXISTS(BEEPER)

@@ -68,6 +68,10 @@
   #include "tool_change.h"
 #endif
 
+#if ENABLED(USE_DWIN_LCD)
+#include "lcd_process.h"
+#endif
+
 #if HOTEND_USES_THERMISTOR
   #if ENABLED(TEMP_SENSOR_1_AS_REDUNDANT)
     static void* heater_ttbl_map[2] = { (void*)HEATER_0_TEMPTABLE, (void*)HEATER_1_TEMPTABLE };
@@ -2907,8 +2911,7 @@ void Temperature::isr() {
          }
 	   #endif
 	   uint8_t percentage_int = round(processing_percentage * 100) < 100 ? round(processing_percentage * 100) : 100;
-       //SERIAL_PRINTF(" ,status:%02d ,%", percentage_int);
-       //SERIAL_PRINTF("\r\n");
+	   dwin_process.temperature_progress_update(percentage_int, 80, 80, int(degHotend(HOTEND_INDEX)), int(degTargetHotend(HOTEND_INDEX)));
     #endif
     #if HAS_TEMP_CHAMBER
       #if HAS_HEATED_CHAMBER

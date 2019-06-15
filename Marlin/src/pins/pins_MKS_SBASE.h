@@ -151,7 +151,7 @@
 //
 // Misc. Functions
 //
-#define PS_ON_PIN          P0_25   // TH3 Connector
+//#define PS_ON_PIN          P0_25   // TH3 Connector
 
 //
 // Ethernet pins

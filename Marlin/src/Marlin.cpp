@@ -817,6 +817,10 @@ void minkill() {
 
   #else // !HAS_KILL
 
+  #if ENABLED(SOFTWARE_RESET_SUPPORT)
+    void(*resetFunc)(void) = 0; // Declare resetFunc() at address 0
+    resetFunc();                // Jump to address 0
+  #endif
     for (;;) {
       #if ENABLED(USE_WATCHDOG)
         watchdog_reset();

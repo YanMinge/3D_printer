@@ -55,7 +55,9 @@
 
     private:
       static state_t state;
-
+#if ENABLED(TARGET_LPC1768)
+	  bool buzzer_enable;
+#endif
     protected:
       static CircularQueue<tone_t, TONE_QUEUE_LENGTH> buffer;
 
@@ -95,6 +97,11 @@
         SET_OUTPUT(BEEPER_PIN);
         reset();
       }
+
+#if ENABLED(TARGET_LPC1768)
+      void set_buzzer_switch(bool status);
+      bool get_buzzer_switch(void);
+#endif
 
       /**
        * @brief Add a tone to the queue

@@ -295,7 +295,7 @@
  *
  * :{ 0:'No power switch', 1:'ATX', 2:'X-Box 360' }
  */
-#define POWER_SUPPLY 1
+#define POWER_SUPPLY 0
 
 #if POWER_SUPPLY > 0
   // Enable this option to leave the PSU off at startup.
@@ -390,11 +390,11 @@
 
 #define TEMP_RESIDENCY_TIME      3  // (seconds) Time to wait for hotend to "settle" in M109
 #define TEMP_WINDOW              3  // (°C) Temperature proximity for the "temperature reached" timer
-#define TEMP_HYSTERESIS          6  // (°C) Temperature proximity considered "close enough" to the target
+#define TEMP_HYSTERESIS          5  // (°C) Temperature proximity considered "close enough" to the target
 
-#define TEMP_BED_RESIDENCY_TIME 10  // (seconds) Time to wait for bed to "settle" in M190
-#define TEMP_BED_WINDOW          1  // (°C) Temperature proximity for the "temperature reached" timer
-#define TEMP_BED_HYSTERESIS      3  // (°C) Temperature proximity considered "close enough" to the target
+#define TEMP_BED_RESIDENCY_TIME  2  // (seconds) Time to wait for bed to "settle" in M190
+#define TEMP_BED_WINDOW          3  // (°C) Temperature proximity for the "temperature reached" timer
+#define TEMP_BED_HYSTERESIS      5  // (°C) Temperature proximity considered "close enough" to the target
 
 #define TEMP_CHAMBER_HYSTERESIS  3  // (°C) Temperature proximity considered "close enough" to the target
 
@@ -2106,6 +2106,7 @@
 //USB HOST MSC support
 #define USB_DISK_SUPPORT
 #define USE_MATERIAL_MOTION_CHECK
+#define SOFTWARE_RESET_SUPPORT
 #define USE_DWIN_LCD
 #ifdef USE_DWIN_LCD
   #define NEWPANEL
