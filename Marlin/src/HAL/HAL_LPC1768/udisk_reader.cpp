@@ -133,7 +133,6 @@ void udisk_reader::usb_status_polling(void)
       detected = true;
       dwin_parser.set_file_read_status(false);
     }
-    DEBUGPRINTF("usb_status(%d)\r\n", usb_status);
     pre_usb_status = usb_status;
   }
 }
