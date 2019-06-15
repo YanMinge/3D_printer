@@ -62,12 +62,16 @@ public:
   void cmd_g28(void);
   void user_stop(void);
   void user_hardware_stop(void);
+  void cmd_M109(uint16_t temperature);
   void cmd_M109_M701(void);
   void cmd_M109_M702(void);
   void cmd_M2023(char *file_name);
   void cmd_M2024(void);
   void cmd_M2025(void);
   void cmd_M500(void);
+  void cmd_M300(uint16_t frequency, uint16_t duration);
+  void cmd_M2033(bool val);
+
 };
 
 extern user_execution UserExecution;

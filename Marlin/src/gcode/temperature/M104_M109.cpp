@@ -144,5 +144,6 @@ void GcodeSuite::M109() {
 
   #if ENABLED(NEWPANEL)
     filament_show.show_load_unload_start_page();
+    filament_show.show_file_print_end_page();
   #endif
 }

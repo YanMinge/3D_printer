@@ -42,6 +42,7 @@
 #include "dwin.h"
 #include "lcd_file.h"
 #include "lcd_process.h"
+#include "lcd_parser.h"
 #include "filament_ui.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
@@ -68,6 +69,8 @@ void filament_ui_show::show_load_end_page(void)
       dwin_process.lcd_send_data(PAGE_BASE +18, PAGE_ADDR);
     }
     reset_progress_status();
+    UserExecution.cmd_M2033(300,500);
+    UserExecution.cmd_M2033(500,1000);
   }
 }
 
@@ -83,6 +86,35 @@ void filament_ui_show::show_unload_end_page(void)
 void filament_ui_show::show_heat_prepare_page(void)
 {
   dwin_process.lcd_send_data(PAGE_BASE +17, PAGE_ADDR);
+}
+
+void filament_ui_show::show_file_prepare_page(void)
+{
+  dwin_process.lcd_send_data(PAGE_BASE +21, PAGE_ADDR);
+}
+
+void filament_ui_show::show_file_print_end_page(void)
+{
+  if(progress_status.file_print_status)
+  {
+    pfile_list_t temp = NULL;
+    temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+    dwin_process.lcd_send_data(temp->file_name,(FILE_TEXT_ADDR_D));
+    dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
+    dwin_process.limage_send_start();
+
+    if(progress_status.load_return_status)
+    {
+      LcdFile.set_current_status(out_printing);
+    }
+    else
+    {
+      LcdFile.set_current_status(on_printing);
+      dwin_process.lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
+      UserExecution.cmd_M2024();
+    }
+    reset_progress_status();
+  }
 }
 
 void filament_ui_show::show_load_unload_start_page(void)

@@ -403,10 +403,10 @@ void lcd_process::lcd_show_picture(unsigned short y, unsigned short x, unsigned 
 
 void lcd_process::lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt)
 {
-  lcd_send_data(tempbed, TEMP_HOTEND_ADDR);
-  lcd_send_data(tempbedt, TEMP_HOTEND_TARGET_ADDR);
-  lcd_send_data(temphotend, TEMP_BED_ADDR);
-  lcd_send_data(temphotendt, TEMP_BED_TARGET_ADDR);
+  lcd_send_data(tempbed, TEMP_BED_ADDR);
+  lcd_send_data(tempbedt, TEMP_BED_TARGET_ADDR);
+  lcd_send_data(temphotend, TEMP_HOTEND_ADDR);
+  lcd_send_data(temphotendt, TEMP_HOTEND_TARGET_ADDR);
 }
 
 void lcd_process::send_current_temperature(int tempbed, int temphotend)

@@ -71,6 +71,7 @@ public:
   bool last_path_fresh(void);
 
   inline bool get_file_show_status(void){return file_show_status;}
+  inline int get_current_page_index(void){ return current_page_index;}
   inline void set_file_show_status(bool status){ file_show_status = status;}
   inline void set_file_read_status(bool status){ file_read_status = status;}
 

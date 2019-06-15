@@ -49,6 +49,7 @@ typedef struct
   bool start_stop_status;
   bool load_return_status;
   bool heat_cool_status;
+  bool file_print_status;
 } progress_show_status_t;
 
 class filament_ui_show
@@ -58,17 +59,21 @@ public:
   virtual ~filament_ui_show(void) { }
 
   void show_heat_prepare_page(void);
+  void show_file_prepare_page(void);
   void show_load_unload_start_page(void);
   void show_load_end_page(void);
   void show_unload_end_page(void);
+  void show_file_print_end_page(void);
 
   void reset_progress_status(void){memset(&progress_status,0,sizeof(progress_show_status_t)); }
   void set_progress_start_status(bool status){ progress_status.start_stop_status         = status;}
   void set_progress_load_return_status(bool status){  progress_status.load_return_status = status        ;}
   void set_progress_heat_cool_status(bool status){  progress_status.heat_cool_status = status        ;}
+  void set_progress_file_print_status(bool status){  progress_status.file_print_status = status        ;}
   bool get_progress_start_status(void){ return progress_status.start_stop_status        ;}
   bool get_progress_load_return_status(void){ return progress_status.load_return_status         ;}
   bool get_progress_heat_cool_status(void){ return progress_status.heat_cool_status         ;}
+  bool get_progress_file_print_status(void){ return progress_status.file_print_status         ;}
 
 private:
   progress_show_status_t progress_status;

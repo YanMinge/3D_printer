@@ -104,6 +104,13 @@ void user_execution::user_hardware_stop(void)
   enqueue_and_echo_command(PSTR("M105 S0"));
 }
 
+void user_execution::cmd_M109(uint16_t temperature)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M109 S%d"),temperature);
+  enqueue_and_echo_command(cmd);
+}
+
 void user_execution::cmd_M109_M701(void)
 {
   enqueue_and_echo_commands_P(PSTR("M109 S210\nM701"));
@@ -139,6 +146,20 @@ void user_execution::cmd_M500(void)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("M500"));
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_M300(uint16_t frequency, uint16_t duration)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M300 S%d P%d"),frequency,duration);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_M2033(bool val)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2033 S%d"), val);
   enqueue_and_echo_command(cmd);
 }
 

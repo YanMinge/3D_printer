@@ -1843,6 +1843,16 @@ void MarlinSettings::postprocess() {
         _FIELD_TEST(buzzer_status);
         EEPROM_READ(buzzer_status);
 	    buzzer.set_buzzer_switch(buzzer_status);
+	    #if ENABLED(USE_DWIN_LCD)
+	    if(buzzer_status)
+	    {
+        dwin_process.lcd_send_data(2,VOICE_ICON_ADDR);
+	    }
+	    else
+	    {
+        dwin_process.lcd_send_data(1,VOICE_ICON_ADDR);
+	    }
+	    #endif
       #endif
       #endif
 
