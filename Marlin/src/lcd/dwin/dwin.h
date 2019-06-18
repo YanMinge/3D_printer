@@ -110,6 +110,7 @@
 #define FILE_TEXT_ADDR_9 0x1580
 #define FILE_TEXT_ADDR_D 0x15C0
 
+#define UUID_ADDR 0x16B8
 /***************not used text button addr*************/
 /*****************************************************
 #define MainPagetextaddr   1400--1438  //进料退料、返回复位等文字的地址

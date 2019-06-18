@@ -163,6 +163,7 @@ public:
   void set_simage_count(void);
   void set_simage_status(bool status){ image_status.simage_status = status;}
   void set_limage_status(bool status){ image_status.limage_status = status;}
+  bool get_limage_status(void){ return image_status.limage_status;}
   void set_simage_send_status(bool status){ image_status.simage_send_status = status;}
   void set_limage_send_status(bool status){ image_status.limage_send_status = status;}
   void set_simage_set_status(bool status){ image_status.simage_set_status = status;}
@@ -181,6 +182,7 @@ public:
   void move_main_page(void);
   void move_usb_hint_page(void);
   void get_image_data(int len);
+   void show_uuid(void);
 
 private:
   bool is_command; /*whether receive a lcd command*/

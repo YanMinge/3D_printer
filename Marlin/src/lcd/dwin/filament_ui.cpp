@@ -99,20 +99,21 @@ void filament_ui_show::show_file_print_end_page(void)
   {
     pfile_list_t temp = NULL;
     temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
-    dwin_process.lcd_send_data(temp->file_name,(FILE_TEXT_ADDR_D));
     dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
-    dwin_process.limage_send_start();
 
     if(progress_status.load_return_status)
     {
       LcdFile.set_current_status(out_printing);
+      dwin_process.lcd_send_data(START_MESSAGE,START_STOP_ICON_ADDR);
     }
     else
     {
       LcdFile.set_current_status(on_printing);
       dwin_process.lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
+      UserExecution.cmd_M2023(temp->file_name);
       UserExecution.cmd_M2024();
     }
+    dwin_process.lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
     reset_progress_status();
   }
 }

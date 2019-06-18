@@ -102,6 +102,10 @@
       void set_buzzer_switch(bool status);
       bool get_buzzer_switch(void);
 #endif
+#if ENABLED(USE_DWIN_LCD)
+      void buzzer_icon_init(void);
+#endif
+
 
       /**
        * @brief Add a tone to the queue

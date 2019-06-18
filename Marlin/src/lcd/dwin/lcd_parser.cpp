@@ -325,12 +325,17 @@ void lcd_parser::response_select_file(void)
   }
   else if(0x05 == receive_data)
   {
-    //return;
+    dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
+    dwin_process.lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
+    return;
   }
   else if(0x06 == receive_data)
   {
     current_page_index = 0;
+    dwin_process.reset_image_parameters();
+    dwin_process.simage_send_end();
     response_print_button();
+    LcdFile.set_current_status(out_printing);
     return;
   }
   else if(0x07 == receive_data)
@@ -338,6 +343,7 @@ void lcd_parser::response_select_file(void)
     UserExecution.user_stop();
     UserExecution.user_hardware_stop();
     filament_show.set_progress_load_return_status(true);
+    return;
   }
   else
   {
@@ -369,6 +375,7 @@ void lcd_parser::response_print_file(void)
       filament_show.show_file_prepare_page();
       UserExecution.cmd_M109(220);
       filament_show.set_progress_file_print_status(true);
+      UserExecution.user_start();
       //LcdFile.set_current_status(on_printing);
       //dwin_process.lcd_send_data(STOP_MESSAGE,START_STOP_ICON_ADDR);
       //UserExecution.cmd_M2024();
@@ -506,6 +513,7 @@ void lcd_parser::select_file(pfile_list_t temp)
   {
     dwin_process.lcd_send_data(temp->file_name,(FILE_TEXT_ADDR_D));
     dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
+    dwin_process.lcd_send_data(START_MESSAGE,START_STOP_ICON_ADDR);
     dwin_process.limage_send_start();
   }
   else if(temp->file_type == TYPE_DEFAULT_FILE)

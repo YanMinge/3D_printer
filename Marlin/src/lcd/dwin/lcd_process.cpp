@@ -650,8 +650,6 @@ void lcd_process::send_simage(void)
       lcd_show_picture((0x0020),(0x0020 + file_info.send_file_num * 100),PICTURE_ADDR,0X82);
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
       DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
-      //file_info.shadow_image_current_count = file_info.image_current_send_count;
-      //file_info.shadow_image_send_count = file_info.image_send_count;
 
       image_status.simage_delay_status = true;
 

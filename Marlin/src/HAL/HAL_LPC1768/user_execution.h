@@ -60,6 +60,7 @@ public:
   void cmd_g1_y(float y);
   void cmd_g1_z(float z);
   void cmd_g28(void);
+  void user_start(void);
   void user_stop(void);
   void user_hardware_stop(void);
   void cmd_M109(uint16_t temperature);

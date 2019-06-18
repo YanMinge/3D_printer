@@ -31,6 +31,9 @@
   #include "../lcd/extensible_ui/ui_api.h"
 #endif
 
+#if ENABLED(NEWPANEL)
+  #include "lcd_process.h"
+#endif
 Buzzer::state_t Buzzer::state;
 CircularQueue<tone_t, TONE_QUEUE_LENGTH> Buzzer::buffer;
 Buzzer buzzer;
@@ -42,6 +45,20 @@ void Buzzer::set_buzzer_switch(bool status) {
 
 bool Buzzer::get_buzzer_switch(void) {
   return buzzer_enable;
+}
+#endif
+
+#if ENABLED(USE_DWIN_LCD)
+void Buzzer::buzzer_icon_init(void)
+{
+  if(buzzer_enable)
+  {
+    dwin_process.lcd_send_data(2,VOICE_ICON_ADDR);
+  }
+  else
+  {
+    dwin_process.lcd_send_data(1,VOICE_ICON_ADDR);
+  }
 }
 #endif
 

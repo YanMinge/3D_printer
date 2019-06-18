@@ -97,6 +97,12 @@ void user_execution::cmd_g28(void)
   enqueue_and_echo_command("G28");
 }
 
+void user_execution::user_start(void)
+{
+  wait_for_user = true;
+  wait_for_heatup = true;
+}
+
 void user_execution::user_stop(void)
 {
   wait_for_user = false;
