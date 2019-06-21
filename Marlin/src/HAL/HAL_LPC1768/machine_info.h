@@ -41,6 +41,7 @@
  *    14.  void     machine_info::machine_information_update(void);
  *    15.  void     machine_info::lcd_print_information_update(void);
  *    16.  void     machine_info::lcd_usb_status_update(void);
+ *    17.  void     machine_info::lcd_material_info_update(void);
  *
  * \par History:
  * <pre>
@@ -62,8 +63,9 @@
 
 #if ENABLED(FACTORY_MACHINE_INFO)
 
-#define MACHINE_INFORMATION_UPDATE_PERIOD 50
-#define LCD_PRINT_TIME_UPDATE_PERIOD      1000
+#define MACHINE_INFORMATION_UPDATE_PERIOD    50
+#define MATERIAL_INFORMATION_UPDATE_PERIOD   1000
+#define LCD_PRINT_TIME_UPDATE_PERIOD         1000
 
 enum head_t : uint8_t { HEAD_NULL, HEAD_PRINT, HEAD_LASER };
 
@@ -89,6 +91,10 @@ public:
 #if ENABLED(USE_DWIN_LCD)
   void lcd_print_information_update(void);
   void lcd_usb_status_update(void);
+#endif
+
+#ifdef USE_MATERIAL_MOTION_CHECK
+  void lcd_material_info_update(void);
 #endif
 
 private:

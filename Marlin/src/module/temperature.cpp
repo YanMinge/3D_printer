@@ -2596,7 +2596,7 @@ void Temperature::isr() {
    */
   #define ACCUMULATE_ADC(obj) do{ \
     if (!HAL_ADC_READY()) next_sensor_state = adc_sensor_state; \
-    else obj.acc += HAL_READ_ADC(); \
+    else {obj.single = HAL_READ_ADC(); obj.acc += obj.single;} \
   }while(0)
 
   ADCSensorState next_sensor_state = adc_sensor_state < SensorsReady ? (ADCSensorState)(int(adc_sensor_state) + 1) : StartSampling;

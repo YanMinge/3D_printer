@@ -41,6 +41,7 @@
  *    14.  void     machine_info::machine_information_update(void);
  *    15.  void     machine_info::lcd_print_information_update(void);
  *    16.  void     machine_info::lcd_usb_status_update(void);
+ *    17.  void     machine_info::lcd_material_info_update(void);
  *
  * \par History:
  * <pre>
@@ -65,6 +66,11 @@
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
 #endif
+
+#ifdef USE_MATERIAL_MOTION_CHECK
+#include "material_check.h"
+#endif
+
 
 machine_info MachineInfo;
 
@@ -228,12 +234,13 @@ void machine_info::machine_information_update(void)
     usb_cable_connect = !status;
 
     //head type detection
-    int16_t temp = int(thermalManager.degHotend(HOTEND_INDEX));
-    if(temp < 0)
+    int16_t temp = thermalManager.temp_hotend[HOTEND_INDEX].single;
+    if(temp > 1000)
     {
       head_type = HEAD_NULL;
+      //LCD Pop-ups
     }
-    else if(temp > 800)
+    else if(temp < 20)
     {
       head_type = HEAD_LASER;
     }
@@ -254,11 +261,11 @@ void machine_info::lcd_print_information_update(void)
   if(millis() - previous_time > LCD_PRINT_TIME_UPDATE_PERIOD)
   {
     dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
-    previous_time = millis();
     if(IS_UDISK_PRINTING())
     {
       dwin_process.send_print_time(udisk.get_print_time_dynamic());
     }
+    previous_time = millis();
   }
 }
 
@@ -270,12 +277,12 @@ void machine_info::lcd_usb_status_update(void)
   {
     if(usb_status == true)
     {
-      dwin_process.lcd_send_data(USB_INSERT,USB_ICON_ADDR);
+      dwin_process.lcd_send_data(USB_INSERT, USB_ICON_ADDR);
       udisk.ls(LS_COUNT, "/", ".gcode");
     }
     else
     {
-      dwin_process.lcd_send_data(USB_NO_INSERT,USB_ICON_ADDR);
+      dwin_process.lcd_send_data(USB_NO_INSERT, USB_ICON_ADDR);
     }
     pre_usb_status = usb_status;
   }
@@ -296,10 +303,52 @@ void machine_info::lcd_usb_status_update(void)
       OUT_WRITE(LED_PIN, false);
 #endif
     }
+    //Lcd status bar update
     pre_usb_cable_status = usb_cable_status;
   }
 }
-#endif // USE_DWIN_LCD
 
+#ifdef USE_MATERIAL_MOTION_CHECK
+void machine_info::lcd_material_info_update(void)
+{
+  bool run_status = print_job_timer.isRunning();
+
+  static bool pre_filamen_runout_status;
+  if(MaterialCheck.get_filamen_runout_report_status())
+  {
+    bool filamen_runout_status = MaterialCheck.is_filamen_runout();
+    if(filamen_runout_status != pre_filamen_runout_status)
+    {
+      SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
+      pre_filamen_runout_status = filamen_runout_status;
+    }
+
+    if((run_status == true) && (filamen_runout_status == false))
+    {
+      //LCD Pop-ups
+    }
+  }
+
+  static long previous_material_info_update_time = 0;
+  if(millis() - previous_material_info_update_time > MATERIAL_INFORMATION_UPDATE_PERIOD)
+  {
+    if(MaterialCheck.get_filamen_motion_report_status())
+    {
+      if((abs(MaterialCheck.get_material_extrusion_in_windows()) > 5) && 
+         ((MaterialCheck.get_code_wheel_step_in_windows() * 0.5) < abs(MaterialCheck.get_material_extrusion_in_windows())))
+      {
+        SERIAL_PRINTF("M2032 E1\r\n");
+        if(run_status == true)
+        {
+          //LCD Pop-ups
+        }
+      }
+    }
+    previous_material_info_update_time = millis();
+  }
+}
+#endif
+
+#endif // USE_DWIN_LCD
 #endif // FACTORY_MACHINE_INFO
 #endif // TARGET_LPC1768

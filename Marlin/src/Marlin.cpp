@@ -742,6 +742,7 @@ void idle(
   dwin_parser.lcd_update();
   dwin_process.lcd_loop();
   MachineInfo.lcd_print_information_update();
+  MachineInfo.lcd_material_info_update();
 #endif //USE_DWIN_LCD
 }
 
@@ -1146,12 +1147,14 @@ void setup() {
   udisk.init();
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+  MachineInfo.machine_information_update();
+#endif
+
 #if ENABLED(USE_DWIN_LCD)
   LcdFile.file_list_init();
   buzzer.buzzer_icon_init();
-  //dwin_process.show_uuid();
 #endif //USE_DWIN_LCD
-
 }
 
 /**
@@ -1206,5 +1209,9 @@ void loop() {
       #endif
     }
 #endif //USB_DISK_SUPPORT
+
+#if ENABLED(FACTORY_MACHINE_INFO)
+	MachineInfo.machine_information_update();
+#endif
   }
 }

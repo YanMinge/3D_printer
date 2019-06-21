@@ -179,6 +179,7 @@ enum TempIndex : uint8_t {
 typedef struct TempInfo {
   uint16_t acc;
   int16_t raw;
+  int16_t single;
   float current;
 } temp_info_t;
 

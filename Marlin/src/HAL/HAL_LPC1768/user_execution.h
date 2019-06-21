@@ -27,7 +27,22 @@
  *
  *    1.  void    user_execution::cmd_g92(float x, float y, float z, float e);
  *    2.  void    user_execution::cmd_g1(float x, float y, float z, float e);
- *    3.  void    user_execution::cmd_g28(void);
+ *    3.  void    user_execution::cmd_g1_x(float x);
+ *    4.  void    user_execution::cmd_g1_y(float y);
+ *    5.  void    user_execution::cmd_g1_z(float z);
+ *    6.  void    user_execution::cmd_g28(void);
+ *    7.  void    user_execution::user_start(void);
+ *    8.  void    user_execution::user_stop(void);
+ *    9.  void    user_execution::user_hardware_stop(void);
+ *    10.  void    user_execution::cmd_M109(uint16_t temperature);
+ *    11.  void    user_execution::cmd_M109_M701(void);
+ *    12.  void    user_execution::cmd_M109_M702(void);
+ *    13.  void    user_execution::cmd_M2023(char *file_name);
+ *    14.  void    user_execution::cmd_M2024(void);
+ *    15.  void    user_execution::pause_udisk_print(void);
+ *    16.  void    user_execution::cmd_M500(void);
+ *    17.  void    user_execution::cmd_M300(uint16_t frequency, uint16_t duration);
+ *    18.  void    user_execution::cmd_M2033(bool val);
  *
  * \par History:
  * <pre>

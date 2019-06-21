@@ -31,8 +31,10 @@
  *    4.  void material_check::set_filamen_motion_report_status(bool set_val);
  *    5.  bool material_check::get_filamen_motion_report_status(void);
  *    6.  bool material_check::is_filamen_runout(void);
- *    7.  uint16_t material_check::get_code_wheel_step_in_windows(void);
- *    8.  void material_check::code_wheel_step_update(void);
+ *    7.  void material_check::code_wheel_step_update(void);
+ *    8.  void material_check::material_extrusion_update(void);
+ *    9.  uint16_t material_check::get_code_wheel_step_in_windows(void);
+ *    10.  int16_t material_check::get_material_extrusion_in_windows(void);
  *
  * \par History:
  * <pre>
@@ -71,15 +73,15 @@ public:
   void code_wheel_step_update();
   void material_extrusion_update();
   uint16_t get_code_wheel_step_in_windows(void);
-  uint16_t get_material_extrusion_in_windows(void);
+  int16_t get_material_extrusion_in_windows(void);
 
 private:
   bool is_report_filamen_runout;
   bool is_report_filamen_motion;
   uint32_t code_wheel_step_in_windows;
-  uint32_t material_extrusion_in_windows;
+  int32_t material_extrusion_in_windows;
   uint16_t code_wheel_step_in_statistics_time[CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM];
-  uint16_t material_extrusion_in_statistics_time[CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM];
+  int16_t material_extrusion_in_statistics_time[CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM];
 };
 
 extern material_check MaterialCheck;

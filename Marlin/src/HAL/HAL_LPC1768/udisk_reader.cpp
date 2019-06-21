@@ -25,13 +25,35 @@
  *
  * \par Method List:
  *
- *    1.  void    udisk_reader::init(void);
- *    2.  bool    udisk_reader::is_usb_detected(void);
- *    3.  void    udisk_reader::usb_status_polling(void);
- *    4.  void    udisk_reader::test_code(void);
+ *    1.  void     udisk_reader::init(void);
+ *    2.  bool     udisk_reader::is_usb_detected(void);
+ *    3.  bool     udisk_reader::is_usb_Initialized(void);
+ *    4.  void     udisk_reader::usb_status_polling(void);
  *    5.  uint16_t udisk_reader::ls(is_action_t action, const char *path = "", const char * const match = NULL);
- *    6.  uint16_t udisk_reader::is_dive(const char *path = "", const char * const match = NULL);
- *    7.  uint16_t udisk_reader::get_num_Files(const char *path = "", const char * const match = NULL);
+ *    6.  void     udisk_reader::file_list_sort(void);
+ *    7.  uint16_t udisk_reader::is_dive(const char *path = "", const char * const match = NULL);
+ *    8.  uint16_t udisk_reader::get_num_Files(const char *path = "", const char * const match = NULL);
+ *    9.  char *   udisk_reader::get_file_name(void);
+ *    10. void     udisk_reader::open_file(char * const path, const bool read);
+ *    11. void     udisk_reader::print_file_name();
+ *    12. void     udisk_reader::report_status();
+ *    13. int16_t  udisk_reader::get(void);
+ *    14. void     udisk_reader::start_udisk_print(void);
+ *    15. void     udisk_reader::pause_udisk_print(void);
+ *    16. void     udisk_reader::stop_udisk_print(void);
+ *    17. void     udisk_reader::printing_has_finished();
+ *    18. bool     udisk_reader::get_udisk_printing_flag(void);
+ *    19. bool     udisk_reader::is_gm_file_type(char * const path);
+ *    20. bool     udisk_reader::check_gm_file(char * const path);
+ *    21. uint32_t udisk_reader::get_simage_size(char * const path);
+ *    22. uint32_t udisk_reader::get_simage_offset(char * const path);
+ *    23. uint32_t udisk_reader::get_limage_size(char * const path);
+ *    24. uint32_t udisk_reader::get_limage_offset(char * const path);
+ *    25. uint32_t udisk_reader::get_gcode_size(char * const path);
+ *    26. uint32_t udisk_reader::get_gcode_offset(char * const path);
+ *    27. uint32_t udisk_reader::get_print_time(char * const path);
+ *    28. uint32_t udisk_reader::get_print_time_dynamic(void);
+ *    29. void     udisk_reader::print_time_countdown(void);
  *
  * \par History:
  * <pre>

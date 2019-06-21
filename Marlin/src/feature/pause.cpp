@@ -234,7 +234,7 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
     #endif
 
     for (float purge_count = purge_length; purge_count > 0 && wait_for_user; --purge_count){
-      do_pause_e_move(2, ADVANCED_PAUSE_PURGE_FEEDRATE);
+      do_pause_e_move(5, ADVANCED_PAUSE_PURGE_FEEDRATE);
       idle();
     }
     wait_for_user = false;

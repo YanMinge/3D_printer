@@ -31,8 +31,10 @@
  *    4.  void material_check::set_filamen_motion_report_status(bool set_val);
  *    5.  bool material_check::get_filamen_motion_report_status(void);
  *    6.  bool material_check::is_filamen_runout(void);
- *    7.  uint16_t material_check::get_code_wheel_step_in_windows(void);
- *    8.  void material_check::code_wheel_step_update(void);
+ *    7.  void material_check::code_wheel_step_update(void);
+ *    8.  void material_check::material_extrusion_update(void);
+ *    9.  uint16_t material_check::get_code_wheel_step_in_windows(void);
+ *    10.  int16_t material_check::get_material_extrusion_in_windows(void);
  *
  * \par History:
  * <pre>
@@ -113,7 +115,7 @@ uint16_t material_check::get_code_wheel_step_in_windows(void)
   return code_wheel_step_in_windows;
 }
 
-uint16_t material_check::get_material_extrusion_in_windows(void)
+int16_t material_check::get_material_extrusion_in_windows(void)
 {
   material_extrusion_in_windows = 0;
   for(uint8_t i = 0; i< CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM; i++)
@@ -166,7 +168,7 @@ void material_check::material_extrusion_update(void)
     int32_t material_extrusion = round(planner.get_axis_position_mm(E_AXIS));
     material_extrusion_in_statistics_time[material_update_statistics_time_counter] = material_extrusion - pre_material_extrusion;
     material_update_statistics_time_counter++;
-    material_update_time_local = 0; 
+    material_update_time_local = 0;
     pre_material_extrusion = material_extrusion;
     if(material_update_statistics_time_counter == CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM)
     {

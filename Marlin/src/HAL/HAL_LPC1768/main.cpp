@@ -19,8 +19,6 @@ extern "C" {
 
 #ifdef USE_MATERIAL_MOTION_CHECK
   #include "material_check.h"
-  #include "../../module/motion.h"
-  #include "../../module/planner.h"
 #endif
 
 extern uint32_t MSC_SD_Init(uint8_t pdrv);
@@ -29,10 +27,6 @@ extern "C" void disk_timerproc(void);
 
 #if ENABLED(USB_DISK_SUPPORT)
 static int start_systick = false;
-#endif
-
-#ifdef USE_MATERIAL_MOTION_CHECK
-static bool pre_filamen_runout_status;
 #endif
 
 void SysTick_Callback() {
@@ -46,26 +40,8 @@ void SysTick_Callback() {
 #endif
   
 #ifdef USE_MATERIAL_MOTION_CHECK
-  if(MaterialCheck.get_filamen_runout_report_status())
-  {
-    bool filamen_runout_status = MaterialCheck.is_filamen_runout();
-    if(filamen_runout_status != pre_filamen_runout_status)
-    {
-      SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
-      pre_filamen_runout_status = filamen_runout_status;
-    }
-  }
-  if(MaterialCheck.get_filamen_motion_report_status())
-  {
-    SERIAL_PRINTF("M2032 E%d\r\n", MaterialCheck.is_filamen_runout());
-  }
- 
   MaterialCheck.code_wheel_step_update();
   MaterialCheck.material_extrusion_update();
-#endif
-
-#if ENABLED(FACTORY_MACHINE_INFO)
-  MachineInfo.machine_information_update();
 #endif
 
   disk_timerproc();
