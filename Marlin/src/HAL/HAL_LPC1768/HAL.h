@@ -39,7 +39,6 @@ extern "C" volatile millis_t _millis;
 
 #include <Arduino.h>
 #include <pinmapping.h>
-#include "virtual_serial.h"
 
 #include "../shared/math_32bit.h"
 #include "../shared/HAL_SPI.h"
@@ -62,8 +61,8 @@ extern "C" volatile millis_t _millis;
   #define ST7920_DELAY_3 DELAY_NS(750)
 #endif
 
-#if !WITHIN(SERIAL_PORT, -1, 4)
-  #error "SERIAL_PORT must be from -1 to 4"
+#if !WITHIN(SERIAL_PORT, -1, 3)
+  #error "SERIAL_PORT must be from -1 to 3"
 #endif
 
 #if SERIAL_PORT == -1
@@ -76,13 +75,11 @@ extern "C" volatile millis_t _millis;
   #define MYSERIAL0 MSerial2
 #elif SERIAL_PORT == 3
   #define MYSERIAL0 MSerial3
-#elif SERIAL_PORT == 4
-  #define MYSERIAL0 VirtualSerial
 #endif
 
 #ifdef SERIAL_PORT_2
-  #if !WITHIN(SERIAL_PORT_2, -1, 4)
-    #error "SERIAL_PORT_2 must be from -1 to 4"
+  #if !WITHIN(SERIAL_PORT_2, -1, 3)
+    #error "SERIAL_PORT_2 must be from -1 to 3"
   #elif SERIAL_PORT_2 == SERIAL_PORT
     #error "SERIAL_PORT_2 must be different than SERIAL_PORT"
   #endif
@@ -97,8 +94,6 @@ extern "C" volatile millis_t _millis;
     #define MYSERIAL1 MSerial2
   #elif SERIAL_PORT_2 == 3
     #define MYSERIAL1 MSerial3
-  #elif SERIAL_PORT_2 == 4
-    #define MYSERIAL1 VirtualSerial
   #endif
 #else
   #define NUM_SERIAL 1

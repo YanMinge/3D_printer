@@ -19,7 +19,7 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * Get SD Card status.
+ * Get UDISK status.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
@@ -36,8 +36,8 @@
 #include "udisk_reader.h"
 
 /**
- * M2027: Get SD Card status
- *      OR, with 'S<seconds>' set the SD status auto-report interval. (Requires AUTO_REPORT_SD_STATUS)
+ * M2027: Get UDISK status
+ *      OR, with 'NULL' report the UDISK status.
  *      OR, with 'C' get the current filename.
  */
 void GcodeSuite::M2027()

@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2020.cpp
+ * @file    M2061.cpp
  * @author  Mark Yan
  * @version V1.0.0
- * @date    2019/05/24
- * @brief   source code for M2020.
+ * @date    2019/06/20
+ * @brief   source code for M2061.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,38 +19,43 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * List usb disk files to serial output.
+ * Reset/Query the total working time.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/05/24     1.0.0            Initial function design.
+ * Mark Yan         2019/06/20     1.0.0            Initial function design.
  * </pre>
  *
  */
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USB_DISK_SUPPORT)
+#if ENABLED(FACTORY_MACHINE_INFO)
 
 #include "../gcode.h"
-#include "udisk_reader.h"
+#include "machine_info.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2061: Reset/Query the working time.
+ *      OR, with 'S2061' to reset the working time.
+ *      OR, with 'T' to set the working time.
+ *      OR, with 'NULL parameters' get the current working time.
  */
-void GcodeSuite::M2020()
+void GcodeSuite::M2061()
 {
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
-
-  for (char *fn = parser.string_arg; *fn; ++fn)
+  if(parser.intval('S') == 2061)
   {
-    if (*fn == ' ') 
-    { 
-      *fn = '\0';
-    }
+    MachineInfo.reset_total_working_time();
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".gcode");
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
+  else if(parser.seen('T'))
+  {
+    MachineInfo.set_total_working_time(parser.value_ushort());
+  }
+  else
+  {
+    SERIAL_ECHOPGM("Working time: ");
+    MachineInfo.print_working_time();
+  }
 }
 
-#endif // USB_DISK_SUPPORT
+#endif // FACTORY_MACHINE_INFO

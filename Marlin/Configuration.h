@@ -104,7 +104,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT 4
+#define SERIAL_PORT 0
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
@@ -113,7 +113,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT_2 0
+//#define SERIAL_PORT_2 0
 
 /**
  * This setting determines the communication speed of the printer.
@@ -390,7 +390,7 @@
 
 #define TEMP_RESIDENCY_TIME      3  // (seconds) Time to wait for hotend to "settle" in M109
 #define TEMP_WINDOW              3  // (°C) Temperature proximity for the "temperature reached" timer
-#define TEMP_HYSTERESIS          5  // (°C) Temperature proximity considered "close enough" to the target
+#define TEMP_HYSTERESIS          6  // (°C) Temperature proximity considered "close enough" to the target
 
 #define TEMP_BED_RESIDENCY_TIME  2  // (seconds) Time to wait for bed to "settle" in M190
 #define TEMP_BED_WINDOW          3  // (°C) Temperature proximity for the "temperature reached" timer
@@ -694,7 +694,7 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 150, 150, 7.5, 25 }
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 9, 25 }
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -1277,7 +1277,7 @@
 
 // Homing speeds (mm/m)
 #define HOMING_FEEDRATE_XY (80*60)
-#define HOMING_FEEDRATE_Z  (5*60)
+#define HOMING_FEEDRATE_Z  (8*60)
 
 // Validate that endstops are triggered on homing moves
 #define VALIDATE_HOMING_ENDSTOPS
@@ -1506,7 +1506,7 @@
  *
  * View the current statistics with M78.
  */
-//#define PRINTCOUNTER
+#define PRINTCOUNTER
 
 //=============================================================================
 //============================= LCD and SD support ============================
@@ -2105,10 +2105,14 @@
 
 //USB HOST MSC support
 #define USB_DISK_SUPPORT
+#ifdef USB_DISK_SUPPORT
+  #define UDISK_FINISHED_STEPPERRELEASE true          // Disable steppers when SD Print is finished
+  #define UDISK_FINISHED_RELEASECOMMAND "M84 X Y Z E" // You might want to keep the Z enabled so your bed stays in place.
+#endif
 #define USE_MATERIAL_MOTION_CHECK
 #define SOFTWARE_RESET_SUPPORT
 #define USE_DWIN_LCD
-#define FACTORY_MACHINE_UUID
+#define FACTORY_MACHINE_INFO
 #ifdef USE_DWIN_LCD
   #define NEWPANEL
 /**

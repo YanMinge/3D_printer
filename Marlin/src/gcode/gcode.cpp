@@ -762,6 +762,7 @@ void GcodeSuite::process_parsed_command(
         case 2025: M2025(); break;
         case 2026: M2026(); break;
         case 2027: M2027(); break;
+        case 2524: M2524(); break;
       #endif
 
       #if PIN_EXISTS(BEEPER)
@@ -777,8 +778,10 @@ void GcodeSuite::process_parsed_command(
         case 2050: M2050(); break;
       #endif
 
-      #if ENABLED(FACTORY_MACHINE_UUID)
+      #if ENABLED(FACTORY_MACHINE_INFO)
         case 2060: M2060(); break;
+        case 2061: M2061(); break;
+        case 2062: M2062(); break;
       #endif
 
       default: parser.unknown_command_error(); break;

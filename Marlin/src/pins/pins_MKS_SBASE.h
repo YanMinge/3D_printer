@@ -116,6 +116,8 @@
 #define MATERIAL_MOTION_PIN 		P1_00
 #endif
 
+#define USB_CABLE_DETECTION_PIN     P1_30
+
 //
 // Connector J7
 // Note: These pins are all digitally shared with the EXP1/EXP2 Connector.

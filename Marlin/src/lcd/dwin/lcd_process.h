@@ -182,7 +182,6 @@ public:
   void move_main_page(void);
   void move_usb_hint_page(void);
   void get_image_data(int len);
-   void show_uuid(void);
 
 private:
   bool is_command; /*whether receive a lcd command*/

@@ -102,6 +102,7 @@ public:
   void start_udisk_print(void);
   void pause_udisk_print(void);
   void stop_udisk_print(void);
+  void printing_has_finished();
   bool get_udisk_printing_flag(void);
   bool is_gm_file_type(char * const path);
   bool check_gm_file(char * const path);
@@ -118,6 +119,7 @@ public:
   inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
   inline void set_index(const uint32_t index) { udisk_pos = index; f_lseek(&file_obj, index); }
   inline uint32_t get_index() { return udisk_pos; }
+  bool abort_udisk_printing;
 private:
   //Variable definitions
   FATFS fatFS; /* File system object */
@@ -125,7 +127,6 @@ private:
   bool detected;
   bool Initialized;
   bool udisk_printing;
-  bool abort_udisk_printing;
   bool is_file_opened;
 
   is_action_t is_action;

@@ -101,8 +101,8 @@
   #include "lcd_process.h"
 #endif
 
-#if ENABLED(FACTORY_MACHINE_UUID)
-#include "machine_uuid.h"
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
 #endif
 
 #if ENABLED(TARGET_LPC1768)
@@ -1108,11 +1108,16 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(language_current_type);
     #endif
 
-    #if ENABLED(FACTORY_MACHINE_UUID)
+    #if ENABLED(FACTORY_MACHINE_INFO)
       uint8_t uuid[8];
-      memcpy(uuid, MachineUuid.get_uuid(), 8);
+      memcpy(uuid, MachineInfo.get_uuid(), 8);
       _FIELD_TEST(uuid);
       EEPROM_WRITE(uuid);
+
+      uint32_t time;
+      time = MachineInfo.get_total_working_time();
+      _FIELD_TEST(time);
+      EEPROM_WRITE(time);
     #endif
 
     #if ENABLED(TARGET_LPC1768)
@@ -1847,11 +1852,16 @@ void MarlinSettings::postprocess() {
 		dwin_process.set_language_type(language_current_type);
       #endif
 
-      #if ENABLED(FACTORY_MACHINE_UUID)
+      #if ENABLED(FACTORY_MACHINE_INFO)
 	    uint8_t uuid[8];
         _FIELD_TEST(uuid);
         EEPROM_READ(uuid);
-		MachineUuid.set_uuid(uuid);
+        MachineInfo.set_uuid(uuid);
+
+        uint32_t time;
+        _FIELD_TEST(time);
+        EEPROM_READ(time);
+        MachineInfo.set_total_working_time(time);
       #endif
 
       #if ENABLED(TARGET_LPC1768)
@@ -3181,9 +3191,11 @@ void MarlinSettings::reset() {
       SERIAL_EOL();
     #endif
 
-    #if ENABLED(FACTORY_MACHINE_UUID)
+    #if ENABLED(FACTORY_MACHINE_INFO)
       SERIAL_ECHOPGM("  M2060 ");
-      MachineUuid.print_info();
+      MachineInfo.print_uuid_info();
+      SERIAL_ECHOPGM("  M2061 ");
+      MachineInfo.print_working_time();
     #endif
 
     #if ENABLED(TARGET_LPC1768)

@@ -23,8 +23,8 @@
 #include "../gcode.h"
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(FACTORY_MACHINE_UUID)
-#include "machine_uuid.h"
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
 #endif
 
 #if ENABLED(EXTENDED_CAPABILITIES_REPORT)
@@ -42,8 +42,8 @@
 void GcodeSuite::M115() {
 
   SERIAL_ECHOPGM(MSG_M115_REPORT);
-#if ENABLED(FACTORY_MACHINE_UUID)
-  	MachineUuid.print_info();
+#if ENABLED(FACTORY_MACHINE_INFO)
+  	MachineInfo.print_uuid_info();
 #else
   SERIAL_ECHOLNPGM(MACHINE_UUID);
 #endif

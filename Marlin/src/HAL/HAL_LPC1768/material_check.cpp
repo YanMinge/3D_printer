@@ -135,7 +135,7 @@ void material_check::code_wheel_step_update(void)
     if(step_status != previous_step_status)
     {
       code_wheel_step++;
-	  previous_step_status = step_status;
+      previous_step_status = step_status;
     }
     code_wheel_update_time_local++;
   }
@@ -143,9 +143,9 @@ void material_check::code_wheel_step_update(void)
   {
     code_wheel_step_in_statistics_time[code_wheel_update_statistics_time_counter] = code_wheel_step;
     code_wheel_update_statistics_time_counter++;
-	code_wheel_update_time_local = 0;
-	code_wheel_step = 0;
-	if(code_wheel_update_statistics_time_counter == CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM)
+    code_wheel_update_time_local = 0;
+    code_wheel_step = 0;
+    if(code_wheel_update_statistics_time_counter == CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM)
     {
       code_wheel_update_statistics_time_counter = 0;
     }
@@ -166,9 +166,9 @@ void material_check::material_extrusion_update(void)
     int32_t material_extrusion = round(planner.get_axis_position_mm(E_AXIS));
     material_extrusion_in_statistics_time[material_update_statistics_time_counter] = material_extrusion - pre_material_extrusion;
     material_update_statistics_time_counter++;
-	material_update_time_local = 0; 
-	pre_material_extrusion = material_extrusion;
-	if(material_update_statistics_time_counter == CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM)
+    material_update_time_local = 0; 
+    pre_material_extrusion = material_extrusion;
+    if(material_update_statistics_time_counter == CODE_WHEEL_STEP_WINDOWS_ELEMENTS_NUM)
     {
       material_update_statistics_time_counter = 0;
     }

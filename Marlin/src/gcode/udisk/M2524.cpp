@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2020.cpp
+ * @file    M2524.cpp
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/05/24
- * @brief   source code for M2020.
+ * @brief   source code for M2524.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,7 +19,7 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * List usb disk files to serial output.
+ * Abort the current UDISK print job (started with M2024).
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
@@ -36,21 +36,14 @@
 #include "udisk_reader.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2524: Abort the current UDISK print job
  */
-void GcodeSuite::M2020()
+void GcodeSuite::M2524()
 {
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
-
-  for (char *fn = parser.string_arg; *fn; ++fn)
+  if (IS_UDISK_PRINTING())
   {
-    if (*fn == ' ') 
-    { 
-      *fn = '\0';
-    }
+    udisk.stop_udisk_print();
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".gcode");
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
 }
 
 #endif // USB_DISK_SUPPORT

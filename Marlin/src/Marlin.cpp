@@ -185,6 +185,10 @@
   #include "lcd_parser.h"
 #endif //USE_DWIN_LCD
 
+#if ENABLED(USE_DWIN_LCD)
+  #include "machine_info.h"
+#endif
+
 bool Running = true;
 
 #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
@@ -737,21 +741,8 @@ void idle(
 #if ENABLED(USE_DWIN_LCD)
   dwin_parser.lcd_update();
   dwin_process.lcd_loop();
+  MachineInfo.lcd_print_information_update();
 #endif //USE_DWIN_LCD
-
-#if ENABLED(USE_DWIN_LCD)
-  static long previous_time = 0;
-  //Report the temperature every 2 seconds
-  if(millis() - previous_time > 2000)
-  {
-    dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
-    previous_time = millis();
-	if(IS_UDISK_PRINTING())
-    {
-	  dwin_process.send_print_time(udisk.get_print_time_dynamic());
-    }
-  }
-#endif
 }
 
 /**
@@ -1155,14 +1146,10 @@ void setup() {
   udisk.init();
 #endif
 
-#if PIN_EXISTS(LED)
-  OUT_WRITE(LED_PIN, true);
-#endif
-
 #if ENABLED(USE_DWIN_LCD)
   LcdFile.file_list_init();
   buzzer.buzzer_icon_init();
-  dwin_process.show_uuid();
+  //dwin_process.show_uuid();
 #endif //USE_DWIN_LCD
 
 }
@@ -1206,27 +1193,18 @@ void loop() {
     idle();
 
 #if ENABLED(USB_DISK_SUPPORT)
-    static bool pre_usb_status;
-    bool usb_status = udisk.is_usb_detected();
-    if(usb_status != pre_usb_status)
-    {
-      if(usb_status == true)
-      {
-        dwin_process.lcd_send_data(USB_INSERT,USB_ICON_ADDR);
-        udisk.ls(LS_COUNT, "/", ".gcode");
-      }
-      else
-      {
-        dwin_process.lcd_send_data(USB_NO_INSERT,USB_ICON_ADDR);
-      }
-      pre_usb_status = usb_status;
+    MachineInfo.lcd_usb_status_update();
+    if (udisk.abort_udisk_printing) {
+      clear_command_queue();
+      quickstop_stepper();
+      print_job_timer.stop();
+      thermalManager.disable_all_heaters();
+      thermalManager.zero_fan_speeds();
+      wait_for_heatup = false;
+      #if ENABLED(POWER_LOSS_RECOVERY)
+        //
+      #endif
     }
 #endif //USB_DISK_SUPPORT
-
-#if ENABLED(USE_DWIN_LCD)
-    dwin_parser.lcd_update();
-    dwin_process.lcd_loop();
-#endif //USE_DWIN_LCD
-
   }
 }

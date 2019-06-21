@@ -1,10 +1,10 @@
 /**   
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2020.cpp
+ * @file    M2062.cpp
  * @author  Mark Yan
  * @version V1.0.0
- * @date    2019/05/24
- * @brief   source code for M2020.
+ * @date    2019/06/20
+ * @brief   source code for M2062.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,38 +19,41 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * List usb disk files to serial output.
+ * Query the head type.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/05/24     1.0.0            Initial function design.
+ * Mark Yan         2019/06/20     1.0.0            Initial function design.
  * </pre>
  *
  */
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USB_DISK_SUPPORT)
+#if ENABLED(FACTORY_MACHINE_INFO)
 
 #include "../gcode.h"
-#include "udisk_reader.h"
+#include "machine_info.h"
 
 /**
- * M2020: List usb disk files to serial output
+ * M2062: Query the head type.
  */
-void GcodeSuite::M2020()
-{
-  SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
-
-  for (char *fn = parser.string_arg; *fn; ++fn)
+void GcodeSuite::M2062()
+{ 
+  SERIAL_ECHOPGM("head type: ");
+  head_t head_type = MachineInfo.get_head_type();
+  if(head_type == HEAD_NULL)
   {
-    if (*fn == ' ') 
-    { 
-      *fn = '\0';
-    }
+    SERIAL_ECHOLNPGM("no head");
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".gcode");
-  SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
+  else if(head_type == HEAD_LASER)
+  {
+    SERIAL_ECHOLNPGM("laser head");
+  }
+  else
+  {
+    SERIAL_ECHOLNPGM("print head");
+  }
 }
 
-#endif // USB_DISK_SUPPORT
+#endif // FACTORY_MACHINE_INFO

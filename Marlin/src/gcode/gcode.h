@@ -882,6 +882,7 @@ private:
     static void M2025();
     static void M2026();
     static void M2027();
+    static void M2524();
   #endif
   
   #if PIN_EXISTS(BEEPER)
@@ -897,8 +898,10 @@ private:
     static void M2050();
   #endif
 
-  #if ENABLED(FACTORY_MACHINE_UUID)
+  #if ENABLED(FACTORY_MACHINE_INFO)
     static void M2060();
+    static void M2061();
+    static void M2062();
   #endif
 
   static void T(const uint8_t tool_index);

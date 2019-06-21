@@ -30,10 +30,10 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(FACTORY_MACHINE_UUID)
+#if ENABLED(FACTORY_MACHINE_INFO)
 
 #include "../gcode.h"
-#include "machine_uuid.h"
+#include "machine_info.h"
 
 /**
  * M2060: Set/Query the product uuid.
@@ -47,16 +47,16 @@ void GcodeSuite::M2060()
   if(str_len <= 2)
   {
     SERIAL_ECHOPGM("uuid: ");
-  	MachineUuid.print_info();
+    MachineInfo.print_uuid_info();
   }
   else
   {
-    bool ret = MachineUuid.set_uuid_from_str(parser.string_arg);
-	if(ret == false)
+    bool ret = MachineInfo.set_uuid_from_str(parser.string_arg);
+    if(ret == false)
     {
       SERIAL_ECHOLNPGM("wrong parameter input");
     }
   }
 }
 
-#endif // FACTORY_MACHINE_UUID
+#endif // FACTORY_MACHINE_INFO

@@ -55,9 +55,10 @@ void GcodeSuite::M2023()
     {
       uint32_t initial_time = udisk.get_print_time(udisk.get_file_name());
 #if ENABLED(USE_DWIN_LCD)
-	  dwin_process.send_print_time(initial_time);
+      dwin_process.send_print_time(initial_time);
 #endif
-      udisk.set_index(udisk.get_gcode_offset(udisk.get_file_name()));
+      uint32_t index = udisk.get_gcode_offset(udisk.get_file_name());
+      udisk.set_index(index);
     }
     else
     {

@@ -106,7 +106,6 @@
       void buzzer_icon_init(void);
 #endif
 
-
       /**
        * @brief Add a tone to the queue
        * @details Adds a tone_t structure to the ring buffer, will block IO if the

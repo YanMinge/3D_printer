@@ -42,6 +42,9 @@
  */
 
 #ifdef TARGET_LPC1768
+#include "../../module/planner.h"
+#include "../../module/printcounter.h"
+
 #include "lcd_process.h"
 #include "lcd_parser.h"
 #include "../../gcode/queue.h"
@@ -122,11 +125,11 @@ void udisk_reader::usb_status_polling(void)
       set_disk_status(STA_NOINIT);
       detected = false;
       LcdFile.file_list_clear();
-  	  if(dwin_parser.get_file_show_status())
-	  {
-	  	dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-		dwin_parser.set_file_show_status(false);
-	  }
+      if(dwin_parser.get_file_show_status())
+      {
+        dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
+        dwin_parser.set_file_show_status(false);
+      }
     }
     else
     {
@@ -443,6 +446,23 @@ void udisk_reader::stop_udisk_print(void)
   }
 }
 
+void udisk_reader::printing_has_finished()
+{
+  planner.synchronize();
+  stop_udisk_print();
+
+  #if ENABLED(POWER_LOSS_RECOVERY)
+    //
+  #endif
+
+  #if ENABLED(UDISK_FINISHED_STEPPERRELEASE) && defined(UDISK_FINISHED_RELEASECOMMAND)
+    planner.finish_and_disable();
+  #endif
+
+  print_job_timer.stop();
+  if (print_job_timer.duration() > 60) enqueue_and_echo_commands_P(PSTR("M31"));
+}
+
 bool udisk_reader::get_udisk_printing_flag(void)
 {
   return udisk_printing;
@@ -638,7 +658,7 @@ void udisk_reader::print_time_countdown(void)
     if((print_time_count >= 1000) && (print_time_dynamic > 0))
     {
       print_time_dynamic--;
-	  print_time_count = 0;
+      print_time_count = 0;
     }
     print_time_count++;
   }

@@ -13,6 +13,10 @@ extern "C" {
   #include "udisk_reader.h"
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+  #include "machine_info.h"
+#endif
+
 #ifdef USE_MATERIAL_MOTION_CHECK
   #include "material_check.h"
   #include "../../module/motion.h"
@@ -60,6 +64,10 @@ void SysTick_Callback() {
   MaterialCheck.material_extrusion_update();
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+  MachineInfo.machine_information_update();
+#endif
+
   disk_timerproc();
 }
 
@@ -95,6 +103,10 @@ void HAL_init() {
   #if PIN_EXISTS(SS)
     WRITE(SS_PIN, HIGH);
     SET_OUTPUT(SS_PIN);
+  #endif
+
+  #if ENABLED(FACTORY_MACHINE_INFO)
+    MachineInfo.init();
   #endif
 
   #ifdef USE_MATERIAL_MOTION_CHECK
