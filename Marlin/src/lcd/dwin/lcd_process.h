@@ -45,69 +45,6 @@
 #include "dwin.h"
 #include "lcd_file.h"
 
-enum lcd_cmd_type : unsigned char {
-  CMD_NULL,
-  CMD_ERROR,
-  CMD_OK,
-  CMD_WRITE_REG_OK,
-  CMD_WRITE_VAR_OK,
-  CMD_READ_REG,
-  CMD_READ_VAR,
-
-  CMD_MENU_FILE,
-  CMD_SELECT_FILE,
-  CMD_PRINT_FILE,
-  CMD_AXIS_MOVE,
-  CMD_SET_LANGUAGE,
-
-  CMD_FILAMENT,
-};
-
-enum language_type : uint8_t {
-  LAN_NULL = 0,
-  LAN_CHINESE,
-  LAN_ENGLISH,
-};
-
-enum usb_status : char {
-  USB_NO_INSERT = 0,
-  USB_INSERT,
-};
-typedef struct lcd_data_buffer
-{
-    unsigned char head[2];
-    unsigned char len;
-    unsigned char command;
-    unsigned long addr;
-    unsigned long bytelen;
-    unsigned short data[32];
-} lcd_buffer_t;
-
-typedef struct
-{
-  uint8_t image_send_count; /*the number of times needed for send a picture*/
-  uint8_t image_current_send_count; /*the number of times have already sended*/
-  uint8_t image_last_count_len; /*the length of bytes needed to be send in the last send var(0-250)*/
-  uint8_t send_file_num; /*the number of pictures have already send  var(0-4)*/
-  uint8_t select_file_num; /*file number of the current page which is clicked*/
-
-  int page_count; /*the number of page need to show in lcd pannel*/
-  int current_page; /*the page number which now showing in lcd pannel*/
-  int last_page_file; /*the number of files in last page*/
-  int current_index; /*the file number which now is selected*/
-} data_info_t;
-
-typedef struct
-{
-  bool simage_status;
-  bool limage_status;
-  bool simage_send_status;
-  bool limage_send_status;
-  bool simage_set_status;
-  bool limage_set_status;
-  bool simage_delay_status;
-} send_status_t;
-
 class lcd_process
 {
 public:
@@ -133,18 +70,12 @@ public:
   void lcd_send_data(unsigned long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_show_picture(unsigned short n,unsigned short n1, unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
 
-  void lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt);
   void send_current_temperature(int tempbed, int temphotend);
 
-  inline void clear_page(unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
-  inline void send_page(unsigned long addr,int page,int num, unsigned char cmd = WRITE_VARIABLE_ADDR);
   void get_file_info(void);
 
-  void icon_update(void);
+  void lcd_start_up(void);
   void temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt);
-  void send_first_page_data(void);
-  void send_next_page_data(void);
-  void send_last_page_data(void);
 
   inline bool is_have_command(){ return is_command;}
   inline void reset_command(){ is_command = 0;}
@@ -179,15 +110,33 @@ public:
 
   language_type get_language_type(void);
   void set_language_type(language_type type);
-  void move_main_page(void);
   void move_usb_hint_page(void);
   void get_image_data(int len);
+  void show_uuid(void);
+
+  machine_type get_machine_type(void){ return ui_machine;}
+  void set_machine_type(machine_type type){ui_machine = type;}
+  void set_machine_status(machine_status_type type){machine_status = type;}
+  machine_status_type get_machine_status(void){return machine_status;}
+
+  //show_page.cpp
+  void show_start_up_page(void);
+  void change_lcd_page(int en_page_num, int ch_page_num);
+  void clear_page(unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  inline void send_page(unsigned long addr,int page,int num, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  void send_first_page_data(void);
+  void send_next_page_data(void);
+  void send_last_page_data(void);
+  void show_print_set_page(void);
+  void show_machine_status(uint8_t ch_type);
+  void show_start_print_file_page(pfile_list_t temp);
+  void show_stop_print_file_page(pfile_list_t temp);
 
 private:
   bool is_command; /*whether receive a lcd command*/
   lcd_cmd_type type; /*the type of the lcd command*/
 
-  bool icon_update_status;
+  bool lcd_start_up_status; /*start_up_page update status*/
   millis_t update_time;
   unsigned int start_icon_count;
 
@@ -198,16 +147,16 @@ private:
   unsigned char recevie_data_buf[DATA_BUF_SIZE];
   unsigned char send_data_buf[MAX_SEND_BUF];
 
-  //languge
-  language_type ui_language;
-
   //image show
   send_status_t image_status;
-
   data_info_t file_info;
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
-
   uint32_t offset;
+
+  //languge
+  language_type ui_language;
+  machine_type ui_machine;
+  machine_status_type machine_status;
 };
 
 extern lcd_process dwin_process;

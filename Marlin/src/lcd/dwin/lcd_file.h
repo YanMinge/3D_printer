@@ -57,8 +57,10 @@
 
 enum file_type_t : uint8_t
 {
-  TYPE_FOLDER,
+  TYPE_NULL = 0,
+  TYPE_LOAD,
   TYPE_DEFAULT_FILE,
+  TYPE_FOLDER,
   TYPE_MAKEBLOCK_GM,
   TYPE_FIRMWARE,
 };

@@ -52,7 +52,7 @@ lcd_process dwin_process;
 lcd_process::lcd_process()
 {
   start_icon_count = 0;
-  icon_update_status = 1;
+  lcd_start_up_status = 1;
 
   is_command = 0;
   type = CMD_NULL;
@@ -63,6 +63,8 @@ lcd_process::lcd_process()
   memset(recevie_data_buf,0, sizeof(recevie_data_buf));
   memset(send_data_buf,0, sizeof(send_data_buf));
   memset(&file_info,0,sizeof(data_info_t));
+
+  ui_machine = MACHINE_TYPE_PRINT;
 }
 
 /**
@@ -388,88 +390,47 @@ void lcd_process::lcd_send_data(unsigned long n, unsigned long addr, unsigned ch
 	lcd_send_data();
 }
 
-void lcd_process::lcd_show_picture(unsigned short y, unsigned short x, unsigned long addr,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
+void lcd_process::lcd_show_picture(unsigned short x, unsigned short y, unsigned long addr,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
 {
 	send_data.data[0] = PICTURE_DISPLAY_BASE1 >> 16;
 	send_data.data[1] = PICTURE_DISPLAY_BASE1 & 0xFFFF;
 
-	send_data.data[2] = y;
-	send_data.data[3] = x;
+	send_data.data[2] = x;
+	send_data.data[3] = y;
 	send_data.len = 11;
 	send_data.command = cmd;
 	send_data.addr = addr;
 	lcd_send_data();
 }
 
-void lcd_process::lcd_send_temperature(int tempbed, int tempbedt, int temphotend, int temphotendt)
-{
-  lcd_send_data(tempbed, TEMP_BED_ADDR);
-  lcd_send_data(tempbedt, TEMP_BED_TARGET_ADDR);
-  lcd_send_data(temphotend, TEMP_HOTEND_ADDR);
-  lcd_send_data(temphotendt, TEMP_HOTEND_TARGET_ADDR);
-}
-
 void lcd_process::send_current_temperature(int tempbed, int temphotend)
 {
-  lcd_send_data(tempbed, TEMP_BED_ADDR);
-  lcd_send_data(temphotend, TEMP_HOTEND_ADDR);
+  char str[2][8];
+  char str1[3]={0xff,0xff,0};
+
+  itoa(tempbed,str[0],10);
+  itoa(temphotend,str[1],10);
+  strcat(str[0],str1);
+  strcat(str[1],str1);
+
+  lcd_send_data(str[0],PRINT_TEMP_BED_ADDR);
+  lcd_send_data(str[1],PRINT_TEMP_HOTEND_ADDR);
+
 }
 
-inline void lcd_process::clear_page(unsigned long addr, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
+void lcd_process::lcd_start_up(void)
 {
-  for(int i = 0; i < PAGE_FILE_NUM; i++)
+  if(lcd_start_up_status)
   {
-    lcd_text_clear((addr + FILE_TEXT_LEN*i), FILE_NAME_LEN);
-    lcd_send_data(2,(FILE_ICON_ADDR + i));
-  }
-}
-
-void lcd_process::icon_update(void)
-{
-  millis_t ms = millis();
-  if(ms > update_time && icon_update_status)
-  {
-    if(start_icon_count < 100)
-    {
-      lcd_send_data(start_icon_count, START_ICON_ADDR);
-    }
-    if((start_icon_count += 1) > 100)
-    {
-      icon_update_status = 0;
-      start_icon_count = 0;
-      move_main_page();
-      lcd_send_data(start_icon_count, START_ICON_ADDR);
-    }
-    update_time = ms +10;
+    lcd_start_up_status = false;
+    show_start_up_page();
   }
 }
 
 void lcd_process::temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt)
 {
-  lcd_send_data(percentage, START_ICON_ADDR);
   send_temperature_percentage((uint16_t)percentage);
-  lcd_send_temperature(tempbed,tempbedt,temphotend,temphotendt);
-}
-
-inline void lcd_process::send_page(unsigned long addr,int page,int num, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
-{
-  pfile_list_t temp = NULL;
-
-#define PAGE(a,b) (a - 4*b)
-
-  for(int i = page*4; i < (page*4 + num); i++)
-  {
-    temp = LcdFile.file_list_index((i+1));
-    if(temp->file_type == TYPE_FOLDER)
-    {
-      lcd_send_data(1,(FILE_ICON_ADDR + PAGE(i,page)));
-    }
-    else
-    {
-      lcd_send_data(0,(FILE_ICON_ADDR + PAGE(i,page)));
-    }
-    lcd_send_data(temp->file_name,addr + FILE_TEXT_LEN*PAGE(i,page));
-  }
+  send_current_temperature(tempbed,temphotend);
 }
 
 void lcd_process::get_file_info(void)
@@ -477,105 +438,6 @@ void lcd_process::get_file_info(void)
   file_info.last_page_file = LcdFile.get_last_page_file_num();
   file_info.page_count = LcdFile.get_page_count();
   file_info.current_page = LcdFile.get_current_page_num();
-}
-
-void lcd_process::send_first_page_data(void)
-{
-  get_file_info();
-  clear_page(FILE_TEXT_ADDR_1);
-
-  if((file_info.page_count > 1) && file_info.current_page == 0)
-  {
-    send_page(FILE_TEXT_ADDR_1,file_info.current_page,PAGE_FILE_NUM);
-    lcd_send_data(PAGE_BASE +3, PAGE_ADDR);
-  }
-  else if((file_info.page_count == 1) && file_info.current_page == 0)
-  {
-    if(0 == file_info.last_page_file)
-    {
-      file_info.last_page_file = PAGE_FILE_NUM;
-    }
-    send_page(FILE_TEXT_ADDR_1,file_info.current_page,file_info.last_page_file);
-    lcd_send_data(PAGE_BASE + 2, PAGE_ADDR);
-  }
-  else if((file_info.page_count == 0) && (file_info.current_page == 0))
-  {
-    lcd_send_data(PAGE_BASE + 2, PAGE_ADDR);
-  }
-  LcdFile.set_current_page(1);
-}
-
-void lcd_process::send_next_page_data(void)
-{
-  get_file_info();
-
-  if(file_info.page_count == (file_info.current_page + 1))
-  {
-    clear_page(FILE_TEXT_ADDR_9);
-    send_page(FILE_TEXT_ADDR_9,file_info.current_page,file_info.last_page_file);
-    lcd_send_data(PAGE_BASE +6, PAGE_ADDR);
-    LcdFile.set_current_page(file_info.current_page + 1);
-  }
-  else if(file_info.page_count > file_info.current_page + 1)
-  {
-    if(file_info.current_page % 2)
-    {
-      clear_page(FILE_TEXT_ADDR_5);
-      send_page(FILE_TEXT_ADDR_5,file_info.current_page,PAGE_FILE_NUM);
-      lcd_send_data(PAGE_BASE +5, PAGE_ADDR);
-    }
-    else
-    {
-      clear_page(FILE_TEXT_ADDR_1);
-      send_page(FILE_TEXT_ADDR_1,file_info.current_page,PAGE_FILE_NUM);
-      lcd_send_data(PAGE_BASE +4, PAGE_ADDR);
-    }
-    LcdFile.set_current_page(file_info.current_page + 1);
-  }
-  else
-  {
-    type = CMD_NULL;
-  }
-}
-
-void lcd_process::send_last_page_data(void)
-{
-  get_file_info();
-
-  if((file_info.page_count > 2))
-  {
-    if(file_info.current_page % 2)
-    {
-      clear_page(FILE_TEXT_ADDR_5);
-      send_page(FILE_TEXT_ADDR_5,file_info.current_page-2,PAGE_FILE_NUM);
-      lcd_send_data(PAGE_BASE +5, PAGE_ADDR);
-    }
-    else
-    {
-      clear_page(FILE_TEXT_ADDR_1);
-      send_page(FILE_TEXT_ADDR_1,file_info.current_page-2,PAGE_FILE_NUM);
-      if(file_info.current_page == 2)
-      {
-        lcd_send_data(PAGE_BASE + 3, PAGE_ADDR);
-      }
-      else
-      {
-        lcd_send_data(PAGE_BASE + 4, PAGE_ADDR);
-      }
-    }
-    LcdFile.set_current_page(file_info.current_page - 1);
-  }
-  else if((file_info.page_count == 2))
-  {
-    clear_page(FILE_TEXT_ADDR_1);
-    send_page(FILE_TEXT_ADDR_1,file_info.current_page-2,PAGE_FILE_NUM);
-    lcd_send_data(PAGE_BASE +3, PAGE_ADDR);
-    LcdFile.set_current_page(file_info.current_page - 1);
-  }
-  else
-  {
-    type = CMD_NULL;
-  }
 }
 
 void lcd_process::set_simage_count(void)
@@ -589,12 +451,20 @@ void lcd_process::set_simage_count(void)
     current_file = LcdFile.file_list_index(file_info.current_index);
     DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
 
-
+    DEBUGPRINTF("file_name = %s file_type = %d\r\n",current_file->file_name, current_file->file_type);
+    if(TYPE_FOLDER == current_file->file_type)
+    {
+      lcd_send_data(TYPE_FOLDER,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
+    }
     if(TYPE_DEFAULT_FILE == current_file->file_type)
     {
       if(udisk.check_gm_file(current_file->file_name))
       {
         current_file->file_type = TYPE_MAKEBLOCK_GM;
+      }
+      else
+      {
+        lcd_send_data(TYPE_DEFAULT_FILE,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
       }
     }
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
@@ -626,7 +496,7 @@ void lcd_process::set_simage_count(void)
       image_status.simage_set_status = true;
       image_status.simage_send_status = false;
       file_info.send_file_num += 1;
-      if(file_info.send_file_num > 3)
+      if(file_info.send_file_num > 2)
       {
         image_status.simage_send_status = false;
         image_status.simage_set_status = false;
@@ -646,8 +516,8 @@ void lcd_process::send_simage(void)
       get_image_data(SEND_NUM(file_info.image_last_count_len));
       lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
 
-      lcd_send_data(2,(FILE_ICON_ADDR + file_info.send_file_num));
-      lcd_show_picture((0x0020),(0x0020 + file_info.send_file_num * 100),PICTURE_ADDR,0X82);
+      lcd_send_data(TYPE_NULL,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
+      lcd_show_picture(PRINT_SIMAGE_X_POSITION(file_info.send_file_num),PRINT_SIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
       DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
 
@@ -697,6 +567,7 @@ void lcd_process::set_limage_count(void)
     file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.select_file_num);
     current_file = LcdFile.file_list_index(file_info.current_index);
 
+    lcd_send_data(TYPE_LOAD,PRINT_FILE_LIMAGE_ICON_ADDR);
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
     {
       file_size = udisk.get_limage_size(current_file->file_name);
@@ -733,8 +604,8 @@ void lcd_process::send_limage(void)
       get_image_data(SEND_NUM(file_info.image_last_count_len));
       lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
 
-      lcd_send_data(2,(FILE_ICON_ADDR + 4));
-      lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
+      lcd_send_data(TYPE_NULL,PRINT_FILE_LIMAGE_ICON_ADDR);
+      lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
 
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;
@@ -773,7 +644,7 @@ void lcd_process::send_print_time(uint32_t time)
   int8_t min = (time % 3600) / 60;
   int8_t sec = (time % 3600) % 60;
   sprintf_P(str,"%02d:%02d:%02d", hour, min, sec);
-  lcd_send_data(str,0x1616);
+  lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
 }
 
 void lcd_process::send_temperature_percentage(uint16_t percentage)
@@ -789,7 +660,7 @@ void lcd_process::send_temperature_percentage(uint16_t percentage)
   }
   str[3] = '\0';
 
-  lcd_send_data(str,0x1650);
+  lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
 }
 
 void lcd_process::lcd_loop(void)
@@ -818,23 +689,6 @@ language_type lcd_process::get_language_type(void)
 void lcd_process::set_language_type(language_type type)
 {
   ui_language = type;
-}
-
-void lcd_process::move_main_page(void)
-{
-  //lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-  if(LAN_NULL == ui_language)
-  {
-    lcd_send_data(PAGE_BASE +10, PAGE_ADDR);
-  }
-  else if(LAN_CHINESE == ui_language)
-  {
-    lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-  }
-  else if(LAN_ENGLISH == ui_language)
-  {
-    lcd_send_data(PAGE_BASE +11, PAGE_ADDR);
-  }
 }
 
 void lcd_process::move_usb_hint_page(void)

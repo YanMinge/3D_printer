@@ -1153,7 +1153,6 @@ void setup() {
 
 #if ENABLED(USE_DWIN_LCD)
   LcdFile.file_list_init();
-  buzzer.buzzer_icon_init();
 #endif //USE_DWIN_LCD
 }
 

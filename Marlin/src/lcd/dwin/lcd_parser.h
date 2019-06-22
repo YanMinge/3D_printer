@@ -62,10 +62,10 @@ public:
   void response_menu_file(void);
   void response_select_file(void);
   void response_print_file(void);
-  void response_move_axis(void);
-  void response_set_language(void);
+  void response_print_move_axis(void);
+  void response_print_set(void);
   void response_filament(void);
-
+  void response_print_machine_status(void);
   void select_file(pfile_list_t temp);
   void next_path_fresh(char* name);
   bool last_path_fresh(void);
@@ -85,6 +85,9 @@ private:
   bool file_show_status;
   bool file_read_status;
   int current_page_index;
+
+  char machine_head;
+  print_prepare_status prepare_status;
 };
 
 extern lcd_parser dwin_parser;

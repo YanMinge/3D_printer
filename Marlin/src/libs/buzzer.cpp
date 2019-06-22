@@ -48,20 +48,6 @@ bool Buzzer::get_buzzer_switch(void) {
 }
 #endif
 
-#if ENABLED(USE_DWIN_LCD)
-void Buzzer::buzzer_icon_init(void)
-{
-  if(buzzer_enable)
-  {
-    dwin_process.lcd_send_data(2,VOICE_ICON_ADDR);
-  }
-  else
-  {
-    dwin_process.lcd_send_data(1,VOICE_ICON_ADDR);
-  }
-}
-#endif
-
 /**
  * @brief Add a tone to the queue
  * @details Adds a tone_t structure to the ring buffer, will block IO if the
