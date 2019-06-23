@@ -120,6 +120,7 @@ void machine_info::send_uuid_string(void)
   sprintf_P(str_machine,"-%02x%02x%02x%02x%02x", factory_uuid[3], factory_uuid[4], factory_uuid[5], factory_uuid[6], factory_uuid[7]);
   strcpy(str_uuid, str_product);
   strcat(str_uuid, str_machine);
+  dwin_process.lcd_send_data(str_uuid,PRINT_MACHINE_INFO_ID_ADDR);
   SERIAL_PRINTF("%s", str_uuid);
 }
 
@@ -277,12 +278,12 @@ void machine_info::lcd_usb_status_update(void)
   {
     if(usb_status == true)
     {
-      dwin_process.lcd_send_data(USB_INSERT, USB_ICON_ADDR);
+      dwin_process.lcd_send_data(USB_INSERT, PRINT_STATUS_BAR_USB_ICON_ADDR);
       udisk.ls(LS_COUNT, "/", ".gcode");
     }
     else
     {
-      dwin_process.lcd_send_data(USB_NO_INSERT, USB_ICON_ADDR);
+      dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_USB_ICON_ADDR);
     }
     pre_usb_status = usb_status;
   }
@@ -295,12 +296,14 @@ void machine_info::lcd_usb_status_update(void)
     {
 #if PIN_EXISTS(LED)
       OUT_WRITE(LED_PIN, true);
+      dwin_process.lcd_send_data(PC_CABLE_INSERT, PRINT_STATUS_BAR_PC_ICON_ADDR);
 #endif
     }
     else
     { 
 #if PIN_EXISTS(LED)
       OUT_WRITE(LED_PIN, false);
+      dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_PC_ICON_ADDR);
 #endif
     }
     //Lcd status bar update
@@ -346,6 +349,28 @@ void machine_info::lcd_material_info_update(void)
     }
     previous_material_info_update_time = millis();
   }
+}
+#endif
+
+#if ENABLED(NEWPANEL)
+void machine_info::send_version_string(void)
+{
+  dwin_process.lcd_send_data(SHORT_BUILD_VERSION,PRINT_MACHINE_INFO_FIRMWARE_ADDR);
+  SERIAL_PRINTF("%s", SHORT_BUILD_VERSION);
+}
+
+void machine_info::send_work_time(void)
+{
+  char buffer[16];
+  char hour_gbk[] = {0xD0,0xA1,0xCA,0xB1,0x00};
+  uint32_t time;
+	
+  time = get_total_working_time();
+  int lcd_time = time / 3600;
+  sprintf_P(buffer, "%i %s", lcd_time, hour_gbk);
+  dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_UPTIME_ADDR);
+  dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_PRINT_TIME_ADDR);
+  dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_LASER_TIME_ADDR);
 }
 #endif
 

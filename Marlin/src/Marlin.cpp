@@ -1149,6 +1149,9 @@ void setup() {
 
 #if ENABLED(FACTORY_MACHINE_INFO)
   MachineInfo.machine_information_update();
+  MachineInfo.send_uuid_string();
+  MachineInfo.send_version_string();
+  MachineInfo.send_work_time();
 #endif
 
 #if ENABLED(USE_DWIN_LCD)

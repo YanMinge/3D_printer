@@ -104,8 +104,9 @@ enum language_type : uint8_t {
 };
 
 enum usb_status : char {
-  USB_NO_INSERT = 0,
+  NULL_INSERT = 0,
   USB_INSERT,
+  PC_CABLE_INSERT,
 };
 
 enum machine_type : uint8_t {

@@ -355,6 +355,7 @@ void lcd_parser::response_select_file(void)
     dwin_process.simage_send_end();
     response_print_button();
     LcdFile.set_current_status(out_printing);
+    udisk.stop_udisk_print();
     return;
   }
   else

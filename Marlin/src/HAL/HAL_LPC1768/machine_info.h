@@ -97,6 +97,11 @@ public:
   void lcd_material_info_update(void);
 #endif
 
+#if ENABLED(NEWPANEL)
+  void send_version_string(void);
+  void send_work_time(void);
+#endif
+
 private:
   uint8_t factory_uuid[8];
   head_t head_type;
