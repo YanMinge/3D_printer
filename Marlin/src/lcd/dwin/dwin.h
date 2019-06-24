@@ -255,10 +255,13 @@ typedef struct
 #define PRINT_FILE_LIST_BUTTONS                     0x1200
 #define PRINT_FILE_SELECT_BUTTONS                   0x1202
 #define PRINT_FILE_PRINT_BUTTONS                    0x1204
-#define PRINT_SET_PAGE_AXIS_MOVE_BTN                0x120E
-#define PRINT_SET_PAGE_X_AXIS_MOVE_BTN              0x1210
-#define PRINT_SET_PAGE_Y_AXIS_MOVE_BTN              0x1212
-#define PRINT_SET_PAGE_Z_AXIS_MOVE_BTN              0x1214
+#define PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE         0x120E
+#define PRINT_SET_PAGE_X_AXIS_MOVE_MIN_BTN          0x1210
+#define PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN          0x1211
+#define PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN          0x1212
+#define PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN          0x1213
+#define PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN          0x1214
+#define PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN          0x1215
 #define PRINT_SET_PAGE_HOME_MOVE_BTN                0x1216
 #define PRINT_SET_PAGE_SET_BTN                      0x1218
 #define PRINT_HOME_PAGE_FILEMENT_BTN   	            0x121A

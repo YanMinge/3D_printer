@@ -86,6 +86,7 @@ public:
   void pause_udisk_print(void);
   void cmd_M500(void);
   void cmd_M300(uint16_t frequency, uint16_t duration);
+  void cmd_M410(void);
   void cmd_M2033(bool val);
 
 };

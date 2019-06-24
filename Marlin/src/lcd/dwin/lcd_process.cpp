@@ -117,7 +117,7 @@ void lcd_process::lcd_receive_data(void)
   while(MYSERIAL2.available() > 0 )
   {
     recevie_data_buf[receive_num++] = MYSERIAL2.read();
-    //MYSERIAL1.write(recevie_data_buf[receive_num-1]);
+    MYSERIAL0.write(recevie_data_buf[receive_num-1]);
 
     if((recevie_data_buf[0] != HEAD_ONE) || \
       (receive_num > DATA_BUF_SIZE) ||
@@ -406,7 +406,7 @@ void lcd_process::lcd_show_picture(unsigned short x, unsigned short y, unsigned 
 void lcd_process::send_current_temperature(int tempbed, int temphotend)
 {
   char str[2][8];
-  char str1[3]={0xff,0xff,0};
+  char str1[5]={0xA1,0xe3,0xff,0xff,0};
 
   itoa(tempbed,str[0],10);
   itoa(temphotend,str[1],10);
@@ -415,7 +415,6 @@ void lcd_process::send_current_temperature(int tempbed, int temphotend)
 
   lcd_send_data(str[0],PRINT_TEMP_BED_ADDR);
   lcd_send_data(str[1],PRINT_TEMP_HOTEND_ADDR);
-
 }
 
 void lcd_process::lcd_start_up(void)

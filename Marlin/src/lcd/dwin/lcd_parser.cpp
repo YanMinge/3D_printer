@@ -56,7 +56,7 @@
   #include "material_check.h"
 
 lcd_parser dwin_parser;
-const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120E,0x1210,0x1212,0x1214,0x1216,0x1218,0x121A,0x121B,0};
+const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1218,0x121A,0x121B,0};
 
 lcd_parser::lcd_parser(void)
 {
@@ -111,7 +111,7 @@ void lcd_parser::get_command_type(void)
         {
           type = CMD_PRINT_FILE;
         }
-        else if(button_addr[i] >= PRINT_SET_PAGE_AXIS_MOVE_BTN && button_addr[i] <= PRINT_SET_PAGE_HOME_MOVE_BTN)
+        else if(button_addr[i] >= PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE && button_addr[i] <= PRINT_SET_PAGE_HOME_MOVE_BTN)
         {
           type = CMD_PRINT_AXIS_MOVE;
         }
@@ -417,32 +417,43 @@ void lcd_parser::response_print_file(void)
 
 void lcd_parser::response_print_move_axis(void)
 {
-  if(PRINT_SET_PAGE_AXIS_MOVE_BTN == receive_addr)
+  if(PRINT_SET_PAGE_X_AXIS_MOVE_MIN_BTN == receive_addr)
   {
-    dwin_process.change_lcd_page(PRINT_XYZ_MOVE_PAGE_EN,PRINT_XYZ_MOVE_PAGE_CH);
-    dwin_process.lcd_send_data(0,PRINT_SET_PAGE_X_AXIS_MOVE_BTN);
-    dwin_process.lcd_send_data(0,PRINT_SET_PAGE_Y_AXIS_MOVE_BTN);
-    dwin_process.lcd_send_data(0,PRINT_SET_PAGE_Z_AXIS_MOVE_BTN);
-    UserExecution.cmd_g92(0, 0, 0, 0);
+    SERIAL_PRINTF("X AXIS MOVE MIN = %d ...\r\n",-X_MAX_POS);
+    UserExecution.cmd_g1_x(-X_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_X_AXIS_MOVE_BTN == receive_addr)
+  else if(PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN == receive_addr)
   {
-    SERIAL_PRINTF("X AXIS MOVE = %f ...\r\n",(signed short)receive_data);
-    UserExecution.cmd_g1_x((signed short)receive_data);
+    SERIAL_PRINTF("X AXIS MOVE MAX = %d ...\r\n",X_MAX_POS);
+    UserExecution.cmd_g1_x(X_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_Y_AXIS_MOVE_BTN == receive_addr)
+  else if(PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN == receive_addr)
   {
-    SERIAL_PRINTF("Y AXIS MOVE = %f ...\r\n",(signed short)receive_data);
-    UserExecution.cmd_g1_y((signed short)receive_data);
+    SERIAL_PRINTF("Y AXIS MOVE = %d ...\r\n",-Y_MAX_POS);
+    UserExecution.cmd_g1_y(-Y_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_Z_AXIS_MOVE_BTN == receive_addr)
+  else if(PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr)
   {
-    SERIAL_PRINTF("Z AXIS MOVE = %f ...\r\n",(signed short)receive_data);
-    UserExecution.cmd_g1_z(-(signed short)receive_data);
+    SERIAL_PRINTF("Y AXIS MOVE = %f ...\r\n",Y_MAX_POS);
+    UserExecution.cmd_g1_z(Y_MAX_POS);
+  }
+  else if(PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr)
+  {
+    SERIAL_PRINTF("Z AXIS MOVE = %f ...\r\n",Z_MAX_POS);
+    UserExecution.cmd_g1_y(Z_MAX_POS);
+  }
+  else if(PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr)
+  {
+    SERIAL_PRINTF("Z AXIS MOVE = %f ...\r\n",-Z_MAX_POS);
+    UserExecution.cmd_g1_z(-Z_MAX_POS);
+  }
+  else if(PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr)
+  {
+    SERIAL_PRINTF("AXIS STOP\r\n");
+    UserExecution.cmd_M410();
   }
   else if(PRINT_SET_PAGE_HOME_MOVE_BTN == receive_addr)
   {
-    //go home;
     SERIAL_PRINTF("go hmoenow ...\r\n");
     UserExecution.cmd_g28();
   }
