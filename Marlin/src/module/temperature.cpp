@@ -2893,7 +2893,7 @@ void Temperature::isr() {
     #if ENABLED(USE_DWIN_LCD)
        #if HAS_TEMP_HOTEND
    	     //SERIAL_PRINTF("\r\nhotend: %d/%d", int(degHotend(HOTEND_INDEX)), int(degTargetHotend(HOTEND_INDEX)));
-	   #endif	   
+	   #endif
        #if HAS_HEATED_BED
    	     //SERIAL_PRINTF(" ,bed:%d/%d", int(degBed()), int(degTargetBed()));
 	   #endif
@@ -2988,16 +2988,6 @@ void Temperature::isr() {
     #ifndef MIN_COOLING_SLOPE_TIME
       #define MIN_COOLING_SLOPE_TIME 60
     #endif
-
-    void Temperature::lcd_temperature_test(void)
-    {
-      int my_icon = 0;
-      do {
-        idle();
-        my_icon ++;
-        SERIAL_PRINTF("my_icon = %d\r\n",my_icon);
-      }while(wait_for_heatup && my_icon < 1000);
-    }
 
     bool Temperature::wait_for_hotend(const uint8_t target_extruder, const bool no_wait_for_cooling/*=true*/
       #if G26_CLICK_CAN_CANCEL

@@ -90,7 +90,6 @@ void GcodeSuite::M104() {
  *       Rxxx Wait for extruder(s) to reach temperature. Waits when heating and cooling.
  */
 void GcodeSuite::M109() {
-#if 0
 
   if (DEBUGGING(DRYRUN)) return;
 
@@ -147,11 +146,4 @@ void GcodeSuite::M109() {
     filament_show.show_load_unload_start_page();
     filament_show.show_file_print_end_page();
   #endif
-#else
-  thermalManager.lcd_temperature_test();
-  #if ENABLED(NEWPANEL)
-    filament_show.show_load_unload_start_page();
-    filament_show.show_file_print_end_page();
-  #endif
-#endif
 }
