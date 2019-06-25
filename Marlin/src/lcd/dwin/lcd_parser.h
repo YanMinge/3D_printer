@@ -66,15 +66,14 @@ public:
   void response_print_set(void);
   void response_filament(void);
   void response_print_machine_status(void);
-  void select_file(pfile_list_t temp);
   void next_path_fresh(char* name);
   bool last_path_fresh(void);
 
-  inline bool get_file_show_status(void){return file_show_status;}
   inline int get_current_page_index(void){ return current_page_index;}
-  inline void set_file_show_status(bool status){ file_show_status = status;}
   inline void set_file_read_status(bool status){ file_read_status = status;}
 
+  void refresh_current_path(void);
+	
 private:
   lcd_cmd_type type;
   unsigned short receive_data;
@@ -82,7 +81,6 @@ private:
 
   char * current_path;
 
-  bool file_show_status;
   bool file_read_status;
   int current_page_index;
 

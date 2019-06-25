@@ -104,6 +104,7 @@ public:
   void limage_send_end(){ image_status.limage_status = false;image_status.limage_set_status = false;}
   void set_select_file_num(uint8_t index){ file_info.select_file_num = index;}
   void reset_image_parameters(void);
+  void reset_usb_pull_out_parameters(void);
   void image_send_delay(void);
   void send_print_time(uint32_t time);
 
@@ -129,6 +130,7 @@ public:
   void show_machine_status(uint8_t ch_type);
   void show_start_print_file_page(pfile_list_t temp);
   void show_stop_print_file_page(pfile_list_t temp);
+  void show_usb_pull_out_page(void);
 
 private:
   bool is_command; /*whether receive a lcd command*/

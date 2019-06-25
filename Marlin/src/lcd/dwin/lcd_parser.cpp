@@ -195,27 +195,22 @@ void lcd_parser::response_print_button(void)
 {
   uint16_t value;
   bool usb_status = udisk.is_usb_detected();
-
+	
   if(!usb_status)
   {
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
-    dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
+    dwin_process.show_usb_pull_out_page();
     return;
   }
-
   if(!file_read_status)
   {
     value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
     if(USB_NOT_DETECTED == value)
     {
-      set_file_show_status(false);
+      dwin_process.show_usb_pull_out_page();
       return;
     }
     file_read_status = true;
   }
-
-  set_file_show_status(true);
   LcdFile.set_file_page_info();
   LcdFile.set_current_page(0);
   dwin_process.send_first_page_data();
@@ -226,32 +221,20 @@ void lcd_parser::response_print_button(void)
 void lcd_parser::response_return_button(void)
 {
   bool usb_status = udisk.is_usb_detected();
-
-  dwin_process.reset_image_parameters();
-  dwin_process.simage_send_end();
-  dwin_process.image_send_delay();
-
+  dwin_process.reset_usb_pull_out_parameters();
+	
   if(!usb_status)
   {
-    // usb have not insert
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
-    dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
+    dwin_process.show_usb_pull_out_page();
     return;
   }
-
   if(last_path_fresh())
   {
-    uint16_t value;
-    SERIAL_PRINTF("enter new path folder...\r\n");
-
-    value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
-    if(USB_NOT_DETECTED == value)
+    if(USB_NOT_DETECTED == udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode"))
     {
-      set_file_show_status(false);
+      dwin_process.show_usb_pull_out_page();
       return;
     }
-
     LcdFile.set_file_page_info();
     LcdFile.set_current_page(0);
     dwin_process.send_first_page_data();
@@ -261,7 +244,6 @@ void lcd_parser::response_return_button(void)
   else
   {
     dwin_process.show_start_up_page();
-    set_file_show_status(false);
   }
 }
 
@@ -271,10 +253,7 @@ void lcd_parser::response_next_page_button(void)
 
   if(!usb_status)
   {
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
-    dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-    set_file_show_status(false);
+    dwin_process.show_usb_pull_out_page();
     return;
   }
   dwin_process.image_send_delay();
@@ -289,10 +268,7 @@ void lcd_parser::response_last_page_button(void)
 
   if(!usb_status)
   {
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
-    dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-    set_file_show_status(false);
+    dwin_process.show_usb_pull_out_page();
     return;
   }
 
@@ -331,6 +307,7 @@ void lcd_parser::response_select_file(void)
   int max_index = 0;
   pfile_list_t temp = NULL;
 
+  dwin_process.image_send_delay();
   dwin_process.reset_image_parameters();
   dwin_process.simage_send_end();
   max_index = LcdFile.get_file_list_len();
@@ -343,25 +320,44 @@ void lcd_parser::response_select_file(void)
   {
     current_page_index = LcdFile.get_current_index();
     current_page_index += receive_data;
+    if(current_page_index > max_index)
+    {
+      dwin_process.show_usb_pull_out_page();
+      return;
+	  }
     dwin_process.set_select_file_num(receive_data);
   }
-  else if(0x05 == receive_data)
-  {
-    dwin_process.lcd_send_data(PAGE_BASE + 7, PAGE_ADDR);
-    dwin_process.lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
-    return;
-  }
-  else
-  {
-    return;
-  }
-
-  if(current_page_index > max_index)
-  {
-    return;
-  }
   temp = LcdFile.file_list_index((current_page_index));
-  select_file(temp);
+  if(temp->file_type == TYPE_FOLDER)
+  {
+    LcdFile.file_list_clear();
+    next_path_fresh(temp->file_name);
+    if(USB_NOT_DETECTED == udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode"))
+    {
+      dwin_process.show_usb_pull_out_page();
+      return;
+    }
+    LcdFile.set_file_page_info();
+    LcdFile.set_current_page(0);
+    dwin_process.send_first_page_data();
+    dwin_process.reset_image_parameters();
+    dwin_process.simage_send_start();
+  }
+  else if(temp->file_type == TYPE_MAKEBLOCK_GM)
+  {
+    dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
+    dwin_process.lcd_send_data(temp->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
+    dwin_process.change_lcd_page(PRINT_FILE_PRINT_STANDARD_START_PAGE_EN,PRINT_FILE_PRINT_STANDARD_START_PAGE_CH);
+    dwin_process.limage_send_start();
+  }
+  else if(temp->file_type == TYPE_DEFAULT_FILE)
+  {
+    dwin_process.lcd_send_data(TYPE_DEFAULT_FILE,PRINT_FILE_LIMAGE_ICON_ADDR);
+    dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
+    dwin_process.lcd_send_data(temp->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
+    dwin_process.change_lcd_page(PRINT_FILE_PRINT_NOSTANDARD_START_PAGE_EN,PRINT_FILE_PRINT_NOSTANDARD_START_PAGE_CH);
+    UserExecution.cmd_M2023(temp->file_name);
+  }
 }
 
 void lcd_parser::response_print_file(void)
@@ -376,14 +372,14 @@ void lcd_parser::response_print_file(void)
     //first press print button, should show print prepare page
     if(status == out_printing)
     {
-      dwin_process.image_send_delay();
+      if(!dwin_process.get_limage_status())
+      {
+        return;
+      }
       dwin_process.reset_image_parameters();
-      dwin_process.simage_send_end();
-
       dwin_process.lcd_send_data(1,PRINT_PREPARE_TEXT_ICON_ADDR);
       dwin_process.change_lcd_page(PRINT_PREPARE_HEAT_PAGE,PRINT_PREPARE_HEAT_PAGE);
 
-      //filament_show.show_file_prepare_page();
       UserExecution.cmd_M109(230);
       filament_show.set_progress_file_print_status(true);
       UserExecution.user_start();
@@ -437,42 +433,34 @@ void lcd_parser::response_print_move_axis(void)
 {
   if(PRINT_SET_PAGE_X_AXIS_MOVE_MIN_BTN == receive_addr)
   {
-    SERIAL_PRINTF("X AXIS MOVE MIN = %d ...\r\n",-X_MAX_POS);
     UserExecution.cmd_g1_x(-X_MAX_POS);
   }
   else if(PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN == receive_addr)
   {
-    SERIAL_PRINTF("X AXIS MOVE MAX = %d ...\r\n",X_MAX_POS);
     UserExecution.cmd_g1_x(X_MAX_POS);
   }
   else if(PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN == receive_addr)
   {
-    SERIAL_PRINTF("Y AXIS MOVE = %d ...\r\n",-Y_MAX_POS);
     UserExecution.cmd_g1_y(-Y_MAX_POS);
   }
   else if(PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr)
   {
-    SERIAL_PRINTF("Y AXIS MOVE = %f ...\r\n",Y_MAX_POS);
     UserExecution.cmd_g1_y(Y_MAX_POS);
   }
   else if(PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr)
   {
-    SERIAL_PRINTF("Z AXIS MOVE = %f ...\r\n",Z_MAX_POS);
     UserExecution.cmd_g1_z(Z_MAX_POS);
   }
   else if(PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr)
   {
-    SERIAL_PRINTF("Z AXIS MOVE = %f ...\r\n",-Z_MAX_POS);
     UserExecution.cmd_g1_z(-Z_MAX_POS);
   }
   else if(PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr)
   {
-    SERIAL_PRINTF("AXIS STOP\r\n");
     UserExecution.cmd_M410();
   }
   else if(PRINT_SET_PAGE_HOME_MOVE_BTN == receive_addr)
   {
-    SERIAL_PRINTF("go hmoenow ...\r\n");
     UserExecution.cmd_g28();
   }
 }
@@ -660,37 +648,6 @@ void lcd_parser::response_print_machine_status()
   }
 }
 
-void lcd_parser::select_file(pfile_list_t temp)
-{
-  if(temp->file_type == TYPE_FOLDER)
-  {
-    LcdFile.file_list_clear();
-    next_path_fresh(temp->file_name);
-    udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
-
-    LcdFile.set_file_page_info();
-    LcdFile.set_current_page(0);
-    dwin_process.send_first_page_data();
-    dwin_process.reset_image_parameters();
-    dwin_process.simage_send_start();
-  }
-  else if(temp->file_type == TYPE_MAKEBLOCK_GM)
-  {
-    dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
-    dwin_process.lcd_send_data(temp->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
-    dwin_process.change_lcd_page(PRINT_FILE_PRINT_STANDARD_START_PAGE_EN,PRINT_FILE_PRINT_STANDARD_START_PAGE_CH);
-    dwin_process.limage_send_start();
-  }
-  else if(temp->file_type == TYPE_DEFAULT_FILE)
-  {
-    dwin_process.lcd_send_data(TYPE_DEFAULT_FILE,PRINT_FILE_LIMAGE_ICON_ADDR);
-    dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
-    dwin_process.lcd_send_data(temp->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
-    dwin_process.change_lcd_page(PRINT_FILE_PRINT_NOSTANDARD_START_PAGE_EN,PRINT_FILE_PRINT_NOSTANDARD_START_PAGE_CH);
-    UserExecution.cmd_M2023(temp->file_name);
-  }
-}
-
 void lcd_parser::next_path_fresh(char* name)
 {
   if(strcmp(current_path,"/") == 0)
@@ -754,6 +711,13 @@ bool lcd_parser::last_path_fresh(void)
   }
 }
 
+void lcd_parser::refresh_current_path(void)
+{
+  delete [] current_path;
+  current_path = new char[2];
+  current_path[0] = '/';
+  current_path[1] = '\0';
+}
 #endif // USE_MATERIAL_MOTION_CHECK
 #endif // BEEPER
 #endif // USB_DISK_SUPPORT

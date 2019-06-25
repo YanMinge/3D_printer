@@ -42,6 +42,7 @@
 #include "dwin.h"
 #include "lcd_file.h"
 #include "lcd_process.h"
+#include "lcd_parser.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -255,6 +256,16 @@ void lcd_process::show_stop_print_file_page(pfile_list_t temp)
   }
 }
 
+void lcd_process::show_usb_pull_out_page(void)
+{
+  dwin_parser.refresh_current_path();
+  dwin_parser.set_file_read_status(false);
+
+  reset_usb_pull_out_parameters();
+  show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
+  set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
+  change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+}
 
 #endif // USB_DISK_SUPPORT
 #endif // USE_DWIN_LCD

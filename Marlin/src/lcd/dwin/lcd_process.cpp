@@ -619,8 +619,6 @@ void lcd_process::image_send_delay(void)
   if(image_status.simage_delay_status)
   {
     delay(100);
-    //file_info.shadow_image_current_count = 0;
-    //file_info.shadow_image_send_count = 0;
     DEBUGPRINTF("\r\nimage_send_delay happened\r\n");
   }
 }
@@ -682,13 +680,25 @@ void lcd_process::reset_image_parameters(void)
   file_info.send_file_num = 0;
 }
 
+void lcd_process::reset_usb_pull_out_parameters(void)
+{
+  if(image_status.simage_delay_status)
+  {
+    delay(100);
+  }
+	
+  memset(&file_info,0,sizeof(file_info));
+  memset(&image_status,0,sizeof(image_status));
+}
+
+
 void lcd_process::get_image_data(int len)
 {
   char c;
   for(int i = 0; i < len; i++)
   {
-    c = udisk.get();
-    if(c < 0)
+  	c = udisk.get();
+    if(-1 == c)
     {
       //read error
       DEBUGPRINTF("get char error\r\n");

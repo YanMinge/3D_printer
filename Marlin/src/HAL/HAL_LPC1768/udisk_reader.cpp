@@ -146,12 +146,11 @@ void udisk_reader::usb_status_polling(void)
       f_unmount("/");
       set_disk_status(STA_NOINIT);
       detected = false;
+			
       LcdFile.file_list_clear();
-      if(dwin_parser.get_file_show_status())
-      {
-        dwin_process.lcd_send_data(PAGE_BASE +1, PAGE_ADDR);
-        dwin_parser.set_file_show_status(false);
-      }
+      dwin_parser.refresh_current_path();
+      dwin_parser.set_file_read_status(false);
+      dwin_process.reset_usb_pull_out_parameters();
     }
     else
     {
@@ -204,7 +203,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     DEBUGPRINTF("can't open dir(%s)\r\n", path);
     if(!is_usb_detected())
     {
-      dwin_process.lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
+      dwin_process.show_usb_pull_out_page();
       return USB_NOT_DETECTED;
     }
     DEBUGPRINTF("f_opendir error(%d)\r\n", path);
@@ -258,6 +257,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     if (rc)
     {
       DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
+      dwin_process.show_usb_pull_out_page();
       return rc;
     }
     if(is_action == LS_SERIAL_PRINT)
