@@ -74,7 +74,6 @@ public:
 
   void get_file_info(void);
 
-  void lcd_start_up(void);
   void temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt);
 
   inline bool is_have_command(){ return is_command;}
@@ -84,7 +83,7 @@ public:
   inline unsigned long get_receive_addr(){ return recive_data.addr;}
   inline unsigned short get_receive_data(){ return recive_data.data[0];}
 
-  void lcd_send_image_test(int len,int times, unsigned char cmd = WRITE_VARIABLE_ADDR);
+  void lcd_send_image(int len,int times, unsigned char cmd = WRITE_VARIABLE_ADDR);
   void send_simage(void);
   void send_limage(void);
   void lcd_loop(void);
@@ -110,7 +109,6 @@ public:
 
   language_type get_language_type(void);
   void set_language_type(language_type type);
-  void move_usb_hint_page(void);
   void get_image_data(int len);
   void show_uuid(void);
 
@@ -136,7 +134,6 @@ private:
   bool is_command; /*whether receive a lcd command*/
   lcd_cmd_type type; /*the type of the lcd command*/
 
-  bool lcd_start_up_status; /*start_up_page update status*/
   millis_t update_time;
   unsigned int start_icon_count;
 

@@ -45,6 +45,10 @@
   #include "udisk_reader.h"
 #endif //USB_DISK_SUPPORT
 
+#if ENABLED(NEWPANEL)
+  #include "lcd_process.h"
+#endif
+
 /**
  * GCode line number handling. Hosts may opt to include line numbers when
  * sending commands to Marlin, and lines will be checked for sequentiality.
@@ -857,6 +861,11 @@ inline void get_udisk_commands(void) {
               ));
             #endif
           #endif // PRINTER_EVENT_LEDS
+#if ENABLED(NEWPANEL)
+          dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
+          dwin_process.show_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
+          dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+#endif
         }
       }
       else if (n == -1)

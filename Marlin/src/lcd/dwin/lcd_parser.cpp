@@ -55,6 +55,10 @@
 #if ENABLED(USE_MATERIAL_MOTION_CHECK)
   #include "material_check.h"
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+  #include "machine_info.h"
+#endif
+
 lcd_parser dwin_parser;
 const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1218,0x121A,0x121B,0};
 
@@ -67,19 +71,18 @@ lcd_parser::lcd_parser(void)
   current_path = new char[2];
   current_path[0] = '/';
   current_path[1] = '\0';
-
-  machine_head = 0x01; //3d_print_head
 }
 
 void lcd_parser::lcd_update(void)
 {
-  if(0x01 == machine_head)
+  head_t machine_head;
+  machine_head = MachineInfo.get_head_type();
+  if((HEAD_PRINT == machine_head) || (HEAD_LASER == machine_head))
   {
-    dwin_process.lcd_start_up();
     dwin_parser.parser_lcd_command();
     dwin_process.lcd_loop();
   }
-  else // no machine_head
+  else
   {
 
   }
@@ -348,16 +351,6 @@ void lcd_parser::response_select_file(void)
     dwin_process.lcd_show_picture((0x0005),(0x0020),PICTURE_ADDR,0X82);
     return;
   }
-  else if(0x06 == receive_data)  //return from printfile
-  {
-    current_page_index = 0;
-    dwin_process.reset_image_parameters();
-    dwin_process.simage_send_end();
-    response_print_button();
-    LcdFile.set_current_status(out_printing);
-    udisk.stop_udisk_print();
-    return;
-  }
   else
   {
     return;
@@ -374,6 +367,8 @@ void lcd_parser::response_select_file(void)
 void lcd_parser::response_print_file(void)
 {
   print_status status;
+  pfile_list_t temp = NULL;
+  temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
   status = LcdFile.get_current_status();
 
   if(0x01 == receive_data)
@@ -400,6 +395,7 @@ void lcd_parser::response_print_file(void)
     {
       LcdFile.set_current_status(stop_printing);
       UserExecution.pause_udisk_print();
+      dwin_process.show_start_print_file_page(temp);
     }
 
     //start the print
@@ -407,6 +403,28 @@ void lcd_parser::response_print_file(void)
     {
       LcdFile.set_current_status(on_printing);
       UserExecution.cmd_M2024();
+      dwin_process.show_stop_print_file_page(temp);
+    }
+  }
+  // return print file.
+  else if(0x02 == receive_data)
+  {
+    if(out_printing == status || stop_printing == status)
+    {
+      current_page_index = 0;
+      dwin_process.reset_image_parameters();
+      dwin_process.simage_send_end();
+      LcdFile.set_current_status(out_printing);
+      udisk.stop_udisk_print();
+      response_print_button();
+      return;
+    }
+    else
+    {
+      dwin_process.change_lcd_page(EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN, EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_CH);
+      dwin_process.show_machine_status(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
+      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
+      return;
     }
   }
   else
@@ -435,12 +453,12 @@ void lcd_parser::response_print_move_axis(void)
   else if(PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr)
   {
     SERIAL_PRINTF("Y AXIS MOVE = %f ...\r\n",Y_MAX_POS);
-    UserExecution.cmd_g1_z(Y_MAX_POS);
+    UserExecution.cmd_g1_y(Y_MAX_POS);
   }
   else if(PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr)
   {
     SERIAL_PRINTF("Z AXIS MOVE = %f ...\r\n",Z_MAX_POS);
-    UserExecution.cmd_g1_y(Z_MAX_POS);
+    UserExecution.cmd_g1_z(Z_MAX_POS);
   }
   else if(PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr)
   {
@@ -559,21 +577,40 @@ void lcd_parser::response_filament(void)
 
 void lcd_parser::response_print_machine_status()
 {
-  DEBUGPRINTF("response_print_machine_status = %d\r\n",dwin_process.get_machine_status());
+  pfile_list_t temp = NULL;
+
   if(0x01 == receive_data)
   {
     switch(dwin_process.get_machine_status())
     {
       case PRINT_MACHINE_STATUS_NO_USB_DISK_CH:case PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH:
       case PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH:
+      case PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH:
         dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
         break;
 
       case PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH:
-        DEBUGPRINTF("PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH = %d\r\n",dwin_process.get_machine_status());
         UserExecution.user_stop();
         UserExecution.user_hardware_stop();
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+        break;
+
+      case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        dwin_process.show_stop_print_file_page(temp);
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+        break;
+
+      case PRINT_MACHINE_STATUS_NO_FILAMENT_CH:
+        dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+        break;
+
+      case PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH:
+        //clear the file_list
+        //show main_page
+        dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
         break;
 
@@ -581,7 +618,7 @@ void lcd_parser::response_print_machine_status()
         break;
     }
   }
-  if(0x02 == receive_data)
+  else if(0x02 == receive_data)
   {
     switch(prepare_status)
     {
@@ -606,6 +643,19 @@ void lcd_parser::response_print_machine_status()
 
       default:
         break;
+    }
+  }
+  else if(0x03 == receive_data)
+  {
+    if(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH == dwin_process.get_machine_status())
+    {
+      current_page_index = 0;
+      dwin_process.reset_image_parameters();
+      dwin_process.simage_send_end();
+      LcdFile.set_current_status(out_printing);
+      udisk.stop_udisk_print();
+      response_print_button();
+      return;
     }
   }
 }

@@ -52,7 +52,6 @@ lcd_process dwin_process;
 lcd_process::lcd_process()
 {
   start_icon_count = 0;
-  lcd_start_up_status = 1;
 
   is_command = 0;
   type = CMD_NULL;
@@ -417,15 +416,6 @@ void lcd_process::send_current_temperature(int tempbed, int temphotend)
   lcd_send_data(str[1],PRINT_TEMP_HOTEND_ADDR);
 }
 
-void lcd_process::lcd_start_up(void)
-{
-  if(lcd_start_up_status)
-  {
-    lcd_start_up_status = false;
-    show_start_up_page();
-  }
-}
-
 void lcd_process::temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt)
 {
   send_temperature_percentage((uint16_t)percentage);
@@ -513,7 +503,7 @@ void lcd_process::send_simage(void)
     if(file_info.image_current_send_count == file_info.image_send_count -1)
     {
       get_image_data(SEND_NUM(file_info.image_last_count_len));
-      lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
+      lcd_send_image(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
 
       lcd_send_data(TYPE_NULL,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
       lcd_show_picture(PRINT_SIMAGE_X_POSITION(file_info.send_file_num),PRINT_SIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
@@ -549,7 +539,7 @@ void lcd_process::send_simage(void)
     if(file_info.image_current_send_count < file_info.image_send_count -1)
     {
       get_image_data(SEND_IMAGE_LEN);
-      lcd_send_image_test(SEND_IMAGE_LEN,file_info.image_current_send_count);
+      lcd_send_image(SEND_IMAGE_LEN,file_info.image_current_send_count);
       file_info.image_current_send_count += 1;
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
@@ -601,7 +591,7 @@ void lcd_process::send_limage(void)
     if(file_info.image_current_send_count == file_info.image_send_count -1)
     {
       get_image_data(SEND_NUM(file_info.image_last_count_len));
-      lcd_send_image_test(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
+      lcd_send_image(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
 
       lcd_send_data(TYPE_NULL,PRINT_FILE_LIMAGE_ICON_ADDR);
       lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
@@ -617,7 +607,7 @@ void lcd_process::send_limage(void)
     if(file_info.image_current_send_count < file_info.image_send_count -1)
     {
       get_image_data(SEND_IMAGE_LEN);
-      lcd_send_image_test(SEND_IMAGE_LEN,file_info.image_current_send_count);
+      lcd_send_image(SEND_IMAGE_LEN,file_info.image_current_send_count);
       file_info.image_current_send_count += 1;
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
@@ -648,17 +638,11 @@ void lcd_process::send_print_time(uint32_t time)
 
 void lcd_process::send_temperature_percentage(uint16_t percentage)
 {
-  char str[4];
+  char str[8];
+  char str1[4] = {0x25,0xff,0xff,0x0};
 
   itoa(percentage,str,10);
-  if(percentage < 100)
-  {
-    str[2] = str[1];
-    str[1] = str[0];
-    str[0] = ' ';
-  }
-  str[3] = '\0';
-
+  strcat(str,str1);
   lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
 }
 
@@ -690,18 +674,6 @@ void lcd_process::set_language_type(language_type type)
   ui_language = type;
 }
 
-void lcd_process::move_usb_hint_page(void)
-{
-  if(LAN_CHINESE == ui_language)
-  {
-    lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
-  }
-  else if(LAN_ENGLISH == ui_language)
-  {
-    lcd_send_data(PAGE_BASE +12, PAGE_ADDR);
-  }
-}
-
 void lcd_process::reset_image_parameters(void)
 {
   file_info.image_send_count = 0;
@@ -726,7 +698,7 @@ void lcd_process::get_image_data(int len)
   }
 }
 
-void lcd_process::lcd_send_image_test(int len, int times,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
+void lcd_process::lcd_send_image(int len, int times,unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
 {
 	send_data_buf[0] = HEAD_ONE;
 	send_data_buf[1] = HEAD_TWO;

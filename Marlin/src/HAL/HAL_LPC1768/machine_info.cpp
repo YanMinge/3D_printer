@@ -228,6 +228,7 @@ bool machine_info::get_usb_cable_status(void)
 void machine_info::machine_information_update(void)
 {
   static long previous_info_update_time = 0;
+  static bool first_start = true;
   if(millis() - previous_info_update_time > MACHINE_INFORMATION_UPDATE_PERIOD)
   {
     //usb cable access detection
@@ -240,6 +241,7 @@ void machine_info::machine_information_update(void)
     {
       head_type = HEAD_NULL;
       //LCD Pop-ups
+      dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
     }
     else if(temp < 20)
     {
@@ -248,6 +250,11 @@ void machine_info::machine_information_update(void)
     else
     {
       head_type = HEAD_PRINT;
+      if(first_start)
+      {
+        first_start = false;
+        dwin_process.show_start_up_page();
+      }
     }
     previous_info_update_time = millis();
   }
@@ -326,9 +333,13 @@ void machine_info::lcd_material_info_update(void)
       pre_filamen_runout_status = filamen_runout_status;
     }
 
-    if((run_status == true) && (filamen_runout_status == false))
+    if(((run_status == true) && (filamen_runout_status == false)) || \
+       ((run_status == true) && (dwin_process.get_machine_status() == PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH)))
     {
       //LCD Pop-ups
+      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+      dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+      dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
     }
   }
 
@@ -344,6 +355,9 @@ void machine_info::lcd_material_info_update(void)
         if(run_status == true)
         {
           //LCD Pop-ups
+          dwin_process.set_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
+          dwin_process.show_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
+          dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
         }
       }
     }

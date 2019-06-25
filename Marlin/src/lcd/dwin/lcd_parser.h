@@ -86,7 +86,6 @@ private:
   bool file_read_status;
   int current_page_index;
 
-  char machine_head;
   print_prepare_status prepare_status;
 };
 
