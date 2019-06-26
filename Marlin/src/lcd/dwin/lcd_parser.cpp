@@ -76,15 +76,23 @@ lcd_parser::lcd_parser(void)
 void lcd_parser::lcd_update(void)
 {
   head_t machine_head;
+  static bool read_status = true;
+  static uint32_t time = millis();
+
   machine_head = MachineInfo.get_head_type();
+  if(read_status)
+  {
+    if((millis() - time) > 3000)
+    {
+      machine_head = MachineInfo.get_head_type();
+      dwin_process.show_start_up_page();
+      read_status = false;
+    }
+  }
   if((HEAD_PRINT == machine_head) || (HEAD_LASER == machine_head))
   {
     dwin_parser.parser_lcd_command();
     dwin_process.lcd_loop();
-  }
-  else
-  {
-
   }
 }
 

@@ -483,6 +483,12 @@ void udisk_reader::printing_has_finished()
 
   print_job_timer.stop();
   if (print_job_timer.duration() > 60) enqueue_and_echo_commands_P(PSTR("M31"));
+
+#if ENABLED(NEWPANEL)
+  dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
+  dwin_process.show_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
+  dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+#endif
 }
 
 bool udisk_reader::get_udisk_printing_flag(void)

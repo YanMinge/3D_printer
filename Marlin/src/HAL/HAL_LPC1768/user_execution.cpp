@@ -161,6 +161,14 @@ void user_execution::cmd_M2024(void)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_M2034(bool val)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2034 S%d"), val);
+  enqueue_and_echo_command(cmd);
+
+}
+
 void user_execution::pause_udisk_print(void)
 {
 #if ENABLED(USB_DISK_SUPPORT)
@@ -188,9 +196,7 @@ void user_execution::cmd_M300(uint16_t frequency, uint16_t duration)
 
 void user_execution::cmd_M410(void)
 {
-  char cmd[32];
-  sprintf_P(cmd, PSTR("M410"));
-  enqueue_and_echo_command(cmd);
+  quickstop_stepper();
 }
 
 void user_execution::cmd_M2033(bool val)

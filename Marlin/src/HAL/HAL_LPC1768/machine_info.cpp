@@ -228,7 +228,6 @@ bool machine_info::get_usb_cable_status(void)
 void machine_info::machine_information_update(void)
 {
   static long previous_info_update_time = 0;
-  static bool first_start = true;
   if(millis() - previous_info_update_time > MACHINE_INFORMATION_UPDATE_PERIOD)
   {
     //usb cable access detection
@@ -250,11 +249,6 @@ void machine_info::machine_information_update(void)
     else
     {
       head_type = HEAD_PRINT;
-      if(first_start)
-      {
-        first_start = false;
-        dwin_process.show_start_up_page();
-      }
     }
     previous_info_update_time = millis();
   }

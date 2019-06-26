@@ -52,20 +52,24 @@
 #include "../../libs/buzzer.h"
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+
 void lcd_process::show_start_up_page(void)
 {
   DEBUGPRINTF("print start_up_page\r\n");
-  switch (ui_machine)
+  switch (MachineInfo.get_head_type())
   {
-    case MACHINE_TYPE_NULL:
+    case HEAD_NULL:
       lcd_send_data(PAGE_BASE + EXCEPTION_NO_HEAD_PAGE_CH, PAGE_ADDR);
       break;
 
-    case MACHINE_TYPE_PRINT:
+    case HEAD_PRINT:
       change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
       break;
 
-    case MACHINE_TYPE_LASER:
+    case HEAD_LASER:
       change_lcd_page(LASER_HOME_PAGE_EN,LASER_HOME_PAGE_CH);
       break;
 

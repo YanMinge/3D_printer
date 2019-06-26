@@ -113,8 +113,6 @@ public:
   void get_image_data(int len);
   void show_uuid(void);
 
-  machine_type get_machine_type(void){ return ui_machine;}
-  void set_machine_type(machine_type type){ui_machine = type;}
   void set_machine_status(machine_status_type type){machine_status = type;}
   machine_status_type get_machine_status(void){return machine_status;}
 
@@ -154,7 +152,6 @@ private:
 
   //languge
   language_type ui_language;
-  machine_type ui_machine;
   machine_status_type machine_status;
 };
 

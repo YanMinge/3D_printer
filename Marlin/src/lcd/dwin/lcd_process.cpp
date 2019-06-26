@@ -62,8 +62,6 @@ lcd_process::lcd_process()
   memset(recevie_data_buf,0, sizeof(recevie_data_buf));
   memset(send_data_buf,0, sizeof(send_data_buf));
   memset(&file_info,0,sizeof(data_info_t));
-
-  ui_machine = MACHINE_TYPE_PRINT;
 }
 
 /**
@@ -116,7 +114,7 @@ void lcd_process::lcd_receive_data(void)
   while(MYSERIAL2.available() > 0 )
   {
     recevie_data_buf[receive_num++] = MYSERIAL2.read();
-    MYSERIAL0.write(recevie_data_buf[receive_num-1]);
+    //MYSERIAL0.write(recevie_data_buf[receive_num-1]);
 
     if((recevie_data_buf[0] != HEAD_ONE) || \
       (receive_num > DATA_BUF_SIZE) ||
