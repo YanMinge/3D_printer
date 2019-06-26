@@ -2891,13 +2891,6 @@ void Temperature::isr() {
       );
     #endif
     #if ENABLED(USE_DWIN_LCD)
-       #if HAS_TEMP_HOTEND
-   	     //SERIAL_PRINTF("\r\nhotend: %d/%d", int(degHotend(HOTEND_INDEX)), int(degTargetHotend(HOTEND_INDEX)));
-	   #endif
-       #if HAS_HEATED_BED
-   	     //SERIAL_PRINTF(" ,bed:%d/%d", int(degBed()), int(degTargetBed()));
-	   #endif
-
        float processing_percentage = 1;
        #if (HAS_TEMP_HOTEND && HAS_HEATED_BED)
 	     if((degTargetHotend(HOTEND_INDEX) + degTargetBed()) != 0)

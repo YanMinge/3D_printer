@@ -111,7 +111,6 @@ public:
   language_type get_language_type(void);
   void set_language_type(language_type type);
   void get_image_data(int len);
-  void show_uuid(void);
 
   void set_machine_status(machine_status_type type){machine_status = type;}
   machine_status_type get_machine_status(void){return machine_status;}

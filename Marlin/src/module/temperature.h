@@ -611,7 +611,6 @@ class Temperature {
       );
     #endif
 
-
     #if HAS_HEATED_BED
 
       #if ENABLED(SHOW_TEMP_ADC_VALUES)

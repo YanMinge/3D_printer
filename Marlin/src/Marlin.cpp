@@ -673,6 +673,29 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
   #endif
 }
 
+#if PIN_EXISTS(POWER_LOSS)
+void power_loss_test(void){
+  bool power_status = READ(POWER_LOSS_PIN);
+  if(power_status == false)
+  {
+    clear_command_queue();
+    disable_all_steppers();
+	if(print_job_timer.isRunning())
+    {
+      print_job_timer.stop();
+    }
+    thermalManager.disable_all_heaters();
+    thermalManager.zero_fan_speeds();
+    wait_for_heatup = false;
+    uint32_t woking_time = MachineInfo.get_total_working_time() + millis()/1000;
+	MachineInfo.set_total_working_time(woking_time);
+	settings.save();
+	SERIAL_PRINTF("POWER_LOSS\r\n");
+    kill(PSTR(MSG_OUTAGE_RECOVERY));
+  }
+}
+#endif
+
 /**
  * Standard idle routine keeps the machine alive
  */
@@ -744,6 +767,10 @@ void idle(
   MachineInfo.lcd_print_information_update();
   MachineInfo.lcd_material_info_update();
 #endif //USE_DWIN_LCD
+
+#if PIN_EXISTS(POWER_LOSS)
+  power_loss_test();
+#endif
 }
 
 /**
@@ -1157,6 +1184,11 @@ void setup() {
 #if ENABLED(USE_DWIN_LCD)
   LcdFile.file_list_init();
 #endif //USE_DWIN_LCD
+
+#if PIN_EXISTS(POWER_LOSS)
+  SET_INPUT(POWER_LOSS_PIN);
+#endif
+
 }
 
 /**
@@ -1207,7 +1239,7 @@ void loop() {
       thermalManager.zero_fan_speeds();
       wait_for_heatup = false;
       #if ENABLED(POWER_LOSS_RECOVERY)
-        //
+      //
       #endif
     }
 #endif //USB_DISK_SUPPORT

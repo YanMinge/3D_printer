@@ -136,6 +136,8 @@ public:
   uint32_t get_print_time(char * const path);
   uint32_t get_print_time_dynamic(void);
   void print_time_countdown(void);
+  file_type_t get_opened_file_type(void);
+  uint32_t get_opened_file_size(void);
   inline bool eof() { return udisk_pos >= file_size; }
   inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
   inline void set_index(const uint32_t index) { udisk_pos = index; f_lseek(&file_obj, index); }
@@ -151,6 +153,7 @@ private:
   bool is_file_opened;
 
   is_action_t is_action;
+  file_type_t opened_file_type;
 
   uint16_t file_count;  //counter for the files in the current directory
 

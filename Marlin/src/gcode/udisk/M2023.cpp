@@ -51,7 +51,7 @@ void GcodeSuite::M2023()
 
   if (udisk.is_file_open())
   {
-    if((udisk.is_gm_file_type(udisk.get_file_name())) && (udisk.check_gm_file(udisk.get_file_name())))
+    if(udisk.check_gm_file(udisk.get_file_name()))
     {
       uint32_t initial_time = udisk.get_print_time(udisk.get_file_name());
 #if ENABLED(USE_DWIN_LCD)
@@ -62,6 +62,7 @@ void GcodeSuite::M2023()
     }
     else
     {
+      dwin_process.send_print_time(0);
       udisk.set_index(0);
     }
   }

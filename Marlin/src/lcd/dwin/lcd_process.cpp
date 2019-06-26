@@ -624,12 +624,20 @@ void lcd_process::image_send_delay(void)
 void lcd_process::send_print_time(uint32_t time)
 {
   char str[11];
-
-  int8_t hour = time/3600;
-  int8_t min = (time % 3600) / 60;
-  int8_t sec = (time % 3600) % 60;
-  sprintf_P(str,"%02d:%02d:%02d", hour, min, sec);
-  lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
+  memset(str, ' ', sizeof(str));
+  if(udisk.get_opened_file_type() != TYPE_MAKEBLOCK_GM)
+  {
+    sprintf_P(str,"%04.1f%%  ", (udisk.get_index() * 100.0)/udisk.get_opened_file_size());
+    lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
+  }
+  else
+  {
+    int8_t hour = time/3600;
+    int8_t min = (time % 3600) / 60;
+    int8_t sec = (time % 3600) % 60;
+    sprintf_P(str,"%02d:%02d:%02d", hour, min, sec);
+    lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
+  }
 }
 
 void lcd_process::send_temperature_percentage(uint16_t percentage)

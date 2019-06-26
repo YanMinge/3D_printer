@@ -101,6 +101,7 @@ udisk_reader::udisk_reader(void)
   udisk_printing = abort_udisk_printing = false;
   is_file_opened = false;
   opened_file_name = NULL;
+  opened_file_type = TYPE_NULL;
 }
 
 void udisk_reader::init(void)
@@ -465,6 +466,8 @@ void udisk_reader::stop_udisk_print(void)
     is_file_opened = false;
     delete[] opened_file_name;
     opened_file_name = NULL;
+    opened_file_type = TYPE_NULL;
+	file_size = 0;
   }
 }
 
@@ -700,16 +703,29 @@ bool udisk_reader::check_gm_file(char * const path)
   }
   if(!is_gm_file_type(path))
   {
+    opened_file_type = TYPE_DEFAULT_FILE;
     return false;
   }
   if(file_size == (0x50 + get_simage_size(path) + get_limage_size(path) + get_gcode_size(path)))
   {
+    opened_file_type = TYPE_MAKEBLOCK_GM;
     return true;
   }
   else
   {
+    opened_file_type = TYPE_DEFAULT_FILE;
     return false;
   }
+}
+
+file_type_t udisk_reader::get_opened_file_type(void)
+{
+  return opened_file_type;
+}
+
+uint32_t udisk_reader::get_opened_file_size(void)
+{
+  return file_size;
 }
 
 #endif // USB_DISK_SUPPORT
