@@ -161,12 +161,18 @@ void user_execution::cmd_M2024(void)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_M2032(bool val)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2032 S%d"), val);
+  enqueue_and_echo_command(cmd);
+}
+
 void user_execution::cmd_M2034(bool val)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("M2034 S%d"), val);
   enqueue_and_echo_command(cmd);
-
 }
 
 void user_execution::pause_udisk_print(void)

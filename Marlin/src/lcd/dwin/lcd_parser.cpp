@@ -75,25 +75,20 @@ lcd_parser::lcd_parser(void)
 
 void lcd_parser::lcd_update(void)
 {
-  head_t machine_head;
   static bool read_status = true;
   static uint32_t time = millis();
 
-  machine_head = MachineInfo.get_head_type();
   if(read_status)
   {
     if((millis() - time) > 3000)
     {
-      machine_head = MachineInfo.get_head_type();
       dwin_process.show_start_up_page();
       read_status = false;
     }
   }
-  if((HEAD_PRINT == machine_head) || (HEAD_LASER == machine_head))
-  {
-    dwin_parser.parser_lcd_command();
-    dwin_process.lcd_loop();
-  }
+  dwin_parser.parser_lcd_command();
+  dwin_process.lcd_loop();
+
 }
 
 void lcd_parser::get_command_type(void)
@@ -203,7 +198,7 @@ void lcd_parser::response_print_button(void)
 {
   uint16_t value;
   bool usb_status = udisk.is_usb_detected();
-	
+
   if(!usb_status)
   {
     dwin_process.show_usb_pull_out_page();
@@ -230,7 +225,7 @@ void lcd_parser::response_return_button(void)
 {
   bool usb_status = udisk.is_usb_detected();
   dwin_process.reset_usb_pull_out_parameters();
-	
+
   if(!usb_status)
   {
     dwin_process.show_usb_pull_out_page();
@@ -380,7 +375,7 @@ void lcd_parser::response_print_file(void)
     //first press print button, should show print prepare page
     if(status == out_printing)
     {
-      if(!dwin_process.get_limage_status())
+      if(dwin_process.get_limage_status())
       {
         return;
       }
@@ -477,7 +472,8 @@ void lcd_parser::response_print_set(void)
 {
   if(0x00== receive_data) //no set language(chinese), return
   {
-    if(PRINT_MACHINE_STATUS_NO_SET_LANGUAGE == dwin_process.get_machine_status())
+    if(PRINT_MACHINE_STATUS_NO_SET_LANGUAGE == dwin_process.get_machine_status() || \
+      PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD == dwin_process.get_machine_status())
     {
       dwin_process.lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
     }
@@ -492,12 +488,18 @@ void lcd_parser::response_print_set(void)
     if(PRINT_MACHINE_STATUS_NO_SET_LANGUAGE == dwin_process.get_machine_status())
     {
       dwin_process.lcd_send_data(PAGE_BASE + PRINT_HOME_PAGE_CH, PAGE_ADDR);
-      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+    }
+    else if(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD == dwin_process.get_machine_status())
+    {
+      dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
+      MachineInfo.set_exception_status(true);
     }
     else
     {
       dwin_process.show_print_set_page();
+      return;
     }
+    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
     UserExecution.cmd_M500();
   }
   else if(0x02 == receive_data) //set_english
@@ -506,12 +508,18 @@ void lcd_parser::response_print_set(void)
     if(PRINT_MACHINE_STATUS_NO_SET_LANGUAGE == dwin_process.get_machine_status())
     {
       dwin_process.lcd_send_data(PAGE_BASE + PRINT_HOME_PAGE_EN, PAGE_ADDR);
-      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+    }
+    else if(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD == dwin_process.get_machine_status())
+    {
+      dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
+      MachineInfo.set_exception_status(true);
     }
     else
     {
       dwin_process.show_print_set_page();
+      return;
     }
+    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
     UserExecution.cmd_M500();
   }
   else if(0x03 == receive_data) //enter into language_set_page
@@ -545,10 +553,6 @@ void lcd_parser::response_filament(void)
   }
   else if(0x03 == receive_data)
   {
-    if(!MaterialCheck.is_filamen_runout())
-    {
-
-    }
     UserExecution.cmd_M109_M701(); //load filament
     filament_show.set_progress_start_status(true);
     filament_show.set_progress_heat_cool_status(true);
@@ -560,6 +564,8 @@ void lcd_parser::response_filament(void)
   }
   else if(0x05 == receive_data)
   {
+    UserExecution.cmd_M2034(false);
+	UserExecution.cmd_M2032(false);
     UserExecution.cmd_M109_M702(); //unload filament
     filament_show.set_progress_start_status(true);
     filament_show.set_progress_heat_cool_status(false);

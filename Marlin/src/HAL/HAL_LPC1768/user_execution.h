@@ -83,6 +83,7 @@ public:
   void cmd_M109_M702(void);
   void cmd_M2023(char *file_name);
   void cmd_M2024(void);
+  void cmd_M2032(bool val);
   void cmd_M2034(bool val);
   void pause_udisk_print(void);
   void cmd_M500(void);

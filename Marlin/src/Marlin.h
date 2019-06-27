@@ -375,3 +375,6 @@ void protected_pin_err();
   void event_probe_recover();
   void event_probe_failure();
 #endif
+#if ENABLED(NEWPANEL)
+  void lcd_exception_stop(void);
+#endif

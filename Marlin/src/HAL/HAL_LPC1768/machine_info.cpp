@@ -77,6 +77,7 @@ machine_info MachineInfo;
 machine_info::machine_info(void)
 {
   usb_cable_connect = false;
+  exception_status = true;
 }
 
 void machine_info::init(void)
@@ -91,7 +92,7 @@ void machine_info::init(void)
 #endif
   }
   else
-  { 
+  {
 #if PIN_EXISTS(LED)
     OUT_WRITE(LED_PIN, false);
 #endif
@@ -239,8 +240,19 @@ void machine_info::machine_information_update(void)
     if(temp > 1000)
     {
       head_type = HEAD_NULL;
-      //LCD Pop-ups
-      dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
+      if(exception_status)
+      {
+        if(LAN_NULL == dwin_process.get_language_type())
+        {
+          exception_status = false;
+          dwin_process.lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
+          dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD);
+        }
+        else
+        {
+          dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
+        }
+      }
     }
     else if(temp < 20)
     {
@@ -301,7 +313,7 @@ void machine_info::lcd_usb_status_update(void)
 #endif
     }
     else
-    { 
+    {
 #if PIN_EXISTS(LED)
       OUT_WRITE(LED_PIN, false);
       dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_PC_ICON_ADDR);
@@ -327,13 +339,14 @@ void machine_info::lcd_material_info_update(void)
       pre_filamen_runout_status = filamen_runout_status;
     }
 
-    if(((run_status == true) && (filamen_runout_status == false)) || \
-       ((run_status == true) && (dwin_process.get_machine_status() == PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH)))
+    if(((run_status == true) && (filamen_runout_status == false)))
     {
       //LCD Pop-ups
-      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+      udisk.pause_udisk_print();
       dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
       dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+      lcd_exception_stop();
     }
   }
 
@@ -342,16 +355,21 @@ void machine_info::lcd_material_info_update(void)
   {
     if(MaterialCheck.get_filamen_motion_report_status())
     {
-      if((abs(MaterialCheck.get_material_extrusion_in_windows()) > 5) && 
-         ((MaterialCheck.get_code_wheel_step_in_windows() * 0.5) < abs(MaterialCheck.get_material_extrusion_in_windows())))
+      if((abs(MaterialCheck.get_material_extrusion_in_windows()) > 5) &&
+      ((MaterialCheck.get_code_wheel_step_in_windows() * 2) < abs(MaterialCheck.get_material_extrusion_in_windows())))
       {
         SERIAL_PRINTF("M2032 E1\r\n");
         if(run_status == true)
         {
           //LCD Pop-ups
+          if (IS_UDISK_PRINTING())
+          {
+            udisk.pause_udisk_print();
+            dwin_process.show_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
+            dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+          }
           dwin_process.set_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
-          dwin_process.show_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
-          dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+          lcd_exception_stop();
         }
       }
     }
@@ -372,11 +390,22 @@ void machine_info::send_work_time(void)
   char buffer[16];
   char hour_gbk[] = {0xD0,0xA1,0xCA,0xB1,0x00};
   uint32_t time;
-	
+
   time = get_total_working_time();
   int lcd_time = time / 3600;
   sprintf_P(buffer, "%i %s", lcd_time, hour_gbk);
   dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_UPTIME_ADDR);
+}
+
+void machine_info::send_print_work_time(void)
+{
+  char buffer[16];
+  char hour_gbk[] = {0xD0,0xA1,0xCA,0xB1,0x00};
+  uint32_t time;
+
+  time = get_total_printing_time();
+  int lcd_time = time / 3600;
+  sprintf_P(buffer, "%i %s", lcd_time, hour_gbk);
   dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_PRINT_TIME_ADDR);
   dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_LASER_TIME_ADDR);
 }

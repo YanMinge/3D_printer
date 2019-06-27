@@ -187,6 +187,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
   #include "machine_info.h"
+  #include "user_execution.h"
 #endif
 
 bool Running = true;
@@ -694,6 +695,19 @@ void power_loss_test(void){
     kill(PSTR(MSG_OUTAGE_RECOVERY));
   }
 }
+
+void lcd_exception_stop(void){
+  clear_command_queue();
+  disable_all_steppers();
+  if(print_job_timer.isRunning())
+  {
+    print_job_timer.stop();
+  }
+  thermalManager.disable_all_heaters();
+  thermalManager.zero_fan_speeds();
+  wait_for_heatup = false;
+  wait_for_user = false;
+}
 #endif
 
 /**
@@ -1175,10 +1189,13 @@ void setup() {
 #endif
 
 #if ENABLED(FACTORY_MACHINE_INFO)
+  UserExecution.cmd_M2032(true);
+  UserExecution.cmd_M2034(true);
   MachineInfo.machine_information_update();
   MachineInfo.send_uuid_string();
   MachineInfo.send_version_string();
   MachineInfo.send_work_time();
+  MachineInfo.send_print_work_time();
 #endif
 
 #if ENABLED(USE_DWIN_LCD)

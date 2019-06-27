@@ -100,13 +100,16 @@ public:
 #if ENABLED(NEWPANEL)
   void send_version_string(void);
   void send_work_time(void);
+  void send_print_work_time(void);
 #endif
+  void set_exception_status(bool status){ exception_status = status;}
 
 private:
   uint8_t factory_uuid[8];
   head_t head_type;
   uint32_t total_working_time;
   bool usb_cable_connect;
+  bool exception_status;
 };
 
 extern machine_info MachineInfo;

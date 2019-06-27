@@ -58,34 +58,31 @@
 
 void lcd_process::show_start_up_page(void)
 {
-  DEBUGPRINTF("print start_up_page\r\n");
-  switch (MachineInfo.get_head_type())
+  head_t head_machine;
+  head_machine = MachineInfo.get_head_type();
+  if(HEAD_NULL == head_machine && LAN_NULL == ui_language)
   {
-    case HEAD_NULL:
-      lcd_send_data(PAGE_BASE + EXCEPTION_NO_HEAD_PAGE_CH, PAGE_ADDR);
-      break;
-
-    case HEAD_PRINT:
-      change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
-      break;
-
-    case HEAD_LASER:
-      change_lcd_page(LASER_HOME_PAGE_EN,LASER_HOME_PAGE_CH);
-      break;
-
-    default:
-      break;
+    return;
+  }
+  if(LAN_NULL == ui_language)
+  {
+    lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
+    machine_status = PRINT_MACHINE_STATUS_NO_SET_LANGUAGE;
+    return;
+  }
+  if(HEAD_PRINT == head_machine)
+  {
+    change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+  }
+  else if(HEAD_LASER == head_machine)
+  {
+    change_lcd_page(LASER_HOME_PAGE_EN,LASER_HOME_PAGE_CH);
   }
 }
 
 void lcd_process::change_lcd_page(int en_page_num, int ch_page_num)
 {
-  if(LAN_NULL == ui_language)
-  {
-    lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
-    machine_status = PRINT_MACHINE_STATUS_NO_SET_LANGUAGE;
-  }
-  else if(LAN_CHINESE == ui_language)
+  if(LAN_CHINESE == ui_language)
   {
     lcd_send_data(PAGE_BASE + ch_page_num, PAGE_ADDR);
   }
