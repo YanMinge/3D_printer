@@ -59,6 +59,8 @@
 #include HAL_PATH(.., HAL.h)
 #include "../../gcode/queue.h"
 #include "../../Marlin.h"
+#include "../../module/motion.h"
+#include "../../module/planner.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -69,7 +71,7 @@ user_execution UserExecution;
 
 user_execution::user_execution(void)
 {
-
+  lcd_immediate_execution = false;
 }
 
 void user_execution::cmd_g92(float x, float y, float z, float e)
@@ -89,21 +91,21 @@ void user_execution::cmd_g1(float x, float y, float z, float e)
 void user_execution::cmd_g1_x(float x)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 X%4.1f"), x);
+  sprintf_P(cmd, PSTR("G38.2 F3000 X%4.1f"), 2*x);
   enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g1_y(float y)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 Y%4.1f"), y);
+  sprintf_P(cmd, PSTR("G38.2 F3000 Y%4.1f"), 2*y);
   enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g1_z(float z)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 Z%4.1f"), z);
+  sprintf_P(cmd, PSTR("G38.2 F300 Z%4.1f"), 2*z);
   enqueue_and_echo_command(cmd);
 }
 
@@ -202,7 +204,13 @@ void user_execution::cmd_M300(uint16_t frequency, uint16_t duration)
 
 void user_execution::cmd_M410(void)
 {
-  quickstop_stepper();
+  char cmd[32];
+  clear_command_queue();
+  sprintf_P(cmd, PSTR("M410"));
+  lcd_immediate_execution = true;
+  enqueue_and_echo_command(cmd);
+  get_next_command();
+  lcd_immediate_execution =false;
 }
 
 void user_execution::cmd_M2033(bool val)
@@ -210,6 +218,13 @@ void user_execution::cmd_M2033(bool val)
   char cmd[32];
   sprintf_P(cmd, PSTR("M2033 S%d"), val);
   enqueue_and_echo_command(cmd);
+}
+
+void user_execution::get_next_command(void)
+{
+  if (commands_in_queue < BUFSIZE) get_available_commands();
+  advance_command_queue();
+  idle();
 }
 
 #endif // USE_DWIN_LCD

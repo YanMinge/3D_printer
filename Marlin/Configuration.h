@@ -702,7 +702,7 @@
  * Override with M201
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_ACCELERATION      { 6000, 6000, 100, 6000 }
+#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 150, 3000 }
 
 /**
  * Default Acceleration (change/s) change = mm/s
@@ -1212,7 +1212,7 @@
  */
 #if EITHER(AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_UBL)
   #define PROBE_PT_1_X 35
-  #define PROBE_PT_1_Y 55
+  #define PROBE_PT_1_Y 60
   #define PROBE_PT_2_X 35
   #define PROBE_PT_2_Y 185
   #define PROBE_PT_3_X 225

@@ -92,6 +92,10 @@
   #include "../feature/power.h"
 #endif
 
+#if ENABLED(USE_DWIN_LCD)
+#include "user_execution.h"
+#endif
+
 // Delay for delivery of first block to the stepper ISR, if the queue contains 2 or
 // fewer movements. The delay is measured in milliseconds, and must be less than 250ms
 #define BLOCK_DELAY_FOR_1ST_MOVE 100
@@ -1495,6 +1499,12 @@ void Planner::quick_stop() {
 
   // Make sure to drop any attempt of queuing moves for at least 1 second
   cleaning_buffer_counter = 1000;
+
+#if ENABLED(USE_DWIN_LCD)
+  if(UserExecution.lcd_immediate_execution == true){
+    cleaning_buffer_counter = 1;
+  }
+#endif
 
   // Reenable Stepper ISR
   if (was_enabled) ENABLE_STEPPER_DRIVER_INTERRUPT();

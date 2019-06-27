@@ -434,33 +434,53 @@ void lcd_parser::response_print_file(void)
 
 void lcd_parser::response_print_move_axis(void)
 {
-  if(PRINT_SET_PAGE_X_AXIS_MOVE_MIN_BTN == receive_addr)
+  static uint8_t pressed_flag = 0x00;
+  static unsigned long pressed_time;
+  if((pressed_flag == 0) && (PRINT_SET_PAGE_X_AXIS_MOVE_MIN_BTN == receive_addr))
   {
+    pressed_flag |= 0x01;
+	pressed_time = millis();
     UserExecution.cmd_g1_x(-X_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN == receive_addr)
+  else if((pressed_flag == 0) && (PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN == receive_addr))
   {
+    pressed_flag |= 0x02;
+	pressed_time = millis();
     UserExecution.cmd_g1_x(X_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN == receive_addr)
+  else if((pressed_flag == 0) && (PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN == receive_addr))
   {
+    pressed_flag |= 0x04;
+	pressed_time = millis();
     UserExecution.cmd_g1_y(-Y_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr)
+  else if((pressed_flag == 0) && (PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr))
   {
+    pressed_flag |= 0x08;
+	pressed_time = millis();
     UserExecution.cmd_g1_y(Y_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr)
+  else if((pressed_flag == 0) && (PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr))
   {
-    UserExecution.cmd_g1_z(Z_MAX_POS);
-  }
-  else if(PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr)
-  {
+    pressed_flag |= 0x10;
+	pressed_time = millis();
     UserExecution.cmd_g1_z(-Z_MAX_POS);
   }
-  else if(PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr)
+  else if((pressed_flag == 0) && (PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr))
   {
+    pressed_flag |= 0x20;
+	pressed_time = millis();
+    UserExecution.cmd_g1_z(Z_MAX_POS);
+  }
+  else if(!(pressed_flag & 0x40) && (PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr))
+  {
+    pressed_flag |= 0x40;
+	while(millis() - pressed_time < 250)
+    {
+      UserExecution.get_next_command();
+	}
     UserExecution.cmd_M410();
+    pressed_flag = 0x00;
   }
   else if(PRINT_SET_PAGE_HOME_MOVE_BTN == receive_addr)
   {

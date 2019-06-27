@@ -741,9 +741,9 @@ class Planner {
         #if ENABLED(SD_FINISHED_STEPPERRELEASE) && defined(SD_FINISHED_RELEASECOMMAND)
           if (!cleaning_buffer_counter) enqueue_and_echo_commands_P(PSTR(SD_FINISHED_RELEASECOMMAND));
         #endif
-        #if ENABLED(UDISK_FINISHED_STEPPERRELEASE) && defined(UDISK_FINISHED_RELEASECOMMAND)
-          if (!cleaning_buffer_counter) enqueue_and_echo_commands_P(PSTR(UDISK_FINISHED_RELEASECOMMAND));
-        #endif
+        //#if ENABLED(UDISK_FINISHED_STEPPERRELEASE) && defined(UDISK_FINISHED_RELEASECOMMAND)
+        //  if (!cleaning_buffer_counter) enqueue_and_echo_commands_P(PSTR(UDISK_FINISHED_RELEASECOMMAND));
+        //#endif
       }
     }
 

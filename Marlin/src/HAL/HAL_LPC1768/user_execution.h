@@ -90,7 +90,8 @@ public:
   void cmd_M300(uint16_t frequency, uint16_t duration);
   void cmd_M410(void);
   void cmd_M2033(bool val);
-
+  void get_next_command(void);
+  bool lcd_immediate_execution;
 };
 
 extern user_execution UserExecution;
