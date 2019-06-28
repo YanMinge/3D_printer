@@ -120,6 +120,7 @@ void lcd_process::send_first_page_data(void)
 
   get_file_info();
   clear_page(PRINT_FILE_TEXT_BASE_ADDR);
+  send_file_list_page_num(file_info.current_page + 1, file_info.page_count);
 
   if((file_info.page_count > 1) && file_info.current_page == 0)
   {
@@ -146,6 +147,7 @@ void lcd_process::send_next_page_data(void)
 {
   get_file_info();
   clear_page(PRINT_FILE_TEXT_BASE_ADDR);
+  send_file_list_page_num(file_info.current_page + 1, file_info.page_count);
 
   if(file_info.page_count == (file_info.current_page + 1))
   {
@@ -164,7 +166,6 @@ void lcd_process::send_next_page_data(void)
 void lcd_process::send_last_page_data(void)
 {
   get_file_info();
-
   clear_page(PRINT_FILE_TEXT_BASE_ADDR);
   send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page-2,PAGE_FILE_NUM);
   if((file_info.page_count > 2))
@@ -183,6 +184,8 @@ void lcd_process::send_last_page_data(void)
     lcd_send_data(PAGE_BASE +PRINT_FILE_LIST_FIRST_PAGE, PAGE_ADDR);
   }
   LcdFile.set_current_page(file_info.current_page - 1);
+  get_file_info();
+  send_file_list_page_num(file_info.current_page, file_info.page_count);
 }
 
 void lcd_process::show_print_set_page(void)

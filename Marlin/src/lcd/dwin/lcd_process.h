@@ -71,7 +71,7 @@ public:
   void lcd_show_picture(unsigned short n,unsigned short n1, unsigned long addr, unsigned char cmd = WRITE_VARIABLE_ADDR);
 
   void send_current_temperature(int tempbed, int temphotend);
-
+  void send_file_list_page_num(int current_page, int page_num);
   void get_file_info(void);
 
   void temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt);

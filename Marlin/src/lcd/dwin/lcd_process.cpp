@@ -421,6 +421,20 @@ void lcd_process::temperature_progress_update(unsigned int percentage,int tempbe
   lcd_send_data(percentage/5 > 19 ? 19 : percentage/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
 }
 
+void lcd_process::send_file_list_page_num(int current_page, int page_num)
+{
+  char str[10];
+  char str1[4];
+  char str2[3]={0xff,0xff,0};
+  itoa(page_num,str1,10);
+  itoa(current_page,str,10);
+  strcat(str,"/");
+  strcat(str,str1);
+  strcat(str,str2);
+
+  lcd_send_data(str,PRINT_FILE_PAGE_NUM_ADDR);
+}
+
 void lcd_process::get_file_info(void)
 {
   file_info.last_page_file = LcdFile.get_last_page_file_num();
