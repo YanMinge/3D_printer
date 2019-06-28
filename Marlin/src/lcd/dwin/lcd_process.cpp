@@ -418,6 +418,7 @@ void lcd_process::temperature_progress_update(unsigned int percentage,int tempbe
 {
   send_temperature_percentage((uint16_t)percentage);
   send_current_temperature(tempbed,temphotend);
+  lcd_send_data(percentage/5 > 19 ? 19 : percentage/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
 }
 
 void lcd_process::get_file_info(void)

@@ -91,6 +91,7 @@ public:
   void cmd_M410(void);
   void cmd_M2033(bool val);
   void get_next_command(void);
+  void cmd_M107(void);
   bool lcd_immediate_execution;
 };
 

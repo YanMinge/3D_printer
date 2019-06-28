@@ -44,6 +44,7 @@
 #include "lcd_file.h"
 #include "lcd_process.h"
 #include "filament_ui.h"
+#include "../../gcode/queue.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -475,10 +476,11 @@ void lcd_parser::response_print_move_axis(void)
   else if(!(pressed_flag & 0x40) && (PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr))
   {
     pressed_flag |= 0x40;
-	while(millis() - pressed_time < 250)
+    while(millis() - pressed_time < 250)
     {
       UserExecution.get_next_command();
-	}
+    }
+    clear_command_queue();
     UserExecution.cmd_M410();
     pressed_flag = 0x00;
   }
@@ -585,7 +587,7 @@ void lcd_parser::response_filament(void)
   else if(0x05 == receive_data)
   {
     UserExecution.cmd_M2034(false);
-	UserExecution.cmd_M2032(false);
+    UserExecution.cmd_M2032(false);
     UserExecution.cmd_M109_M702(); //unload filament
     filament_show.set_progress_start_status(true);
     filament_show.set_progress_heat_cool_status(false);
@@ -610,12 +612,13 @@ void lcd_parser::response_print_machine_status()
       case PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH:
         dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+        lcd_exception_stop();
         break;
 
       case PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH:
         UserExecution.user_stop();
         UserExecution.user_hardware_stop();
-        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+        //dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
         break;
 
       case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:
@@ -649,18 +652,21 @@ void lcd_parser::response_print_machine_status()
         UserExecution.user_stop();
         UserExecution.user_hardware_stop();
         filament_show.set_progress_load_return_status(true);
+        lcd_exception_stop();
         break;
 
       case PRINT_PREPARE_STATUS_LOAD: //stop load filament prepare heating
         UserExecution.user_stop();
         UserExecution.user_hardware_stop();
         filament_show.set_progress_load_return_status(true);
+        lcd_exception_stop();
         break;
 
       case PRINT_PREPARE_STATUS_UNLOAD: //stop unload filament prepare heating
         UserExecution.user_stop();
         UserExecution.user_hardware_stop();
         filament_show.set_progress_load_return_status(true);
+        lcd_exception_stop();
         break;
 
       default:

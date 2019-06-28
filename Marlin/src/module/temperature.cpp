@@ -2905,7 +2905,6 @@ void Temperature::isr() {
 	   #endif
 	   uint8_t percentage_int = round(processing_percentage * 100) < 100 ? round(processing_percentage * 100) : 100;
 	   dwin_process.temperature_progress_update(percentage_int, 80, 80, int(degHotend(HOTEND_INDEX)), int(degTargetHotend(HOTEND_INDEX)));
-	   dwin_process.lcd_send_data(percentage_int/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
     #endif
     #if HAS_TEMP_CHAMBER
       #if HAS_HEATED_CHAMBER

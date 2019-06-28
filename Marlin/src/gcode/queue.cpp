@@ -554,6 +554,12 @@ inline void get_serial_commands() {
                 , serial_comment_paren_mode[NUM_SERIAL] = { false }
               #endif
             ;
+#if ENABLED(NEWPANEL)
+  if(IS_UDISK_PRINTING())
+  {
+    return;
+  }
+#endif
 
   #if ENABLED(BINARY_FILE_TRANSFER)
     if (card.flag.saving && card.flag.binary_mode) {

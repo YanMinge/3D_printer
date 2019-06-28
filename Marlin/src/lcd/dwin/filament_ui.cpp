@@ -93,6 +93,7 @@ void filament_ui_show::show_unload_end_page(void)
   }
   UserExecution.cmd_M2034(true);
   UserExecution.cmd_M2032(true);
+  UserExecution.cmd_M107();
 }
 
 void filament_ui_show::show_heat_prepare_page(void)
@@ -168,7 +169,7 @@ void filament_ui_show::show_load_unload_start_page(void)
         dwin_process.lcd_send_data(4,PRINT_PREPARE_TEXT_ICON_ADDR);
       }
     }
-    UserExecution.cmd_M2034(true);
+    //UserExecution.cmd_M2034(true);
   }
 }
 

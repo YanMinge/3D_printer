@@ -129,7 +129,7 @@ void user_execution::user_stop(void)
 
 void user_execution::user_hardware_stop(void)
 {
-  enqueue_and_echo_command(PSTR("M105 S0"));
+  enqueue_and_echo_command(PSTR("M109 S0"));
 }
 
 void user_execution::cmd_M109(uint16_t temperature)
@@ -141,12 +141,13 @@ void user_execution::cmd_M109(uint16_t temperature)
 
 void user_execution::cmd_M109_M701(void)
 {
-  enqueue_and_echo_commands_P(PSTR("M109 S210\nM701"));
+  //enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nG38.2 F480 Z400\nM701"));
+  enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nM701"));
 }
 
 void user_execution::cmd_M109_M702(void)
 {
-  enqueue_and_echo_commands_P(PSTR("M109 S210\nM702"));
+  enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nM702"));
 }
 
 void user_execution::cmd_M2023(char *file_name)
@@ -205,7 +206,6 @@ void user_execution::cmd_M300(uint16_t frequency, uint16_t duration)
 void user_execution::cmd_M410(void)
 {
   char cmd[32];
-  clear_command_queue();
   sprintf_P(cmd, PSTR("M410"));
   lcd_immediate_execution = true;
   enqueue_and_echo_command(cmd);
@@ -225,6 +225,11 @@ void user_execution::get_next_command(void)
   if (commands_in_queue < BUFSIZE) get_available_commands();
   advance_command_queue();
   idle();
+}
+
+void user_execution::cmd_M107(void)
+{
+  enqueue_and_echo_command(PSTR("M107"));
 }
 
 #endif // USE_DWIN_LCD

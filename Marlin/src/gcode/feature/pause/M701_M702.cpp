@@ -60,7 +60,7 @@
  *  Default values are used for omitted arguments.
  */
 void GcodeSuite::M701() {
-  point_t park_point = NOZZLE_PARK_POINT;
+  //point_t park_point = NOZZLE_PARK_POINT;
 
   #if ENABLED(NO_MOTION_BEFORE_HOMING)
     // Only raise Z if the machine is homed
@@ -70,7 +70,7 @@ void GcodeSuite::M701() {
   const int8_t target_extruder = get_target_extruder_from_command();
   if (target_extruder < 0) return;
 
-
+  #if 0
   // Z axis lift
   if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
 
@@ -89,7 +89,7 @@ void GcodeSuite::M701() {
   // Lift Z axis
   if (park_point.z > 0)
     do_blocking_move_to_z(MIN(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
-
+  #endif
   // Load filament
   #if ENABLED(PRUSA_MMU2)
     mmu2.loadFilamentToNozzle(target_extruder);
@@ -104,7 +104,7 @@ void GcodeSuite::M701() {
                   #endif
                 );
   #endif
-
+  #if 0
   // Restore Z axis
   if (park_point.z > 0)
     do_blocking_move_to_z(MAX(current_position[Z_AXIS] - park_point.z, 0), NOZZLE_PARK_Z_FEEDRATE);
@@ -118,6 +118,7 @@ void GcodeSuite::M701() {
   // Show status screen
   #if HAS_LCD_MENU
     lcd_pause_show_message(PAUSE_MESSAGE_STATUS);
+  #endif
   #endif
 
   #if ENABLED(NEWPANEL)
@@ -137,7 +138,7 @@ void GcodeSuite::M701() {
  *  Default values are used for omitted arguments.
  */
 void GcodeSuite::M702() {
-  point_t park_point = NOZZLE_PARK_POINT;
+  //point_t park_point = NOZZLE_PARK_POINT;
 
   #if ENABLED(NO_MOTION_BEFORE_HOMING)
     // Only raise Z if the machine is homed
@@ -147,6 +148,7 @@ void GcodeSuite::M702() {
   const int8_t target_extruder = get_target_extruder_from_command();
   if (target_extruder < 0) return;
 
+  #if 0
   // Z axis lift
   if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
 
@@ -165,6 +167,7 @@ void GcodeSuite::M702() {
   // Lift Z axis
   if (park_point.z > 0)
     do_blocking_move_to_z(MIN(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
+  #endif
 
   // Unload filament
   #if ENABLED(PRUSA_MMU2)
@@ -188,6 +191,7 @@ void GcodeSuite::M702() {
     }
   #endif
 
+#if 0
   // Restore Z axis
   if (park_point.z > 0)
     do_blocking_move_to_z(MAX(current_position[Z_AXIS] - park_point.z, 0), NOZZLE_PARK_Z_FEEDRATE);
@@ -197,14 +201,14 @@ void GcodeSuite::M702() {
     if (active_extruder_before_filament_change != active_extruder)
       tool_change(active_extruder_before_filament_change, 0, false);
   #endif
-
-  #if ENABLED(NEWPANEL)
-    filament_show.show_unload_end_page();
-  #endif
-
   // Show status screen
   #if HAS_LCD_MENU
     lcd_pause_show_message(PAUSE_MESSAGE_STATUS);
+  #endif
+#endif
+
+  #if ENABLED(NEWPANEL)
+    filament_show.show_unload_end_page();
   #endif
 }
 
