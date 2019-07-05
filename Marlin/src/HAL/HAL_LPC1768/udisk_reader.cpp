@@ -76,6 +76,9 @@
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
 
+#if ENABLED(POWER_LOSS_RECOVERY)
+#include "../../feature/power_loss_recovery.h"
+#endif
 
 udisk_reader udisk;
 
@@ -476,16 +479,19 @@ void udisk_reader::printing_has_finished()
   planner.synchronize();
   stop_udisk_print();
 
-  #if ENABLED(POWER_LOSS_RECOVERY)
-    //
-  #endif
+#if ENABLED(POWER_LOSS_RECOVERY)
+	remove_job_recovery_file();
+#endif
 
-  #if ENABLED(UDISK_FINISHED_STEPPERRELEASE) && defined(UDISK_FINISHED_RELEASECOMMAND)
-    planner.finish_and_disable();
-  #endif
+#if ENABLED(UDISK_FINISHED_STEPPERRELEASE) && defined(UDISK_FINISHED_RELEASECOMMAND)
+  planner.finish_and_disable();
+#endif
 
   print_job_timer.stop();
-  if (print_job_timer.duration() > 60) enqueue_and_echo_commands_P(PSTR("M31"));
+  if (print_job_timer.duration() > 60)
+  {
+    enqueue_and_echo_commands_P(PSTR("M31"));
+  }
 
 #if ENABLED(NEWPANEL)
   dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
@@ -671,6 +677,12 @@ uint32_t udisk_reader::get_print_time(char * const path)
   return print_time;
 }
 
+void udisk_reader::recovery_print_time_dynamic(uint32_t time)
+{
+  print_time_dynamic = print_time_dynamic - time;
+}
+
+
 uint32_t udisk_reader::get_print_time_dynamic(void)
 {
   if((print_time_dynamic == 0) && ((file_size - udisk_pos) > 0))
@@ -727,6 +739,80 @@ uint32_t udisk_reader::get_opened_file_size(void)
 {
   return file_size;
 }
+
+#if ENABLED(POWER_LOSS_RECOVERY)
+constexpr char job_recovery_file_name[13] = "RECOVERY.bin";
+bool udisk_reader::job_recover_file_exists(void)
+{
+  FILINFO fno;
+  FRESULT f_result = f_stat(job_recovery_file_name, &fno);
+  if(f_result)
+  {
+    DEBUGPRINTF("job_recover_file_exists f_stat(%d)\r\n", f_result);
+    return false;
+  }
+  return true;
+}
+
+void udisk_reader::open_job_recovery_file(const bool read)
+{
+  if (!is_usb_detected())
+  {
+    return;
+  }
+
+  if (recovery.is_file_opened)
+  {
+    return;
+  }
+  DEBUGPRINTF("Yanminge open_job_recovery_file\r\n");
+  FRESULT f_result = f_open(&recovery.file_obj, job_recovery_file_name, read ? FA_READ : FA_READ | FA_WRITE | FA_CREATE_NEW | FA_OPEN_ALWAYS);
+  if(f_result)
+  {
+    DEBUGPRINTF("open_job_recovery_file f_open(%d)\r\n", f_result);
+	SERIAL_ECHOLNPAIR(MSG_SD_OPEN_FILE_FAIL, job_recovery_file_name, ".");
+  }
+  else
+  {
+    recovery.is_file_opened = true;
+  }
+
+  if(!read)
+  {
+    SERIAL_ECHOLNPAIR(MSG_SD_WRITE_TO_FILE, job_recovery_file_name);
+  }
+}
+
+// Removing the job recovery file currently requires closing
+// the file being printed, so during udsik printing the file should
+// be zeroed and written instead of deleted.
+void udisk_reader::remove_job_recovery_file(void)
+{
+  FRESULT rc;
+  if (job_recover_file_exists())
+  {
+    if(recovery.is_file_opened)
+    {
+      rc = f_close(&file_obj);
+      if (rc)
+      {
+        DEBUGPRINTF("remove_job_recovery_file f_close(%d)\r\n", rc);
+      }
+      recovery.is_file_opened = false;
+	}
+    rc = f_unlink(job_recovery_file_name);
+	if (rc)
+	{
+	  DEBUGPRINTF("remove_job_recovery_file f_unlink(%d)\r\n", rc);
+	}
+
+#if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
+    SERIAL_ECHOPGM("Power-loss file delete");
+    serialprintPGM(job_recover_file_exists() ? PSTR(" failed.\n") : PSTR("d.\n"));
+#endif
+  }
+}
+#endif // POWER_LOSS_RECOVERY
 
 #endif // USB_DISK_SUPPORT
 #endif // TARGET_LPC1768

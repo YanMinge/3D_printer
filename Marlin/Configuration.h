@@ -687,7 +687,7 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 100, 100, 2000, 107 }
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 100, 100, 2000, 99.1 }
 
 /**
  * Default Max Feed Rate (mm/s)
@@ -2108,11 +2108,19 @@
 #ifdef USB_DISK_SUPPORT
   #define UDISK_FINISHED_STEPPERRELEASE true          // Disable steppers when SD Print is finished
   #define UDISK_FINISHED_RELEASECOMMAND "M84 X Y Z E" // You might want to keep the Z enabled so your bed stays in place.
+
+  #define POWER_LOSS_RECOVERY
+  #if ENABLED(POWER_LOSS_RECOVERY)
+    #define POWER_LOSS_PIN   P2_07  // Pin to detect power loss
+    #define POWER_LOSS_STATE LOW   // State of pin indicating power loss
+  #endif
 #endif
+
 #define USE_MATERIAL_MOTION_CHECK
 #define SOFTWARE_RESET_SUPPORT
-#define USE_DWIN_LCD
 #define FACTORY_MACHINE_INFO
+
+#define USE_DWIN_LCD
 #ifdef USE_DWIN_LCD
   #define NEWPANEL
 /**

@@ -25,7 +25,8 @@
  * power_loss_recovery.h - Resume an SD print after power-loss
  */
 
-#include "../sd/cardreader.h"
+#include "MassStorageLib.h"
+#include "udisk_reader.h"
 #include "../inc/MarlinConfigPre.h"
 
 #if ENABLED(MIXING_EXTRUDER)
@@ -34,7 +35,7 @@
 
 #define SAVE_INFO_INTERVAL_MS 0
 //#define SAVE_EACH_CMD_MODE
-//#define DEBUG_POWER_LOSS_RECOVERY
+#define DEBUG_POWER_LOSS_RECOVERY
 
 typedef struct {
   uint8_t valid_head;
@@ -80,9 +81,9 @@ typedef struct {
   uint8_t commands_in_queue, cmd_queue_index_r;
   char command_queue[BUFSIZE][MAX_CMD_SIZE];
 
-  // SD Filename and position
-  char sd_filename[MAXPATHNAMELENGTH];
-  uint32_t sdpos;
+  // udisk Filename and position
+  char udisk_filename[FILE_NAME_LEN * 4];
+  uint32_t udisk_pos;
 
   // Job elapsed time
   millis_t print_job_elapsed;
@@ -93,7 +94,8 @@ typedef struct {
 
 class PrintJobRecovery {
   public:
-    static SdFile file;
+    static FIL file_obj;
+    bool is_file_opened;
     static job_recovery_info_t info;
 
     static void init();
@@ -105,9 +107,9 @@ class PrintJobRecovery {
     static void check();
     static void resume();
 
-    static inline bool exists() { return card.jobRecoverFileExists(); }
-    static inline void open(const bool read) { card.openJobRecoveryFile(read); }
-    static inline void close() { file.close(); }
+    static inline bool exists() { return udisk.job_recover_file_exists(); }
+    static inline void open(const bool read) { udisk.open_job_recovery_file(read); }
+    static inline void close() {f_close(&file_obj);}
 
     static void purge();
     static void load();

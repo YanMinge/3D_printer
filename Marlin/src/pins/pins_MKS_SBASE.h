@@ -121,7 +121,6 @@
 #endif
 
 #define USB_CABLE_DETECTION_PIN     P1_30
-#define POWER_LOSS_PIN              P2_07    // PW_DET
 
 //
 // Connector J7

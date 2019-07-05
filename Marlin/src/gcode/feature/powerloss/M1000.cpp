@@ -29,6 +29,10 @@
 #include "../../../module/motion.h"
 #include "../../../lcd/ultralcd.h"
 
+#if ENABLED(USE_DWIN_LCD)
+#include "lcd_process.h"
+#endif
+
 void menu_job_recovery();
 
 #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
@@ -49,10 +53,13 @@ void menu_job_recovery();
 void GcodeSuite::M1000() {
 
   if (recovery.valid()) {
-    if (parser.seen('S'))
-      ui.goto_screen(menu_job_recovery);
+    if (parser.seen('S')){
+      dwin_process.show_machine_continue_print_page();
+	}
     else
+    {
       recovery.resume();
+    }
   }
   else {
     #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)

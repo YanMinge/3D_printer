@@ -674,25 +674,18 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
   #endif
 }
 
-#if PIN_EXISTS(POWER_LOSS)
-void power_loss_test(void){
+#if ENABLED(POWER_LOSS_RECOVERY)
+void power_loss_detect(void){
   bool power_status = READ(POWER_LOSS_PIN);
-  if(power_status == false)
+  if(power_status == POWER_LOSS_STATE)
   {
-    clear_command_queue();
-    disable_all_steppers();
-	if(print_job_timer.isRunning())
-    {
-      print_job_timer.stop();
-    }
     thermalManager.disable_all_heaters();
+    disable_all_steppers();
     thermalManager.zero_fan_speeds();
-    wait_for_heatup = false;
+
     uint32_t woking_time = MachineInfo.get_total_working_time() + millis()/1000;
 	MachineInfo.set_total_working_time(woking_time);
 	settings.save();
-	SERIAL_PRINTF("POWER_LOSS\r\n");
-    kill(PSTR(MSG_OUTAGE_RECOVERY));
   }
 }
 
@@ -783,7 +776,7 @@ void idle(
 #endif //USE_DWIN_LCD
 
 #if PIN_EXISTS(POWER_LOSS)
-  power_loss_test();
+  power_loss_detect();
 #endif
 }
 
@@ -1160,10 +1153,6 @@ void setup() {
     pe_solenoid_init();
   #endif
 
-  #if ENABLED(POWER_LOSS_RECOVERY)
-    recovery.check();
-  #endif
-
   #if ENABLED(USE_WATCHDOG)
     watchdog_init();          // Reinit watchdog after HAL_get_reset_source call
   #endif
@@ -1256,7 +1245,7 @@ void loop() {
       thermalManager.zero_fan_speeds();
       wait_for_heatup = false;
       #if ENABLED(POWER_LOSS_RECOVERY)
-      //
+        udisk.remove_job_recovery_file();
       #endif
     }
 #endif //USB_DISK_SUPPORT

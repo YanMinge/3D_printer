@@ -141,7 +141,8 @@ void user_execution::cmd_M109(uint16_t temperature)
 
 void user_execution::cmd_M109_M701(void)
 {
-  enqueue_and_echo_commands_P(PSTR("M106 S255\nG1 Z 200\nM109 S210\nM701"));
+  //enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nG38.2 F480 Z400\nM701"));
+  enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nM701"));
 }
 
 void user_execution::cmd_M109_M702(void)

@@ -33,7 +33,7 @@
 
 bool PrintJobRecovery::enabled; // Initialized by settings.load()
 
-SdFile PrintJobRecovery::file;
+FIL PrintJobRecovery::file_obj;
 job_recovery_info_t PrintJobRecovery::info;
 
 #include "../sd/cardreader.h"
@@ -73,7 +73,7 @@ void PrintJobRecovery::enable(const bool onoff) {
 void PrintJobRecovery::changed() {
   if (!enabled)
     purge();
-  else if (IS_SD_PRINTING())
+  else if (IS_UDISK_PRINTING())
     save(true);
 }
 
@@ -84,8 +84,10 @@ void PrintJobRecovery::changed() {
  */
 void PrintJobRecovery::check() {
   if (enabled) {
-    if (!card.isDetected()) card.initsd();
-    if (card.isDetected()) {
+    if (!udisk.is_usb_detected()){
+      return;
+	}
+    else{
       load();
       if (!valid()) return purge();
       enqueue_and_echo_commands_P(PSTR("M1000 S"));
@@ -98,7 +100,7 @@ void PrintJobRecovery::check() {
  */
 void PrintJobRecovery::purge() {
   init();
-  card.removeJobRecoveryFile();
+  udisk.remove_job_recovery_file();
 }
 
 /**
@@ -107,12 +109,17 @@ void PrintJobRecovery::purge() {
 void PrintJobRecovery::load() {
   if (exists()) {
     open(true);
-    (void)file.read(&info, sizeof(info));
+    UINT br;
+    FRESULT rc;
+    rc = f_read(&file_obj, &info, sizeof(info), &br);
     close();
-  }
+	recovery.is_file_opened = false;
   #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
     debug(PSTR("Load"));
   #endif
+    UNUSED(rc);
+    UNUSED(br);
+  }
 }
 
 /**
@@ -193,9 +200,9 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
     // Elapsed print job time
     info.print_job_elapsed = print_job_timer.duration();
 
-    // SD file position
-    card.getAbsFilename(info.sd_filename);
-    info.sdpos = card.getIndex();
+    // udisk file position
+	memcpy(info.udisk_filename, udisk.get_file_name(), strlen(udisk.get_file_name()));
+    info.udisk_pos = udisk.get_index();
 
     write();
 
@@ -214,14 +221,24 @@ void PrintJobRecovery::write() {
   #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
     debug(PSTR("Write"));
   #endif
-
+  UINT bw;
+  FRESULT rc;
   open(false);
-  file.seekSet(0);
-  const int16_t ret = file.write(&info, sizeof(info));
+  f_lseek(&file_obj, 0);
+  rc = f_write(&file_obj, &info, sizeof(info), &bw);
   #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
-    if (ret == -1) SERIAL_ECHOLNPGM("Power-loss file write failed.");
+    if (rc != FR_OK) 
+	{
+      SERIAL_PRINTF("Power-loss file write failed(%d).\r\n", rc);
+    }
+	else
+    {
+	  SERIAL_PRINTF("Power-loss file write success.\r\n");
+    }
+	rc = f_close(&file_obj);
   #else
-    UNUSED(ret);
+    UNUSED(rc);
+    UNUSED(bw);
   #endif
 }
 
@@ -344,12 +361,12 @@ void PrintJobRecovery::resume() {
   for (; c--; r = (r + 1) % BUFSIZE)
     gcode.process_subcommands_now(info.command_queue[r]);
 
-  // Resume the SD file from the last position
-  char *fn = info.sd_filename;
+  // Resume the udisk file from the last position
+  char *fn = info.udisk_filename;
   while (*fn == '/') fn++;
-  sprintf_P(cmd, PSTR("M23 %s"), fn);
+  sprintf_P(cmd, PSTR("M2023 %s"), fn);
   gcode.process_subcommands_now(cmd);
-  sprintf_P(cmd, PSTR("M24 S%ld T%ld"), info.sdpos, info.print_job_elapsed);
+  sprintf_P(cmd, PSTR("M2024 S%ld T%ld"), info.udisk_pos, info.print_job_elapsed);
   gcode.process_subcommands_now(cmd);
 }
 
@@ -407,8 +424,8 @@ void PrintJobRecovery::resume() {
         SERIAL_ECHOLNPAIR("cmd_queue_index_r: ", int(info.cmd_queue_index_r));
         SERIAL_ECHOLNPAIR("commands_in_queue: ", int(info.commands_in_queue));
         for (uint8_t i = 0; i < info.commands_in_queue; i++) SERIAL_ECHOLNPAIR("> ", info.command_queue[i]);
-        SERIAL_ECHOLNPAIR("sd_filename: ", info.sd_filename);
-        SERIAL_ECHOLNPAIR("sdpos: ", info.sdpos);
+        SERIAL_ECHOLNPAIR("udisk_filename: ", info.udisk_filename);
+        SERIAL_ECHOLNPAIR("udisk_pos: ", info.udisk_pos);
         SERIAL_ECHOLNPAIR("print_job_elapsed: ", info.print_job_elapsed);
       }
       else

@@ -39,12 +39,18 @@
 #include "lcd_process.h"
 #endif
 
+#if ENABLED(POWER_LOSS_RECOVERY)
+#include "../../feature/power_loss_recovery.h"
+#endif
 
 /**
  * M2023: Open a file
  */
 void GcodeSuite::M2023()
 {
+#if ENABLED(POWER_LOSS_RECOVERY)
+  udisk.remove_job_recovery_file();
+#endif
   // Simplify3D includes the size, so zero out all spaces (#7227)
   for (char *fn = parser.string_arg; *fn; ++fn) if (*fn == ' ') *fn = '\0';
   udisk.open_file(parser.string_arg, true);
@@ -54,8 +60,12 @@ void GcodeSuite::M2023()
     if(udisk.check_gm_file(udisk.get_file_name()))
     {
       uint32_t initial_time = udisk.get_print_time(udisk.get_file_name());
+#if ENABLED(POWER_LOSS_RECOVERY)
+      udisk.recovery_print_time_dynamic(recovery.info.print_job_elapsed);
+#endif
+
 #if ENABLED(USE_DWIN_LCD)
-      dwin_process.send_print_time(initial_time);
+      dwin_process.send_print_time(initial_time - recovery.info.print_job_elapsed);
 #endif
       uint32_t index = udisk.get_gcode_offset(udisk.get_file_name());
       udisk.set_index(index);

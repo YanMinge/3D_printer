@@ -41,7 +41,7 @@ GcodeSuite gcode;
 #endif
 
 #if ENABLED(POWER_LOSS_RECOVERY)
-  #include "../sd/cardreader.h"
+  #include "udisk_reader.h"
   #include "../feature/power_loss_recovery.h"
 #endif
 
@@ -105,7 +105,7 @@ void GcodeSuite::get_destination_from_command() {
 
   #if ENABLED(POWER_LOSS_RECOVERY)
     // Only update power loss recovery on moves with E
-    if ((seen[E_AXIS] || seen[Z_AXIS]) && IS_SD_PRINTING()) recovery.save();
+    if ((seen[X_AXIS] || seen[Y_AXIS]) && IS_UDISK_PRINTING()) recovery.save();
   #endif
 
   if (parser.linearval('F') > 0)

@@ -134,6 +134,7 @@ public:
   uint32_t get_gcode_size(char * const path);
   uint32_t get_gcode_offset(char * const path);
   uint32_t get_print_time(char * const path);
+  void recovery_print_time_dynamic(uint32_t time);
   uint32_t get_print_time_dynamic(void);
   void print_time_countdown(void);
   file_type_t get_opened_file_type(void);
@@ -143,6 +144,11 @@ public:
   inline void set_index(const uint32_t index) { udisk_pos = index; f_lseek(&file_obj, index); }
   inline uint32_t get_index() { return udisk_pos; }
   bool abort_udisk_printing;
+#if ENABLED(POWER_LOSS_RECOVERY)
+  bool job_recover_file_exists(void);
+  void open_job_recovery_file(const bool read);
+  void remove_job_recovery_file(void);
+#endif
 private:
   //Variable definitions
   FATFS fatFS; /* File system object */
@@ -161,7 +167,6 @@ private:
   uint32_t file_size;
   uint32_t print_time_dynamic;
 
-  lcd_file file;
   FIL file_obj;
   char *opened_file_name;
   file_info_t file_list_array[MAX_ELEMENT_FOR_FILES_LIST];

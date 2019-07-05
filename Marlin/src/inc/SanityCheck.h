@@ -2011,7 +2011,7 @@ static_assert(   _ARR_TEST(3,0) && _ARR_TEST(3,1) && _ARR_TEST(3,2)
   #endif
 #endif
 
-#if ENABLED(POWER_LOSS_RECOVERY) && DISABLED(ULTIPANEL)
+#if ENABLED(POWER_LOSS_RECOVERY) && (DISABLED(ULTIPANEL) && DISABLED(USE_DWIN_LCD))
   #error "POWER_LOSS_RECOVERY currently requires an LCD Controller."
 #endif
 

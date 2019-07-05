@@ -60,6 +60,10 @@
   #include "machine_info.h"
 #endif
 
+#if ENABLED(POWER_LOSS_RECOVERY)
+#include "../../feature/power_loss_recovery.h"
+#endif
+
 lcd_parser dwin_parser;
 const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1218,0x121A,0x121B,0};
 
@@ -81,9 +85,12 @@ void lcd_parser::lcd_update(void)
 
   if(read_status)
   {
-    if((millis() - time) > 1000)
+    if((millis() - time) > 3000)
     {
-      dwin_process.show_start_up_page();
+#if ENABLED(POWER_LOSS_RECOVERY)
+	  recovery.check();
+#endif
+      //dwin_process.show_start_up_page();
       read_status = false;
     }
   }

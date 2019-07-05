@@ -43,6 +43,10 @@ void GcodeSuite::M2024()
 {
   if (udisk.is_file_open())
   {
+#if ENABLED(POWER_LOSS_RECOVERY)
+    if (parser.seenval('S')) udisk.set_index(parser.value_long());
+    if (parser.seenval('T')) print_job_timer.resume(parser.value_long());
+#endif
     udisk.start_udisk_print();
     print_job_timer.start();
   }
