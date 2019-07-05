@@ -141,8 +141,7 @@ void user_execution::cmd_M109(uint16_t temperature)
 
 void user_execution::cmd_M109_M701(void)
 {
-  //enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nG38.2 F480 Z400\nM701"));
-  enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nM701"));
+  enqueue_and_echo_commands_P(PSTR("M106 S255\nG1 Z 200\nM109 S210\nM701"));
 }
 
 void user_execution::cmd_M109_M702(void)
@@ -230,6 +229,11 @@ void user_execution::get_next_command(void)
 void user_execution::cmd_M107(void)
 {
   enqueue_and_echo_command(PSTR("M107"));
+}
+
+void user_execution::cmd_M104_M2070(void)
+{
+  enqueue_and_echo_commands_P(PSTR("M106 S255\n M104 S230 \nM2070 Z500\nM701"));
 }
 
 #endif // USE_DWIN_LCD

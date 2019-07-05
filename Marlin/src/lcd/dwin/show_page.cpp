@@ -125,7 +125,7 @@ void lcd_process::send_first_page_data(void)
   if((file_info.page_count > 1) && file_info.current_page == 0)
   {
     send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,PAGE_FILE_NUM);
-    lcd_send_data(PAGE_BASE +PRINT_FILE_LIST_FIRST_PAGE, PAGE_ADDR);
+    SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
   }
   else if((file_info.page_count == 1) && file_info.current_page == 0)
   {
@@ -134,11 +134,11 @@ void lcd_process::send_first_page_data(void)
       file_info.last_page_file = PAGE_FILE_NUM;
     }
     send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,file_info.last_page_file);
-    lcd_send_data(PAGE_BASE + PRINT_FILE_LIST_ONLY_ONE_PAGE, PAGE_ADDR);
+    SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
   }
   else if((file_info.page_count == 0) && (file_info.current_page == 0))
   {
-    lcd_send_data(PAGE_BASE + PRINT_FILE_LIST_ONLY_ONE_PAGE, PAGE_ADDR);
+    SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
   }
   LcdFile.set_current_page(1);
 }
@@ -152,13 +152,15 @@ void lcd_process::send_next_page_data(void)
   if(file_info.page_count == (file_info.current_page + 1))
   {
     send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,file_info.last_page_file);
-    lcd_send_data(PAGE_BASE +PRINT_FILE_LIST_END_PAGE, PAGE_ADDR);
+    //lcd_send_data(PAGE_BASE +PRINT_FILE_LIST_END_PAGE, PAGE_ADDR);
+    SEND_PAGE(PRINT, _FILE_LIST_END_PAGE, PAGE_BASE, LASER);
     LcdFile.set_current_page(file_info.current_page + 1);
   }
   else if(file_info.page_count > file_info.current_page + 1)
   {
     send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,PAGE_FILE_NUM);
-    lcd_send_data(PAGE_BASE + PRINT_FILE_LIST_MIDDLE_PAGE, PAGE_ADDR);
+    //lcd_send_data(PAGE_BASE + PRINT_FILE_LIST_MIDDLE_PAGE, PAGE_ADDR);
+    SEND_PAGE(PRINT, _FILE_LIST_MIDDLE_PAGE, PAGE_BASE, LASER);
     LcdFile.set_current_page(file_info.current_page + 1);
   }
 }
@@ -172,16 +174,16 @@ void lcd_process::send_last_page_data(void)
   {
     if(file_info.current_page == 2)
     {
-      lcd_send_data(PAGE_BASE + PRINT_FILE_LIST_FIRST_PAGE, PAGE_ADDR);
+      SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
     }
     else
     {
-      lcd_send_data(PAGE_BASE +PRINT_FILE_LIST_MIDDLE_PAGE, PAGE_ADDR);
+      SEND_PAGE(PRINT, _FILE_LIST_MIDDLE_PAGE, PAGE_BASE, LASER);
     }
   }
   else if((file_info.page_count == 2))
   {
-    lcd_send_data(PAGE_BASE +PRINT_FILE_LIST_FIRST_PAGE, PAGE_ADDR);
+    SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
   }
   LcdFile.set_current_page(file_info.current_page - 1);
   get_file_info();
@@ -216,6 +218,46 @@ void lcd_process::show_print_set_page(void)
 #endif
 }
 
+void lcd_process::show_laser_set_page(void)
+{
+#if PIN_EXISTS(BEEPER)
+  if(LAN_CHINESE == ui_language)
+  {
+    if(buzzer.get_buzzer_switch())
+    {
+      lcd_send_data(PAGE_BASE + LASER_BEEP_ON_SET_PAGE_CH, PAGE_ADDR);
+    }
+    else
+    {
+      lcd_send_data(PAGE_BASE + LASER_BEEP_OFF_SET_PAGE_CH, PAGE_ADDR);
+    }
+  }
+  else if(LAN_ENGLISH == ui_language)
+  {
+    if(buzzer.get_buzzer_switch())
+    {
+      lcd_send_data(PAGE_BASE + LASER_BEEP_ON_SET_PAGE_EN, PAGE_ADDR);
+    }
+    else
+    {
+      lcd_send_data(PAGE_BASE + LASER_BEEP_OFF_SET_PAGE_EN, PAGE_ADDR);
+    }
+  }
+#endif
+}
+
+void lcd_process::show_machine_set_page(void)
+{
+  if(HEAD_PRINT == MachineInfo.get_head_type())
+  {
+    dwin_process.show_print_set_page();
+  }
+  else
+  {
+    dwin_process.show_laser_set_page();
+  }
+}
+
 void lcd_process::show_machine_status(uint8_t ch_type)
 {
 
@@ -227,11 +269,34 @@ void lcd_process::show_machine_status(uint8_t ch_type)
   {
     lcd_send_data(ch_type + MACHINE_STATUS_NUM,PRINT_MACHINE_STATUS_ICON_ADDR);
   }
-  if(LAN_NULL == ui_language)
+}
+
+void lcd_process::show_machine_continue_print_page(void)
+{
+  if(HEAD_PRINT == MachineInfo.get_head_type())
   {
-    lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
-    machine_status = PRINT_MACHINE_STATUS_NO_SET_LANGUAGE;
+    show_machine_status(PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH);
   }
+  else
+  {
+    return;
+  }
+  change_lcd_page(EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN,EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_CH);
+  machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
+}
+
+void lcd_process::show_laser_focus_confirm_page(void)
+{
+  if(HEAD_LASER == MachineInfo.get_head_type())
+  {
+    show_machine_status(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH);
+  }
+  else
+  {
+    return;
+  }
+  change_lcd_page(EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN,EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_CH);
+  machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
 }
 
 void lcd_process::show_start_print_file_page(pfile_list_t temp)
@@ -249,13 +314,19 @@ void lcd_process::show_start_print_file_page(pfile_list_t temp)
 
 void lcd_process::show_stop_print_file_page(pfile_list_t temp)
 {
+  if(machine_status == PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH)
+  {
+    //send file name ,image to the page;
+  }
   if( TYPE_DEFAULT_FILE == temp->file_type)
   {
-    change_lcd_page(PRINT_FILE_PRINT_NOSTANDARD_STOP_PAGE_EN,PRINT_FILE_PRINT_NOSTANDARD_STOP_PAGE_CH);
+    //change_lcd_page(PRINT_FILE_PRINT_NOSTANDARD_STOP_PAGE_EN,PRINT_FILE_PRINT_NOSTANDARD_STOP_PAGE_CH);
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_STOP_PAGE_, EN, CH)
   }
   else
   {
-    change_lcd_page(PRINT_FILE_PRINT_STANDARD_STOP_PAGE_EN,PRINT_FILE_PRINT_STANDARD_STOP_PAGE_CH);
+    //change_lcd_page(PRINT_FILE_PRINT_STANDARD_STOP_PAGE_EN,PRINT_FILE_PRINT_STANDARD_STOP_PAGE_CH);
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_STOP_PAGE_, EN, CH)
     lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
 }

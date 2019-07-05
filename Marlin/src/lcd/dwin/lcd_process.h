@@ -52,19 +52,20 @@ public:
   virtual ~lcd_process(void) { }
 
   void clear_lcd_data_buf(void);
-  void clear_lcd_data_buf1(void);
   void clear_recevie_buf(void);
   void clear_send_data_buf(void);
+  bool lcd_data_available(void);
+  uint8_t read_lcd_data(void);
+  void write_lcd_data(uint8_t c);
+  uint8_t lcd_receive_data_correct(void);
   void lcd_receive_data(void);
   void lcd_receive_data_clear(void);
   void lcd_send_data(void);
   void lcd_send_data(const String &, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(const char[], unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_text_clear(unsigned long addr,int len, unsigned char cmd = WRITE_VARIABLE_ADDR);
-  void lcd_send_data(char, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(unsigned char*, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(int, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
-  void lcd_send_data(float, unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(unsigned int,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
   void lcd_send_data(unsigned long,unsigned long, unsigned char = WRITE_VARIABLE_ADDR);
@@ -76,10 +77,10 @@ public:
 
   void temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt);
 
-  inline bool is_have_command(){ return is_command;}
-  inline void reset_command(){ is_command = 0;}
-  inline void reset_command_type(){ type = CMD_NULL;}
-  inline lcd_cmd_type get_command_type(){      return type;}
+  inline bool is_have_command(){ return is_lcd_command;}
+  inline void reset_command(){ is_lcd_command = false;}
+  inline void reset_command_type(){ lcd_command_type = CMD_NULL;}
+  inline lcd_cmd_type get_command_type(){      return lcd_command_type;}
   inline unsigned long get_receive_addr(){ return recive_data.addr;}
   inline unsigned short get_receive_data(){ return recive_data.data[0];}
 
@@ -124,14 +125,18 @@ public:
   void send_next_page_data(void);
   void send_last_page_data(void);
   void show_print_set_page(void);
+  void show_laser_set_page(void);
+  void show_machine_set_page(void);
   void show_machine_status(uint8_t ch_type);
+  void show_machine_continue_print_page();
+  void show_laser_focus_confirm_page(void);
   void show_start_print_file_page(pfile_list_t temp);
   void show_stop_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
 
 private:
-  bool is_command; /*whether receive a lcd command*/
-  lcd_cmd_type type; /*the type of the lcd command*/
+  bool is_lcd_command; /*whether receive a lcd command*/
+  lcd_cmd_type lcd_command_type; /*the type of the lcd command*/
 
   millis_t update_time;
   unsigned int start_icon_count;
@@ -155,6 +160,18 @@ private:
 };
 
 extern lcd_process dwin_process;
+
+#define  LCD_PAGE(A, B, C)  (A##B + C)
+#define  LCD_PAGE_EN(A, B, C)  (A##B##C)
+#define  SEND_PAGE(A, B, C, D)  do { \
+  if( IS_HEAD_PRINT()) {dwin_process.lcd_send_data(LCD_PAGE(A, B, C), PAGE_ADDR);}\
+  else if(IS_HEAD_LASER()){dwin_process.lcd_send_data(LCD_PAGE(D, B, C), PAGE_ADDR);}\
+}while(0);
+
+#define  CHANGE_PAGE(A, B, C, D, E)  do { \
+  if( IS_HEAD_PRINT()) {dwin_process.change_lcd_page(LCD_PAGE_EN(A, C, D), LCD_PAGE_EN(A, C, E));}\
+  else if(IS_HEAD_LASER()){dwin_process.change_lcd_page(LCD_PAGE_EN(B, C, D), LCD_PAGE_EN(B, C, E));}\
+}while(0);
 
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

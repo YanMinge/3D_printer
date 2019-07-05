@@ -113,6 +113,11 @@ private:
 };
 
 extern machine_info MachineInfo;
+
+#define IS_HEAD_PRINT()   (HEAD_PRINT == MachineInfo.get_head_type())
+#define IS_HEAD_LASER()   (HEAD_LASER == MachineInfo.get_head_type())
+#define IS_HEAD_NULL()    (HEAD_NULL == MachineInfo.get_head_type())
+
 #endif // FACTORY_MACHINE_INFO
 #endif // TARGET_LPC1768
 #endif // _MACHINE_UUID_H_

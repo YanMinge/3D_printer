@@ -70,26 +70,6 @@ void GcodeSuite::M701() {
   const int8_t target_extruder = get_target_extruder_from_command();
   if (target_extruder < 0) return;
 
-  #if 0
-  // Z axis lift
-  if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
-
-  // Show initial "wait for load" message
-  #if HAS_LCD_MENU
-    lcd_pause_show_message(PAUSE_MESSAGE_LOAD, PAUSE_MODE_LOAD_FILAMENT, target_extruder);
-  #endif
-
-  #if EXTRUDERS > 1 && DISABLED(PRUSA_MMU2)
-    // Change toolhead if specified
-    uint8_t active_extruder_before_filament_change = active_extruder;
-    if (active_extruder != target_extruder)
-      tool_change(target_extruder, 0, false);
-  #endif
-
-  // Lift Z axis
-  if (park_point.z > 0)
-    do_blocking_move_to_z(MIN(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
-  #endif
   // Load filament
   #if ENABLED(PRUSA_MMU2)
     mmu2.loadFilamentToNozzle(target_extruder);
@@ -103,22 +83,6 @@ void GcodeSuite::M701() {
                     , target_extruder
                   #endif
                 );
-  #endif
-  #if 0
-  // Restore Z axis
-  if (park_point.z > 0)
-    do_blocking_move_to_z(MAX(current_position[Z_AXIS] - park_point.z, 0), NOZZLE_PARK_Z_FEEDRATE);
-
-  #if EXTRUDERS > 1 && DISABLED(PRUSA_MMU2)
-    // Restore toolhead if it was changed
-    if (active_extruder_before_filament_change != active_extruder)
-      tool_change(active_extruder_before_filament_change, 0, false);
-  #endif
-
-  // Show status screen
-  #if HAS_LCD_MENU
-    lcd_pause_show_message(PAUSE_MESSAGE_STATUS);
-  #endif
   #endif
 
   #if ENABLED(NEWPANEL)
@@ -148,27 +112,6 @@ void GcodeSuite::M702() {
   const int8_t target_extruder = get_target_extruder_from_command();
   if (target_extruder < 0) return;
 
-  #if 0
-  // Z axis lift
-  if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
-
-  // Show initial "wait for unload" message
-  #if HAS_LCD_MENU
-    lcd_pause_show_message(PAUSE_MESSAGE_UNLOAD, PAUSE_MODE_UNLOAD_FILAMENT, target_extruder);
-  #endif
-
-  #if EXTRUDERS > 1 && DISABLED(PRUSA_MMU2)
-    // Change toolhead if specified
-    uint8_t active_extruder_before_filament_change = active_extruder;
-    if (active_extruder != target_extruder)
-      tool_change(target_extruder, 0, false);
-  #endif
-
-  // Lift Z axis
-  if (park_point.z > 0)
-    do_blocking_move_to_z(MIN(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
-  #endif
-
   // Unload filament
   #if ENABLED(PRUSA_MMU2)
     mmu2.unload();
@@ -190,22 +133,6 @@ void GcodeSuite::M702() {
       unload_filament(unload_length, true, PAUSE_MODE_UNLOAD_FILAMENT);
     }
   #endif
-
-#if 0
-  // Restore Z axis
-  if (park_point.z > 0)
-    do_blocking_move_to_z(MAX(current_position[Z_AXIS] - park_point.z, 0), NOZZLE_PARK_Z_FEEDRATE);
-
-  #if EXTRUDERS > 1 && DISABLED(PRUSA_MMU2)
-    // Restore toolhead if it was changed
-    if (active_extruder_before_filament_change != active_extruder)
-      tool_change(active_extruder_before_filament_change, 0, false);
-  #endif
-  // Show status screen
-  #if HAS_LCD_MENU
-    lcd_pause_show_message(PAUSE_MESSAGE_STATUS);
-  #endif
-#endif
 
   #if ENABLED(NEWPANEL)
     filament_show.show_unload_end_page();

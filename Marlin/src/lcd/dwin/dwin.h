@@ -59,6 +59,7 @@ enum machine_status_type : uint8_t {
   PRINT_MACHINE_STATUS_CANCEL_PRINT_CH,
   PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH,
   PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH,
+  LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH,
 
   PRINT_MACHINE_STATUS_NULL,
   PRINT_MACHINE_STATUS_NO_SET_LANGUAGE,
@@ -76,7 +77,7 @@ enum machine_status_type : uint8_t {
   PRINT_MACHINE_STATUS_CANCEL_PRINT_EN,
   PRINT_MACHINE_STATUS_PRINT_CONTINUE_EN,
   PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_EN,
-
+  LASER_MACHINE_STATUS_FOCUS_CONFIRM_EN,
 };
 
 #define MACHINE_STATUS_NUM    14
@@ -114,6 +115,12 @@ enum machine_type : uint8_t {
   MACHINE_TYPE_NULL = 0,
   MACHINE_TYPE_PRINT,
   MACHINE_TYPE_LASER,
+};
+
+enum lcd_data_status : uint8_t {
+  LCD_DATA_ERROR,
+  LCD_DATA_FULL,
+  LCD_DATA_NO_FULL,
 };
 typedef struct lcd_data_buffer
 {
@@ -224,10 +231,35 @@ typedef struct
 #define EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN       60
 #define EXCEPTION_COMPLETE_HINT_PAGE_EN             60
 
-//laser page
-#define LASER_HOME_PAGE_CH                          100
-#define LASER_HOME_PAGE_EN                          100
+//laser page chinese
+#define LASER_HOME_PAGE_CH                          46
+#define LASER_FILE_LIST_ONLY_ONE_PAGE               47
+#define LASER_FILE_LIST_FIRST_PAGE                  48
+#define LASER_FILE_LIST_END_PAGE                    49
+#define LASER_FILE_LIST_MIDDLE_PAGE                 50
+#define LASER_FILE_PRINT_STANDARD_START_PAGE_CH     52
+#define LASER_FILE_PRINT_NOSTANDARD_START_PAGE_CH   51
+#define LASER_FILE_PRINT_STANDARD_STOP_PAGE_CH      52
+#define LASER_FILE_PRINT_NOSTANDARD_STOP_PAGE_CH    51
+#define LASER_AXIS_MOVE_AJUST_PAGE_CH               54
+#define LASER_BEEP_OFF_SET_PAGE_CH                  57
+#define LASER_BEEP_ON_SET_PAGE_CH                   58
+#define LASER_LINE_CHOICE_PAGE_CH                   60
+#define LASER_PREPARE_PAGE_CH                       61
+#define LASER_EXCEPTION_SURE_PAGE_CH                62
 
+//laser page english
+#define LASER_HOME_PAGE_EN                          46
+#define LASER_FILE_PRINT_STANDARD_START_PAGE_EN     51
+#define LASER_FILE_PRINT_NOSTANDARD_START_PAGE_EN   52
+#define LASER_FILE_PRINT_STANDARD_STOP_PAGE_EN      51
+#define LASER_FILE_PRINT_NOSTANDARD_STOP_PAGE_EN    52
+#define LASER_AXIS_MOVE_AJUST_PAGE_EN               54
+#define LASER_BEEP_OFF_SET_PAGE_EN                  57
+#define LASER_BEEP_ON_SET_PAGE_EN                   58
+#define LASER_LINE_CHOICE_PAGE_EN                   60
+#define LASER_PREPARE_PAGE_EN                       61
+#define LASER_EXCEPTION_SURE_PAGE_EN                62
 
 //print icon_addr
 #define PRINT_STATUS_BAR_USB_ICON_ADDR              0X1000

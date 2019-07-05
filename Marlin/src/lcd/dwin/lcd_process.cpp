@@ -53,8 +53,8 @@ lcd_process::lcd_process()
 {
   start_icon_count = 0;
 
-  is_command = 0;
-  type = CMD_NULL;
+  is_lcd_command = false;
+  lcd_command_type = CMD_NULL;
 
   recive_data.head[0] = send_data.head[0] = HEAD_ONE;
   recive_data.head[1] = send_data.head[1] = HEAD_TWO;
@@ -71,18 +71,6 @@ lcd_process::lcd_process()
 void lcd_process::clear_lcd_data_buf(void)
 {
   receive_num = 0;
-  is_command = 0;
-  memset(recevie_data_buf,0,sizeof(recevie_data_buf));
-}
-
-/**
- * @breif  clear recevie_data_buf
- * @detail  have receive a command
- */
-void lcd_process::clear_lcd_data_buf1(void)
-{
-  receive_num = 0;
-  is_command = 1;
   memset(recevie_data_buf,0,sizeof(recevie_data_buf));
 }
 
@@ -103,85 +91,122 @@ void lcd_process::clear_send_data_buf(void)
 
 void lcd_process::lcd_receive_data_clear(void)
 {
-  while(MYSERIAL2.available() > 0 )
+  while(lcd_data_available())
   {
-    MYSERIAL2.read();
+    read_lcd_data();
   }
+}
+
+uint8_t lcd_process::lcd_receive_data_correct(void)
+{
+  if((HEAD_ONE != recevie_data_buf[0]) || (receive_num > DATA_BUF_SIZE))
+  {
+    return LCD_DATA_ERROR;
+  }
+  else if((receive_num >= 2) && (HEAD_TWO != recevie_data_buf[1]))
+  {
+    return LCD_DATA_ERROR;
+  }
+  else if((receive_num > 3) &&  receive_num > (recevie_data_buf[2]+3))
+  {
+    return LCD_DATA_ERROR;
+  }
+  else if((receive_num > 3) && receive_num == (recevie_data_buf[2]+3))
+  {
+    return LCD_DATA_FULL;
+  }
+  else
+  {
+    return LCD_DATA_NO_FULL;
+  }
+}
+
+bool lcd_process::lcd_data_available(void)
+{
+  return(MYSERIAL2.available() > 0);
+}
+
+uint8_t lcd_process::read_lcd_data(void)
+{
+  uint8_t c;
+  c = MYSERIAL2.read();
+  return c;
+}
+
+void lcd_process::write_lcd_data(uint8_t c)
+{
+  MYSERIAL2.write(c);
 }
 
 void lcd_process::lcd_receive_data(void)
 {
-  while(MYSERIAL2.available() > 0 )
+  while(lcd_data_available())
   {
-    recevie_data_buf[receive_num++] = MYSERIAL2.read();
+    recevie_data_buf[receive_num++] = read_lcd_data();
     //MYSERIAL0.write(recevie_data_buf[receive_num-1]);
-
-    if((recevie_data_buf[0] != HEAD_ONE) || \
-      (receive_num > DATA_BUF_SIZE) ||
-      ((receive_num == 2) && (HEAD_TWO != recevie_data_buf[1])))
+    if(LCD_DATA_ERROR == lcd_receive_data_correct())
     {
       clear_lcd_data_buf();
+      is_lcd_command = false;
       continue;
     }
     //recevie a command
-    else if((receive_num > 3) && receive_num == (recevie_data_buf[2]+3))
+    else if(LCD_DATA_FULL == lcd_receive_data_correct())
     {
       clear_recevie_buf();
-      if((recive_data.head[0] == recevie_data_buf[0]) && (recive_data.head[1] == recevie_data_buf[1]) && receive_num > 2)
-      {
-        recive_data.len = recevie_data_buf[2];
-        recive_data.command = recevie_data_buf[3];
+      recive_data.len = recevie_data_buf[2];
+      recive_data.command = recevie_data_buf[3];
 
-        if((0x03 == recive_data.len) && (WRITE_REGISTER_ADDR == recive_data.command) && (TAIL_ONE == recevie_data_buf[4]) && (TAIL_TWO == recevie_data_buf[5]))
-        {
-          //type = CMD_WRITE_REG_OK;
-          clear_lcd_data_buf();
-          continue;
-        }
-        else if((0x03 == recive_data.len) &&(WRITE_VARIABLE_ADDR == recive_data.command) && (TAIL_ONE == recevie_data_buf[4]) && (TAIL_TWO == recevie_data_buf[5]))
-        {
-          type = CMD_WRITE_VAR_OK;
-        }
-        else if(READ_VARIABLE_ADDR == recive_data.command)
-        {
+      switch (recive_data.command)
+      {
+        case WRITE_REGISTER_ADDR:
+          if(0x03 == recive_data.len)
+          {
+            clear_lcd_data_buf();
+            is_lcd_command = false;
+            continue;
+          }
+          break;
+
+        case WRITE_VARIABLE_ADDR:
+          if(0x03 == recive_data.len)
+          {
+            lcd_command_type = CMD_WRITE_VAR_OK;
+          }
+          break;
+
+        case READ_VARIABLE_ADDR:
           recive_data.addr = recevie_data_buf[4];
           recive_data.addr = (recive_data.addr << 8 ) | recevie_data_buf[5];
           recive_data.bytelen = recevie_data_buf[6];
-
           for(int i = 0;i < (signed long)recive_data.bytelen;i+=2)
           {
             recive_data.data[i/2]= recevie_data_buf[7+i];
             recive_data.data[i/2]= (recive_data.data[i/2] << 8 ) | recevie_data_buf[8+i];
           }
-          type = CMD_READ_VAR;
-          clear_lcd_data_buf1();
+          lcd_command_type = CMD_READ_VAR;
+          clear_lcd_data_buf();
+          is_lcd_command = true;
           return;
-        }
-        else if(READ_REGISTER_ADDR == recive_data.command)
-        {
+
+        case READ_REGISTER_ADDR:
           recive_data.addr = recevie_data_buf[4];
           recive_data.bytelen = recevie_data_buf[5];
 
-          for(int i = 0;i < (signed long)recive_data.bytelen;i++)
+          for(int i = 0;i < (int)recive_data.bytelen;i++)
           {
             recive_data.data[i]= recevie_data_buf[6+i];
           }
-          type = CMD_READ_REG;
-        }
-        else
-        {
-          type = CMD_ERROR;
-          clear_lcd_data_buf();
-          return;
-        }
-        clear_lcd_data_buf();
+          lcd_command_type = CMD_READ_REG;
+          break;
+
+        default:
+          lcd_command_type = CMD_ERROR;
+          break;
       }
-      else
-      {
-        clear_lcd_data_buf();
-        type = CMD_ERROR;  //receive the wrong data
-        continue;
-      }
+
+      clear_lcd_data_buf();
+      is_lcd_command = false;
     }
     else
     {
@@ -240,7 +265,8 @@ void lcd_process::lcd_send_data(void)
     //send data to uart
     for(int i = 0; i < (send_data.len + 3); i++)
     {
-      MYSERIAL2.write(send_data_buf[i]);
+      //MYSERIAL2.write(send_data_buf[i]);
+      write_lcd_data(send_data_buf[i]);
     }
     clear_send_data_buf();
   }
@@ -272,7 +298,8 @@ void lcd_process::lcd_send_data(const char *str, unsigned long addr, unsigned ch
 		}
     for(int i = 0; i < (len + 6); i++)
     {
-      MYSERIAL2.write(send_data_buf[i]);
+      //MYSERIAL2.write(send_data_buf[i]);
+      write_lcd_data(send_data_buf[i]);
     }
     clear_send_data_buf();
 	}
@@ -294,20 +321,11 @@ void lcd_process::lcd_text_clear(unsigned long addr,int len, unsigned char cmd/*
 		}
     for(int i = 0; i < (len + 6); i++)
     {
-      MYSERIAL2.write(send_data_buf[i]);
+      //MYSERIAL2.write(send_data_buf[i]);
+      write_lcd_data(send_data_buf[i]);
     }
     clear_send_data_buf();
 	}
-}
-
-void lcd_process::lcd_send_data(char c, unsigned long addr, unsigned char cmd/*= WRITE_VARIABLE_ADDR*/)
-{
-	send_data.command = cmd;
-	send_data.addr = addr;
-	send_data.data[0] = (unsigned long)c;
-	send_data.data[0] = send_data.data[0] << 8;
-	send_data.len = 5;
-	lcd_send_data();
 }
 
 void lcd_process::lcd_send_data(unsigned char* str, unsigned long addr, unsigned char cmd)
@@ -347,11 +365,6 @@ void lcd_process::lcd_send_data(int n, unsigned long addr, unsigned char cmd/*= 
 }
 
 void lcd_process::lcd_send_data(unsigned int n, unsigned long addr, unsigned char cmd)
-{
-  lcd_send_data((int)n, addr, cmd);
-}
-
-void lcd_process::lcd_send_data(float n, unsigned long addr, unsigned char cmd)
 {
   lcd_send_data((int)n, addr, cmd);
 }
@@ -707,7 +720,7 @@ void lcd_process::reset_usb_pull_out_parameters(void)
   {
     delay(100);
   }
-	
+
   memset(&file_info,0,sizeof(file_info));
   memset(&image_status,0,sizeof(image_status));
 }
@@ -739,7 +752,8 @@ void lcd_process::lcd_send_image(int len, int times,unsigned char cmd/*= WRITE_V
 	send_data_buf[5] = (125 * times)%256;
   for(int i = 0; i < (len + 6); i++)
   {
-    MYSERIAL2.write(send_data_buf[i]);
+    //MYSERIAL2.write(send_data_buf[i]);
+    write_lcd_data(send_data_buf[i]);
   }
   clear_send_data_buf();
 }

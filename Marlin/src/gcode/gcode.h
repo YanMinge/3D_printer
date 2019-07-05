@@ -904,6 +904,10 @@ private:
     static void M2062();
   #endif
 
+  #if ENABLED(USE_DWIN_LCD)
+    static void M2070();
+  #endif
+
   static void T(const uint8_t tool_index);
 
 };

@@ -108,6 +108,10 @@
   #define FAN1_PIN         P1_29
 #endif
 
+#ifndef FAN2_PIN
+  #define FAN2_PIN         P1_18   //use as the laser_pwm pin
+#endif
+
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
   #define FIL_RUNOUT_PIN            P1_01
 #endif

@@ -63,6 +63,11 @@ public:
   void response_select_file(void);
   void response_print_file(void);
   void response_print_move_axis(void);
+  void response_cancel_set_language(void);
+  void response_set_language_ch(void);
+  void response_set_language_en(void);
+  void response_set_languag(void);
+  void response_set_buzzer(void);
   void response_print_set(void);
   void response_filament(void);
   void response_print_machine_status(void);
