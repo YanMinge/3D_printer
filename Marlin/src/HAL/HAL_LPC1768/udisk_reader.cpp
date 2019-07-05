@@ -765,7 +765,6 @@ void udisk_reader::open_job_recovery_file(const bool read)
   {
     return;
   }
-  DEBUGPRINTF("Yanminge open_job_recovery_file\r\n");
   FRESULT f_result = f_open(&recovery.file_obj, job_recovery_file_name, read ? FA_READ : FA_READ | FA_WRITE | FA_CREATE_NEW | FA_OPEN_ALWAYS);
   if(f_result)
   {
@@ -774,6 +773,7 @@ void udisk_reader::open_job_recovery_file(const bool read)
   }
   else
   {
+    DEBUGPRINTF("open_job_recovery_file\r\n");
     recovery.is_file_opened = true;
   }
 
