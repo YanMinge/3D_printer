@@ -48,9 +48,6 @@
  */
 void GcodeSuite::M2023()
 {
-#if ENABLED(POWER_LOSS_RECOVERY)
-  udisk.remove_job_recovery_file();
-#endif
   // Simplify3D includes the size, so zero out all spaces (#7227)
   for (char *fn = parser.string_arg; *fn; ++fn) if (*fn == ' ') *fn = '\0';
   udisk.open_file(parser.string_arg, true);
@@ -60,20 +57,41 @@ void GcodeSuite::M2023()
     if(udisk.check_gm_file(udisk.get_file_name()))
     {
       uint32_t initial_time = udisk.get_print_time(udisk.get_file_name());
+	  uint32_t index = 0;
 #if ENABLED(POWER_LOSS_RECOVERY)
-      udisk.recovery_print_time_dynamic(recovery.info.print_job_elapsed);
+      if(udisk.job_recover_file_exists())
+      {
+        //lcd image
+        udisk.recovery_print_time_dynamic(recovery.info.print_job_elapsed);
+		initial_time -= recovery.info.print_job_elapsed;
+		index = recovery.info.udisk_pos;
+        udisk.remove_job_recovery_file();
+      }
+	  else
+      {
+        index = udisk.get_gcode_offset(udisk.get_file_name());
+      }
+#else
+      index = udisk.get_gcode_offset(udisk.get_file_name());
 #endif
-
-#if ENABLED(USE_DWIN_LCD)
-      dwin_process.send_print_time(initial_time - recovery.info.print_job_elapsed);
-#endif
-      uint32_t index = udisk.get_gcode_offset(udisk.get_file_name());
       udisk.set_index(index);
+#if ENABLED(USE_DWIN_LCD)
+      dwin_process.send_print_time(initial_time);
+#endif
     }
     else
     {
+      uint32_t index = 0;
+#if ENABLED(POWER_LOSS_RECOVERY)
+      if(udisk.job_recover_file_exists())
+      {
+		index = recovery.info.udisk_pos;
+      }
+#endif
+      udisk.set_index(index);
+#if ENABLED(USE_DWIN_LCD)
       dwin_process.send_print_time(0);
-      udisk.set_index(0);
+#endif
     }
   }
 }

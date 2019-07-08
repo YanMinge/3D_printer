@@ -685,9 +685,10 @@ void udisk_reader::recovery_print_time_dynamic(uint32_t time)
 
 uint32_t udisk_reader::get_print_time_dynamic(void)
 {
-  if((print_time_dynamic == 0) && ((file_size - udisk_pos) > 0))
+  //Enable algorithm equalization time when the time is less than 6 minutes.
+  if((print_time_dynamic < 360) && ((file_size - udisk_pos) > 0))
   {
-    print_time_dynamic = 1;
+    print_time_dynamic = uint32_t(ceil(print_time_dynamic * 0.5 + print_time_dynamic * ((file_size - udisk_pos)/file_size) * 0.5));
   }
   return print_time_dynamic;
 }
