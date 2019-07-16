@@ -851,6 +851,7 @@ inline void get_udisk_commands(void) {
         || ((udsik_char == '#' || udsik_char == ':') && !udisk_comment_mode)) {
       if (udisk_eof) {
         //card.printingHasFinished();
+        udisk.printing_has_finished();
         if (IS_UDISK_PRINTING())
            udsik_count = 0; // If a sub-file was printing, continue from call point
         else {

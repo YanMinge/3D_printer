@@ -85,7 +85,8 @@ void GcodeSuite::M2023()
 #if ENABLED(POWER_LOSS_RECOVERY)
       if(udisk.job_recover_file_exists())
       {
-		index = recovery.info.udisk_pos;
+        index = recovery.info.udisk_pos;
+        udisk.remove_job_recovery_file();
       }
 #endif
       udisk.set_index(index);

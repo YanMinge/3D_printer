@@ -37,6 +37,7 @@
 
 #ifdef TARGET_LPC1768
 #include "../Marlin.h"
+#include "../../module/planner.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -48,6 +49,10 @@
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
 #include "user_execution.h"
+
+#if ENABLED(POWER_LOSS_RECOVERY)
+#include "../../feature/power_loss_recovery.h"
+#endif
 
 filament_ui_show filament_show;
 
@@ -118,17 +123,35 @@ void filament_ui_show::show_file_print_end_page(void)
       dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
       return;
     }
-    if(progress_status.load_return_status)
+    if(udisk.job_recover_file_exists())
     {
-      dwin_process.show_start_print_file_page(temp);
-      LcdFile.set_current_status(out_printing);
+      if(progress_status.load_return_status)
+      {
+        dwin_process.show_start_print_file_page(dwin_process.current_file);
+        LcdFile.set_current_status(out_printing);
+      }
+      else
+      {
+        dwin_process.show_stop_print_file_page(temp);
+        LcdFile.set_current_status(on_printing);
+        //recovery.resume();
+        enqueue_and_echo_commands_P(PSTR("M1000"));
+      }
     }
     else
     {
-      dwin_process.show_stop_print_file_page(temp);
-      LcdFile.set_current_status(on_printing);
-      UserExecution.cmd_M2023(temp->file_name);
-      UserExecution.cmd_M2024();
+      if(progress_status.load_return_status)
+      {
+        dwin_process.show_start_print_file_page(temp);
+        LcdFile.set_current_status(out_printing);
+      }
+      else
+      {
+        dwin_process.show_stop_print_file_page(temp);
+        LcdFile.set_current_status(on_printing);
+        UserExecution.cmd_M2023(temp->file_name);
+        UserExecution.cmd_M2024();
+      }
     }
     reset_progress_status();
   }

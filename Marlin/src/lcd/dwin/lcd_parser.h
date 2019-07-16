@@ -78,7 +78,7 @@ public:
   inline void set_file_read_status(bool status){ file_read_status = status;}
 
   void refresh_current_path(void);
-	
+  int laser_focus;
 private:
   lcd_cmd_type type;
   unsigned short receive_data;
@@ -89,7 +89,6 @@ private:
   bool file_read_status;
   int current_page_index;
 
-  print_prepare_status prepare_status;
 };
 
 extern lcd_parser dwin_parser;

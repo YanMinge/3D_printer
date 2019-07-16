@@ -47,6 +47,10 @@
 #include "udisk_reader.h"
 #include "user_execution.h"
 
+#if ENABLED(POWER_LOSS_RECOVERY)
+#include "../../feature/power_loss_recovery.h"
+#endif
+
 lcd_process dwin_process;
 
 lcd_process::lcd_process()
@@ -62,6 +66,8 @@ lcd_process::lcd_process()
   memset(recevie_data_buf,0, sizeof(recevie_data_buf));
   memset(send_data_buf,0, sizeof(send_data_buf));
   memset(&file_info,0,sizeof(data_info_t));
+
+  lcd_subcommand_status = true;
 }
 
 /**
@@ -577,10 +583,12 @@ void lcd_process::set_limage_count(void)
   if(image_status.limage_set_status)
   {
     uint32_t file_size;
-
-    get_file_info();
-    file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.select_file_num);
-    current_file = LcdFile.file_list_index(file_info.current_index);
+    if(!udisk.job_recover_file_exists())
+    {
+      get_file_info();
+      file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.select_file_num);
+      current_file = LcdFile.file_list_index(file_info.current_index);
+    }
 
     lcd_send_data(TYPE_LOAD,PRINT_FILE_LIMAGE_ICON_ADDR);
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
@@ -627,7 +635,6 @@ void lcd_process::send_limage(void)
       file_info.image_last_count_len = 0;
       image_status.limage_status = false;
 
-      UserExecution.cmd_M2023(current_file->file_name);
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
     if(file_info.image_current_send_count < file_info.image_send_count -1)

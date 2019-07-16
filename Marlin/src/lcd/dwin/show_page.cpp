@@ -37,6 +37,8 @@
 
 #ifdef TARGET_LPC1768
 #include "../Marlin.h"
+#include "../../module/planner.h"
+#include "../../gcode/gcode.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -54,6 +56,10 @@
 
 #if ENABLED(FACTORY_MACHINE_INFO)
 #include "machine_info.h"
+#endif
+
+#if ENABLED(POWER_LOSS_RECOVERY)
+#include "../../feature/power_loss_recovery.h"
 #endif
 
 void lcd_process::show_start_up_page(void)
@@ -285,18 +291,58 @@ void lcd_process::show_machine_continue_print_page(void)
   machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
 }
 
-void lcd_process::show_laser_focus_confirm_page(void)
+void lcd_process::show_machine_recovery_print_page(void)
 {
-  if(HEAD_LASER == MachineInfo.get_head_type())
+  dwin_process.image_send_delay();
+  dwin_process.reset_image_parameters();
+  dwin_process.simage_send_end();
+  LcdFile.set_current_status(out_printing);
+
+#if ENABLED(POWER_LOSS_RECOVERY)
+  if(udisk.job_recover_file_exists())
   {
-    show_machine_status(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH);
+    malloc_current_file();
+    strcpy(current_file->file_name,recovery.info.udisk_filename);
+    if(udisk.check_gm_file(current_file->file_name))
+    {
+      current_file->file_type = TYPE_MAKEBLOCK_GM;
+      dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
+      dwin_process.lcd_send_data(current_file->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
+      CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH);
+      dwin_process.limage_send_start();
+    }
+    else
+    {
+      current_file->file_type = TYPE_DEFAULT_FILE;
+      dwin_process.lcd_send_data(TYPE_DEFAULT_FILE,PRINT_FILE_LIMAGE_ICON_ADDR);
+      dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
+      dwin_process.lcd_send_data(current_file->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
+      CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_START_PAGE_, EN, CH);
+    }
+  }
+#endif
+}
+void lcd_process::show_machine_status_page(machine_status_type print_status, \
+                                                    machine_status_type laser_status, int page_en, int page_ch)
+{
+  if(HEAD_PRINT == MachineInfo.get_head_type())
+  {
+    show_machine_status(print_status);
+    machine_status = print_status;
   }
   else
   {
-    return;
+    show_machine_status(laser_status);
+    machine_status = laser_status;
   }
-  change_lcd_page(EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN,EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_CH);
-  machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
+  change_lcd_page(page_en,page_ch);
+}
+
+void lcd_process::show_machine_status_page(machine_status_type status, int page_en, int page_ch)
+{
+  show_machine_status(status);
+  machine_status = status;
+  change_lcd_page(page_en,page_ch);
 }
 
 void lcd_process::show_start_print_file_page(pfile_list_t temp)
@@ -340,6 +386,76 @@ void lcd_process::show_usb_pull_out_page(void)
   show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
   set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
   change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+}
+
+void lcd_process::process_lcd_subcommands_now(PGM_P pgcode)
+{
+  planner.synchronize();
+  if(lcd_subcommand_status)
+  {
+    gcode.process_subcommands_now_P(pgcode);
+  }
+}
+void lcd_process::show_laser_prepare_focus_page(void)
+{
+  char cmd[40];
+  lcd_subcommand_status = true;
+  show_machine_status_page(machine_status_type(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH - MACHINE_STATUS_NUM),\
+                 LASER_PREPARE_PAGE_EN,LASER_PREPARE_PAGE_CH);
+  machine_status = LASER_MACHINE_STATUS_PREPARE_FOCUS_CH;
+
+  process_lcd_subcommands_now(PSTR("G28\nG1 F3000 X32 Y55"));
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus - 0.2);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now(PSTR("M114"));
+
+  //line1 and num1
+  process_lcd_subcommands_now(PSTR("G1 X80 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("G1 X80 Y130"));
+  process_lcd_subcommands_now(PSTR("M107 P2"));
+
+  process_lcd_subcommands_now(PSTR("G1 X80 Y100"));
+  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("G1 X80 Y80"));
+  process_lcd_subcommands_now(PSTR("M107 P2"));
+
+  //line2 and num2
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus - 0.2);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now(PSTR("G1 X95 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("G1 X95 Y130 F3000"));
+  process_lcd_subcommands_now(PSTR("M107 P2"));
+
+  process_lcd_subcommands_now(PSTR("G1 X90 Y100"));
+  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("G1 X100 Y100"));
+  process_lcd_subcommands_now(PSTR("G1 X90 Y80"));
+  process_lcd_subcommands_now(PSTR("G1 X100 Y80"));
+  process_lcd_subcommands_now(PSTR("M107 P2"));
+
+  if(lcd_subcommand_status)
+  {
+    change_lcd_page(LASER_LINE_CHOICE_PAGE_EN,LASER_LINE_CHOICE_PAGE_CH);
+  }
+  else
+  {
+    show_machine_status_page(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH,\
+        LASER_EXCEPTION_SURE_RETURN_PAGE_EN,LASER_EXCEPTION_SURE_RETURN_PAGE_CH);
+  }
+
+}
+
+void lcd_process::laser_walking_frame(void)
+{
+  process_lcd_subcommands_now(PSTR("G28 X Y"));
+
+  process_lcd_subcommands_now(PSTR("G1 X40 Y90 F3000"));
+  process_lcd_subcommands_now(PSTR("G1 X40 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("G1 X100 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("G1 X100 Y90 F3000"));
+  process_lcd_subcommands_now(PSTR("G1 X40 Y90 F3000"));
 }
 
 #endif // USB_DISK_SUPPORT

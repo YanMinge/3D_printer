@@ -676,16 +676,31 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
 
 #if ENABLED(POWER_LOSS_RECOVERY)
 void power_loss_detect(void){
+  static bool power_loss_status = true;
   bool power_status = READ(POWER_LOSS_PIN);
-  if(power_status == POWER_LOSS_STATE)
+  if(power_status == POWER_LOSS_STATE && power_loss_status)
   {
+    recovery.info.target_temperature[HOTEND_INDEX] = thermalManager.temp_hotend[HOTEND_INDEX].target;
+    COPY(recovery.info.current_position, current_position);
+
+    // Commands in the queue
+    recovery.info.commands_in_queue = commands_in_queue;
+    recovery.info.cmd_queue_index_r = cmd_queue_index_r;
+    COPY(recovery.info.command_queue, command_queue);
+
+    clear_command_queue();
     thermalManager.disable_all_heaters();
     disable_all_steppers();
+    UserExecution.lcd_immediate_execution = true;
+    planner.quick_stop();
     thermalManager.zero_fan_speeds();
 
     uint32_t woking_time = MachineInfo.get_total_working_time() + millis()/1000;
-	MachineInfo.set_total_working_time(woking_time);
-	settings.save();
+    MachineInfo.set_total_working_time(woking_time);
+    settings.save();
+    power_loss_status = false;
+
+    if(IS_UDISK_PRINTING())recovery.save(true);
   }
 }
 

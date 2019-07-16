@@ -115,6 +115,9 @@ public:
 
   void set_machine_status(machine_status_type type){machine_status = type;}
   machine_status_type get_machine_status(void){return machine_status;}
+  inline void delete_current_file(void){ delete (current_file);}
+  inline void malloc_current_file(void){    current_file =(pfile_list_t) new char[sizeof(file_list_t)];
+    memset(current_file,0,sizeof(file_list_t));}
 
   //show_page.cpp
   void show_start_up_page(void);
@@ -129,10 +132,18 @@ public:
   void show_machine_set_page(void);
   void show_machine_status(uint8_t ch_type);
   void show_machine_continue_print_page();
-  void show_laser_focus_confirm_page(void);
+  void show_machine_recovery_print_page(void);
+  void show_machine_status_page(machine_status_type print_status, machine_status_type laser_status, \
+                                         int page_en, int page_ch);
+  void show_machine_status_page(machine_status_type status, int page_en, int page_ch);
   void show_start_print_file_page(pfile_list_t temp);
   void show_stop_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
+  void show_laser_prepare_focus_page(void);
+  void process_lcd_subcommands_now(PGM_P pgcode);
+  void laser_walking_frame(void);
+  bool lcd_subcommand_status;
+  pfile_list_t current_file; /*the file_struct which now the file is selected*/
 
 private:
   bool is_lcd_command; /*whether receive a lcd command*/
@@ -151,7 +162,6 @@ private:
   //image show
   send_status_t image_status;
   data_info_t file_info;
-  pfile_list_t current_file; /*the file_struct which now the file is selected*/
   uint32_t offset;
 
   //languge

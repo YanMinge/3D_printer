@@ -45,6 +45,8 @@ job_recovery_info_t PrintJobRecovery::info;
 #include "../module/printcounter.h"
 #include "../module/temperature.h"
 #include "../core/serial.h"
+#include "../module/stepper.h"
+#include "../module/endstops.h"
 
 #if ENABLED(FWRETRACT)
   #include "fwretract.h"
@@ -162,7 +164,7 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
       info.active_hotend = active_extruder;
     #endif
 
-    HOTEND_LOOP() info.target_temperature[e] = thermalManager.temp_hotend[e].target;
+    //HOTEND_LOOP() info.target_temperature[e] = thermalManager.temp_hotend[e].target;
 
     #if HAS_HEATED_BED
       info.target_temperature_bed = thermalManager.temp_bed.target;
@@ -192,19 +194,23 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
       info.retract_hop = fwretract.current_hop;
     #endif
 
-    // Commands in the queue
-    info.commands_in_queue = save_queue ? commands_in_queue : 0;
-    info.cmd_queue_index_r = cmd_queue_index_r;
-    COPY(info.command_queue, command_queue);
-
     // Elapsed print job time
     info.print_job_elapsed = print_job_timer.duration();
 
     // udisk file position
-	memcpy(info.udisk_filename, udisk.get_file_name(), strlen(udisk.get_file_name()));
+    memcpy(info.udisk_filename, udisk.get_file_name(), strlen(udisk.get_file_name()));
     info.udisk_pos = udisk.get_index();
 
     write();
+
+    #if PIN_EXISTS(POWER_LOSS)
+    if (READ(POWER_LOSS_PIN) == POWER_LOSS_STATE){
+      enable_Z();
+      setup_for_endstop_or_probe_move();
+      endstops.enable(true); // Enable endstops for next homing move
+      homeaxis(Z_AXIS);
+    }
+    #endif
 
     // KILL now if the power-loss pin was triggered
     #if PIN_EXISTS(POWER_LOSS)
@@ -256,13 +262,15 @@ void PrintJobRecovery::resume() {
 
   // Set Z to 0, raise Z by 2mm, and Home (XY only for Cartesian) with no raise
   // (Only do simulated homing in Marlin Dev Mode.)
-  gcode.process_subcommands_now_P(PSTR("G92.0 Z0\nG1 Z" STRINGIFY(RECOVERY_ZRAISE) "\nG28 R0"
-    #if ENABLED(MARLIN_DEV_MODE)
-      " S"
-    #elif !IS_KINEMATIC
-      " X Y"
-    #endif
-  ));
+  gcode.process_subcommands_now_P(PSTR("G28\nG1 F3000 X32 Y55"));
+  gcode.process_subcommands_now_P(PSTR("G38.2 Z-20 F300"));
+  gcode.process_subcommands_now_P(PSTR("G92.0 Z0"));
+  gcode.process_subcommands_now_P(PSTR("M114"));
+
+  gcode.process_subcommands_now_P(PSTR("G1 F300 Z0.40"));
+  gcode.process_subcommands_now_P(PSTR("G92.0 Z0"));
+  planner.synchronize();
+  gcode.process_subcommands_now_P(PSTR("M114"));
 
   // Pretend that all axes are homed
   axis_homed = axis_known_position = xyz_bits;
@@ -338,7 +346,12 @@ void PrintJobRecovery::resume() {
     #endif
     , 1, 3, str_2
   );
-  sprintf_P(cmd, PSTR("G92.0 Z%s E%s"), str_1, str_2);
+  //sprintf_P(cmd, PSTR("G92.0 Z%s E%s"), str_1, str_2);
+  //gcode.process_subcommands_now(cmd);
+  dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, Z_AXIS), 1, 3, str_1);
+  sprintf_P(cmd, PSTR("G1 Z%s F200"), str_1);
+  gcode.process_subcommands_now(cmd);
+  sprintf_P(cmd, PSTR("G92.0 E%s"),str_2);
   gcode.process_subcommands_now(cmd);
 
   // Move back to the saved XY
@@ -348,7 +361,7 @@ void PrintJobRecovery::resume() {
   gcode.process_subcommands_now(cmd);
 
   // Move back to the saved Z
-  dtostrf(info.current_position[Z_AXIS], 1, 3, str_1);
+  dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS],Z_AXIS), 1, 3, str_1);
   sprintf_P(cmd, PSTR("G1 Z%s F200"), str_1);
   gcode.process_subcommands_now(cmd);
 
