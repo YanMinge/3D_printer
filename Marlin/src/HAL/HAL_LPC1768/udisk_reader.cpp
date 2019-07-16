@@ -210,7 +210,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       dwin_process.show_usb_pull_out_page();
       return USB_NOT_DETECTED;
     }
-    DEBUGPRINTF("f_opendir error(%d)\r\n", path);
+    DEBUGPRINTF("f_opendir error(%d)\r\n", rc);
   }
   else
   {
