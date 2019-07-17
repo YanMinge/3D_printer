@@ -72,6 +72,10 @@
 #include "lcd_process.h"
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+
 #if HOTEND_USES_THERMISTOR
   #if ENABLED(TEMP_SENSOR_1_AS_REDUNDANT)
     static void* heater_ttbl_map[2] = { (void*)HEATER_0_TEMPTABLE, (void*)HEATER_1_TEMPTABLE };
@@ -2355,7 +2359,9 @@ void Temperature::isr() {
         WRITE_HEATER_##N(on);                               \
       }while(0)
       #define _PWM_MOD_E(N) _PWM_MOD(N,soft_pwm_hotend[N],temp_hotend[N])
-      _PWM_MOD_E(0);
+	  if(IS_HEAD_PRINT()){
+        _PWM_MOD_E(0);
+      }
       #if HOTENDS > 1
         _PWM_MOD_E(1);
         #if HOTENDS > 2
@@ -2400,7 +2406,9 @@ void Temperature::isr() {
       #define _PWM_LOW(N,S) do{ if (S.count <= pwm_count_tmp) WRITE_HEATER_##N(LOW); }while(0)
       #if HOTENDS
         #define _PWM_LOW_E(N) _PWM_LOW(N, soft_pwm_hotend[N])
-        _PWM_LOW_E(0);
+        if((IS_HEAD_PRINT())){
+          _PWM_LOW_E(0);
+        }
         #if HOTENDS > 1
           _PWM_LOW_E(1);
           #if HOTENDS > 2

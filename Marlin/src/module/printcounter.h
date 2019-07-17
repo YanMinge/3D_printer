@@ -40,6 +40,7 @@ struct printStatistics {    // 16 bytes
   uint16_t totalPrints;     // Number of prints
   uint16_t finishedPrints;  // Number of complete prints
   uint32_t printTime;       // Accumulated printing time
+  uint32_t laserTime;       // Accumulated engraving time
   uint32_t longestPrint;    // Longest successful print job
   float    filamentUsed;    // Accumulated filament consumed in mm
   #if SERVICE_INTERVAL_1 > 0

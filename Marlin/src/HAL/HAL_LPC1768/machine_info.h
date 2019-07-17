@@ -78,6 +78,7 @@ public:
   void print_uuid_info(void);
   void send_uuid_string(void);
   uint32_t get_total_printing_time(void);
+  uint32_t get_total_engraving_time(void);
   void print_working_time(void);
   uint32_t get_total_working_time(void);
   void reset_total_working_time(void);
@@ -103,10 +104,11 @@ public:
   void send_print_work_time(void);
 #endif
   void set_exception_status(bool status){ exception_status = status;}
-
+  head_t get_command_type(void);
 private:
   uint8_t factory_uuid[8];
   head_t head_type;
+  head_t command_type;
   uint32_t total_working_time;
   bool usb_cable_connect;
   bool exception_status;

@@ -37,6 +37,10 @@ Stopwatch print_job_timer;      // Global Print Job Timer instance
   #include "../libs/buzzer.h"
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+
 // Service intervals
 #if HAS_SERVICE_INTERVALS
   #if SERVICE_INTERVAL_1 > 0
@@ -92,7 +96,7 @@ void PrintCounter::initStats() {
   #endif
 
   loaded = true;
-  data = { 0, 0, 0, 0, 0.0
+  data = { 0, 0, 0, 0, 0, 0.0
     #if HAS_SERVICE_INTERVALS
       #if SERVICE_INTERVAL_1 > 0
         , SERVICE_INTERVAL_SEC_1
@@ -193,7 +197,17 @@ void PrintCounter::showStats() {
   );
 
   SERIAL_ECHOPGM(MSG_STATS);
+#if ENABLED(FACTORY_MACHINE_INFO)
+  duration_t elapsed;
+  if(IS_HEAD_LASER()){
+    elapsed = data.laserTime;
+  }
+  else{
+    elapsed = data.printTime;
+  }
+#else
   duration_t elapsed = data.printTime;
+#endif
   elapsed.toString(buffer);
   SERIAL_ECHOPAIR("Total time: ", buffer);
   #if ENABLED(DEBUG_PRINTCOUNTER)
@@ -235,7 +249,16 @@ void PrintCounter::tick() {
       debug(PSTR("tick"));
     #endif
     millis_t delta = deltaDuration();
+#if ENABLED(FACTORY_MACHINE_INFO)
+    if(IS_HEAD_LASER()){
+      data.laserTime += delta;
+    }
+	else{
+      data.printTime += delta;
+	}
+#else
     data.printTime += delta;
+#endif
 
     #if SERVICE_INTERVAL_1 > 0
       data.nextService1 -= MIN(delta, data.nextService1);
@@ -284,7 +307,16 @@ bool PrintCounter::stop() {
 
   if (super::stop()) {
     data.finishedPrints++;
+#if ENABLED(FACTORY_MACHINE_INFO)
+  if(IS_HEAD_LASER()){
+  	data.laserTime += deltaDuration();
+  }
+  else{
     data.printTime += deltaDuration();
+  }
+#else
+    data.printTime += deltaDuration();
+#endif
 
     if (duration() > data.longestPrint)
       data.longestPrint = duration();

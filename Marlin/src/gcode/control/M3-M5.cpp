@@ -27,7 +27,11 @@
 #include "../gcode.h"
 #include "../../module/stepper.h"
 
-uint8_t spindle_laser_power; // = 0
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+
+uint16_t spindle_laser_power; // = 0
 
 /**
  * M3: Spindle Clockwise
@@ -72,16 +76,17 @@ inline void delay_for_power_down() { safe_delay(SPINDLE_LASER_POWERDOWN_DELAY); 
  * it accepts inputs of 0-255
  */
 
-inline void set_spindle_laser_ocr(const uint8_t ocr) {
-  WRITE(SPINDLE_LASER_ENABLE_PIN, SPINDLE_LASER_ENABLE_INVERT); // turn spindle on (active low)
-  analogWrite(SPINDLE_LASER_PWM_PIN, (SPINDLE_LASER_PWM_INVERT) ? 255 - ocr : ocr);
+inline void set_spindle_laser_ocr(const uint16_t ocr) {
+  //WRITE(SPINDLE_LASER_ENABLE_PIN, SPINDLE_LASER_ENABLE_INVERT); // turn spindle on (active low)
+  uint16_t ocr_val = constrain(ocr, 0, 1000);
+  pwm_write_ratio(SPINDLE_LASER_PWM_PIN, float(ocr_val/1000.0));
 }
 
 #if ENABLED(SPINDLE_LASER_PWM)
 
   void update_spindle_laser_power() {
     if (spindle_laser_power == 0) {
-      WRITE(SPINDLE_LASER_ENABLE_PIN, !SPINDLE_LASER_ENABLE_INVERT);                      // turn spindle off (active low)
+      //WRITE(SPINDLE_LASER_ENABLE_PIN, !SPINDLE_LASER_ENABLE_INVERT);                      // turn spindle off (active low)
       analogWrite(SPINDLE_LASER_PWM_PIN, SPINDLE_LASER_PWM_INVERT ? 255 : 0);             // only write low byte
       delay_for_power_down();
     }
@@ -135,7 +140,16 @@ void set_spindle_laser_enabled(const bool enable) {
 void GcodeSuite::M3_M4(const bool is_M4) {
 
   planner.synchronize();   // wait until previous movement commands (G0/G0/G2/G3) have completed before playing with the spindle
-
+  if(IS_HEAD_PRINT() || IS_HEAD_NULL()){
+    SERIAL_ECHOPGM("Can not support this command, head type is: ");
+    head_t head_type = MachineInfo.get_head_type();
+    if(head_type == HEAD_NULL){
+      SERIAL_ECHOLNPGM("no head");
+    }
+    else{
+      SERIAL_ECHOLNPGM("print head");
+    }
+  }
   #if SPINDLE_DIR_CHANGE
     set_spindle_direction(is_M4);
   #endif
@@ -146,13 +160,17 @@ void GcodeSuite::M3_M4(const bool is_M4) {
    * Then needed to AND the uint16_t result with 0x00FF to make sure we only wrote the byte of interest.
    */
   #if ENABLED(SPINDLE_LASER_PWM)
-    if (parser.seen('O')) {
-      spindle_laser_power = parser.value_byte();
+    if(parser.seen('F')){
+		uint16_t laser_frequency = parser.value_ushort();
+		pwm_set_frequency(SPINDLE_LASER_PWM_PIN, laser_frequency);
+	}
+	else{
+      pwm_set_frequency(SPINDLE_LASER_PWM_PIN, 1000);
+	}
+
+    if (parser.seen('S')) {
+      spindle_laser_power = parser.value_ushort();
       set_spindle_laser_ocr(spindle_laser_power);
-    }
-    else {
-      spindle_laser_power = parser.intval('S', 255);
-      update_spindle_laser_power();
     }
   #else
     set_spindle_laser_enabled(true);

@@ -131,6 +131,12 @@ uint32_t machine_info::get_total_printing_time(void)
   return data.printTime;
 }
 
+uint32_t machine_info::get_total_engraving_time(void)
+{
+  printStatistics data = print_job_timer.getStats();
+  return data.laserTime;
+}
+
 void machine_info::print_working_time(void)
 {
   char buffer[21];
@@ -399,15 +405,21 @@ void machine_info::send_work_time(void)
 
 void machine_info::send_print_work_time(void)
 {
-  char buffer[16];
+  char print_time[16];
+  char laser_time[16];
   char hour_gbk[] = {0xD0,0xA1,0xCA,0xB1,0x00};
   uint32_t time;
+  int lcd_time;
 
   time = get_total_printing_time();
-  int lcd_time = time / 3600;
-  sprintf_P(buffer, "%i %s", lcd_time, hour_gbk);
-  dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_PRINT_TIME_ADDR);
-  dwin_process.lcd_send_data(buffer, PRINT_MACHINE_INFO_LASER_TIME_ADDR);
+  lcd_time = time / 3600;
+  sprintf_P(print_time, "%i %s", lcd_time, hour_gbk);
+
+  time = get_total_engraving_time();
+  lcd_time = time / 3600;
+  sprintf_P(laser_time, "%i %s", lcd_time, hour_gbk);
+  dwin_process.lcd_send_data(print_time, PRINT_MACHINE_INFO_PRINT_TIME_ADDR);
+  dwin_process.lcd_send_data(laser_time, PRINT_MACHINE_INFO_LASER_TIME_ADDR);
 }
 #endif
 
