@@ -1,10 +1,10 @@
 /**
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2061.cpp
+ * @file    M2034.cpp
  * @author  Mark Yan
  * @version V1.0.0
- * @date    2019/06/20
- * @brief   source code for M2061.
+ * @date    2019/06/11
+ * @brief   source code for M2034.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,43 +19,37 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * Reset/Query the total working time.
+ * enable/disable filamen runout report.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/06/20     1.0.0            Initial function design.
+ * Mark Yan         2019/06/11     1.0.0            Initial function design.
  * </pre>
  *
  */
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(FACTORY_MACHINE_INFO)
+
+#if ENABLED(TARGET_LPC1768)
+#if ENABLED(SPINDLE_LASER_ENABLE)
 
 #include "../gcode.h"
-#include "machine_info.h"
-
+#include "lcd_parser.h"
 /**
- * M2061: Reset/Query the working time.
- *      OR, with 'S2061' to reset the working time.
- *      OR, with 'T' to set the working time.
- *      OR, with 'NULL parameters' get the current working time.
+ * M2040: set the laser focus value;
  */
-void GcodeSuite::M2061()
+void GcodeSuite::M2040()
 {
-  if(parser.intval('S') == 2061)
+  if (parser.seen('S'))
   {
-    MachineInfo.reset_total_working_time();
-  }
-  else if(parser.seen('T'))
-  {
-    MachineInfo.set_total_working_time(parser.value_long());
+    dwin_parser.laser_focus = parser.value_float();
   }
   else
   {
-    SERIAL_ECHOPGM("Working time: ");
-    MachineInfo.print_working_time();
+    SERIAL_PRINTF("laser focus = %f\r\n", dwin_parser.laser_focus);
   }
 }
 
-#endif // FACTORY_MACHINE_INFO
+#endif // SPINDLE_LASER_ENABLE
+#endif // TARGET_LPC1768

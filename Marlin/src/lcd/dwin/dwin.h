@@ -39,6 +39,14 @@
 #ifndef _DWIN_H_
 #define _DWIN_H_
 
+#define IMAGE_SHOW_DELAY      300   //delay ms before show image
+#define FILE_DIRECTORY_DEPTH  6
+
+typedef struct file_directory_stack{
+    int page_num[FILE_DIRECTORY_DEPTH];
+    int top;
+}file_directory_stack_t;
+
 enum machine_status_type : uint8_t {
 
   PRINT_MACHINE_STATUS_NO_USB_DISK_CH = 0,
@@ -56,6 +64,7 @@ enum machine_status_type : uint8_t {
   LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH,
   LASER_MACHINE_STATUS_FOCUS_FINISHED_CH,
   LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH,
+  LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH,
 
   PRINT_MACHINE_STATUS_NO_USB_DISK_EN,
   PRINT_MACHINE_STATUS_UNKNOW_ERROR_EN,
@@ -71,7 +80,8 @@ enum machine_status_type : uint8_t {
   PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_EN,
   LASER_MACHINE_STATUS_FOCUS_CONFIRM_EN,
   LASER_MACHINE_STATUS_FOCUS_FINISHED_EN,
-  LASER_MACHINE_STATUS_ENGRAVE_FINISHED_EN,  // = 29
+  LASER_MACHINE_STATUS_ENGRAVE_FINISHED_EN,
+  LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_EN, // = 31
 
   PRINT_MACHINE_STATUS_PREPARE_PRINT_CH,
   PRINT_MACHINE_STATUS_FIRMWARE_UPDATE_CH,
@@ -94,7 +104,7 @@ enum machine_status_type : uint8_t {
   PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD,
 };
 
-#define MACHINE_STATUS_NUM            29
+#define MACHINE_STATUS_NUM            31
 #define MACHINE_STATUS_PREPARE_NUM    15
 
 enum lcd_cmd_type : unsigned char {
@@ -224,12 +234,14 @@ typedef struct
 #define PRINT_XYZ_MOVE_PAGE_CH                      21
 #define PRINT_LANGUAGE_SET_PAGE_CH                  23
 #define SET_LANGUAGE_CONFIRM_PAGE_CH                25
-#define MACHINE_INFO_PAGE_CH                        27
+#define PRINT_INFO_PAGE_CH                          27
 #define EXCEPTION_NO_HEAD_PAGE_CH                   28
 #define PRINT_PREPARE_HEAT_PAGE                     36
 #define EXCEPTION_SURE_HINT_PAGE_CH                 38
-#define EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_CH       40
+#define PRINT_CONFIRM_CANCEL_HINT_PAGE_CH           40
 #define EXCEPTION_COMPLETE_HINT_PAGE_CH             41
+#define HOST_COMPUTER_PRINT_PAGE_CH                 43
+#define PRINT_UNLOAD_FIILMENT_PAGE_CH               44
 
 //print page english
 #define PRINT_HOME_PAGE_EN                          60
@@ -242,11 +254,12 @@ typedef struct
 #define PRINT_XYZ_MOVE_PAGE_EN                      60
 #define PRINT_LANGUAGE_SET_PAGE_EN                  60
 #define SET_LANGUAGE_CONFIRM_PAGE_EN                60
-#define MACHINE_INFO_PAGE_EN                        27
+#define PRINT_INFO_PAGE_EN                          27
 #define EXCEPTION_NO_HEAD_PAGE_EN                   60
 #define EXCEPTION_SURE_HINT_PAGE_EN                 60
-#define EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN       60
+#define PRINT_CONFIRM_CANCEL_HINT_PAGE_EN           60
 #define EXCEPTION_COMPLETE_HINT_PAGE_EN             60
+#define HOST_COMPUTER_PRINT_PAGE_EN                 60
 
 //laser page chinese
 #define LASER_HOME_PAGE_CH                          46
@@ -265,6 +278,8 @@ typedef struct
 #define LASER_PREPARE_PAGE_CH                       61
 #define LASER_EXCEPTION_SURE_PAGE_CH                62
 #define LASER_EXCEPTION_SURE_RETURN_PAGE_CH         63
+#define LASER_INFO_PAGE_CH                          64
+#define LASER_CONFIRM_CANCEL_HINT_PAGE_CH           40
 
 //laser page english
 #define LASER_HOME_PAGE_EN                          46
@@ -279,6 +294,8 @@ typedef struct
 #define LASER_PREPARE_PAGE_EN                       61
 #define LASER_EXCEPTION_SURE_PAGE_EN                62
 #define LASER_EXCEPTION_SURE_RETURN_PAGE_EN         63
+#define LASER_INFO_PAGE_EN                          64
+#define LASER_CONFIRM_CANCEL_HINT_PAGE_EN           40
 
 //print icon_addr
 #define PRINT_STATUS_BAR_USB_ICON_ADDR              0X1000
@@ -288,12 +305,13 @@ typedef struct
 #define PRINT_MACHINE_STATUS_ICON_ADDR              0X1009
 #define PRINT_PREPARE_PROGRESS_ICON_ADDR            0X100A
 #define PRINT_PREPARE_TEXT_ICON_ADDR                0X100B
+#define PRINT_HOST_PRINT_ICON_ADDR                  0X100C
 
 //print text addr
 #define PRINT_TEMP_HOTEND_ADDR                      0X1040
 #define PRINT_TEMP_BED_ADDR                         0X1044
 #define PRINT_FILE_TEXT_BASE_ADDR                   0X1050  //list_box and print file name
-#define PRINT_FILE_PRINT_TEXT_ADDR                  (PRINT_FILE_TEXT_BASE_ADDR + FILE_TEXT_LEN*PAGE_FILE_NUM)
+#define PRINT_FILE_PRINT_TEXT_ADDR                  0X1083  //(PRINT_FILE_TEXT_BASE_ADDR + FILE_NAME_LEN*PAGE_FILE_NUM)
 #define PRINT_FILE_PAGE_NUM_ADDR                    0X1170
 #define PRINT_FILE_PRINT_TIME_ADDR                  0X1174
 #define PRINT_PREPARE_PERCENTAGE_ADDR               0X1179

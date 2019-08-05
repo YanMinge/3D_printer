@@ -45,6 +45,13 @@
 #include "dwin.h"
 #include "lcd_file.h"
 
+typedef struct{
+  float upper_left_x_position;
+  float upper_left_y_position;
+  float buttom_right_x_position;
+  float buttom_right_y_position;
+}laser_fram_xy_position_t;
+
 class lcd_process
 {
 public:
@@ -75,8 +82,7 @@ public:
   void send_file_list_page_num(int current_page, int page_num);
   void get_file_info(void);
 
-  void temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt);
-
+  void temperature_progress_update(unsigned int percentage);
   inline bool is_have_command(){ return is_lcd_command;}
   inline void reset_command(){ is_lcd_command = false;}
   inline void reset_command_type(){ lcd_command_type = CMD_NULL;}
@@ -101,12 +107,11 @@ public:
   void set_limage_set_status(bool status){ image_status.limage_set_status = status;}
   void simage_send_start(){ image_status.simage_status = true;image_status.simage_set_status = true;}
   void limage_send_start(){ image_status.limage_status = true;image_status.limage_set_status = true;}
-  void simage_send_end(){ image_status.simage_status = false;image_status.simage_set_status = false;}
+  void simage_send_end(){ image_status.simage_status = false;image_status.simage_set_status = false;image_status.simage_send_status = false;}
   void limage_send_end(){ image_status.limage_status = false;image_status.limage_set_status = false;}
   void set_select_file_num(uint8_t index){ file_info.select_file_num = index;}
   void reset_image_parameters(void);
-  void reset_usb_pull_out_parameters(void);
-  void image_send_delay(void);
+  void reset_image_send_parameters(void);
   void send_print_time(uint32_t time);
 
   language_type get_language_type(void);
@@ -118,6 +123,8 @@ public:
   inline void delete_current_file(void){ delete (current_file);}
   inline void malloc_current_file(void){    current_file =(pfile_list_t) new char[sizeof(file_list_t)];
     memset(current_file,0,sizeof(file_list_t));}
+  inline void set_computer_print_status(bool status){computer_print_status = status;}
+  inline bool is_computer_print(void){return computer_print_status == true;}
 
   //show_page.cpp
   void show_start_up_page(void);
@@ -127,6 +134,7 @@ public:
   void send_first_page_data(void);
   void send_next_page_data(void);
   void send_last_page_data(void);
+  void send_given_page_data(void);
   void show_print_set_page(void);
   void show_laser_set_page(void);
   void show_machine_set_page(void);
@@ -142,9 +150,11 @@ public:
   void show_laser_prepare_focus_page(void);
   void process_lcd_subcommands_now(PGM_P pgcode);
   void laser_walking_frame(void);
+  void laser_before_print_move(void);
   bool lcd_subcommand_status;
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
-
+  laser_fram_xy_position_t laser_fram_xy_position;
+  uint16_t pre_percentage;
 private:
   bool is_lcd_command; /*whether receive a lcd command*/
   lcd_cmd_type lcd_command_type; /*the type of the lcd command*/
@@ -167,6 +177,8 @@ private:
   //languge
   language_type ui_language;
   machine_status_type machine_status;
+
+  bool computer_print_status;
 };
 
 extern lcd_process dwin_process;

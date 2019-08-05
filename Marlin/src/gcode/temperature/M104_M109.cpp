@@ -37,6 +37,7 @@
 
 #if ENABLED(NEWPANEL)
   #include "filament_ui.h"
+  #include "lcd_process.h"
 #endif
 
 /**
@@ -76,6 +77,18 @@ void GcodeSuite::M104() {
       if (temp <= (EXTRUDE_MINTEMP) / 2) {
         print_job_timer.stop();
         ui.reset_status();
+        if(dwin_process.is_computer_print())
+        {
+          dwin_process.show_start_up_page();
+          dwin_process.set_computer_print_status(false);
+        }
+      }
+      else
+      {
+        if(dwin_process.is_computer_print())
+        {
+          dwin_process.change_lcd_page(HOST_COMPUTER_PRINT_PAGE_EN, HOST_COMPUTER_PRINT_PAGE_CH);
+        }
       }
     #endif
   }
@@ -124,9 +137,17 @@ void GcodeSuite::M109() {
       if (parser.value_celsius() <= (EXTRUDE_MINTEMP) / 2) {
         print_job_timer.stop();
         ui.reset_status();
+        if(dwin_process.is_computer_print())
+        {
+          dwin_process.show_start_up_page();
+          dwin_process.set_computer_print_status(false);
+        }
       }
       else
+      {
+        if(dwin_process.is_computer_print())dwin_process.change_lcd_page(HOST_COMPUTER_PRINT_PAGE_EN, HOST_COMPUTER_PRINT_PAGE_CH);
         print_job_timer.start();
+      }
     #endif
 
     #if EITHER(ULTRA_LCD, EXTENSIBLE_UI)

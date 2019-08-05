@@ -99,6 +99,34 @@ public:
   inline print_status get_current_status(){ return current_status;}
   inline int get_current_index(){ return (current_page - 1)*PAGE_FILE_NUM;}
 
+  void directory_stack_init(void)
+  {
+    memset(&page_directory, 0, sizeof(page_directory));
+    page_directory.top = -1;
+  }
+  bool directory_stack_is_full(void)
+  {
+    if(page_directory.top == FILE_DIRECTORY_DEPTH - 1) return true;
+    else return false;
+  }
+  bool directory_stack_is_empty(void)
+  {
+    if(page_directory.top ==  - 1) return true;
+    else return false;
+  }
+  void directory_stack_push(void)
+  {
+    if(directory_stack_is_full()) return;
+    page_directory.top ++;
+    page_directory.page_num[page_directory.top] = current_page;
+  }
+  void directory_stack_pop(void)
+  {
+    if(directory_stack_is_empty()) return;
+    current_page = page_directory.page_num[page_directory.top];
+    page_directory.top --;
+  }
+
 private:
   char sort;
   int file_page_num; /* number of page that show in lcd*/
@@ -110,6 +138,8 @@ private:
   print_status current_status;
 
   pfile_list_t file_list; /*file linklist object*/
+
+  file_directory_stack_t page_directory;
 };
 
 extern lcd_file LcdFile;

@@ -75,6 +75,7 @@
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
+#include "machine_info.h"
 
 #if ENABLED(POWER_LOSS_RECOVERY)
 #include "../../feature/power_loss_recovery.h"
@@ -105,6 +106,7 @@ udisk_reader::udisk_reader(void)
   is_file_opened = false;
   opened_file_name = NULL;
   opened_file_type = TYPE_NULL;
+  memset(current_file_path, 0, sizeof(current_file_path));
 }
 
 void udisk_reader::init(void)
@@ -145,22 +147,17 @@ void udisk_reader::usb_status_polling(void)
   bool usb_status = is_usb_connected();
   if(usb_status != pre_usb_status)
   {
+    dwin_parser.set_file_read_status(false);
     if(usb_status == false)
     {
       f_unmount("/");
       set_disk_status(STA_NOINIT);
       detected = false;
-			
-      LcdFile.file_list_clear();
-      dwin_parser.refresh_current_path();
-      dwin_parser.set_file_read_status(false);
-      dwin_process.reset_usb_pull_out_parameters();
     }
     else
     {
       f_mount(&fatFS, "/" , 0);     /* Register volume work area (never fails) */
       detected = true;
-      dwin_parser.set_file_read_status(false);
     }
     pre_usb_status = usb_status;
   }
@@ -198,6 +195,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
   FRESULT rc = FR_OK;   /* Result code */
   DIR dir;        /* Directory object */
   FILINFO fno;    /* File information object */
+  uint8_t dir_depth = 0;
   pfile_list_t file_list_data;
   char lsdata[100];
   rc = f_opendir(&dir, path);
@@ -207,7 +205,6 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     DEBUGPRINTF("can't open dir(%s)\r\n", path);
     if(!is_usb_detected())
     {
-      dwin_process.show_usb_pull_out_page();
       return USB_NOT_DETECTED;
     }
     DEBUGPRINTF("f_opendir error(%d)\r\n", rc);
@@ -216,6 +213,9 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
   {
     file_count = 0;
     memset(file_list_array, 0, sizeof(file_list_array));
+    memset(current_file_path, 0, sizeof(current_file_path));
+    strcpy(current_file_path, path);
+    dir_depth = get_directory_depth(current_file_path);
     for(;; )
     {
       /* Read a directory item */
@@ -234,7 +234,8 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
         file_list_array[file_count].fsize = fno.fsize;
         if(fno.fattrib & AM_DIR)
         {
-          file_list_array[file_count].ftype = TYPE_FOLDER;
+          if(dir_depth > 5) continue;
+          else file_list_array[file_count].ftype = TYPE_FOLDER;
         }
         else
         {
@@ -252,8 +253,9 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
         }
         else
         {
-          memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1);
-          file_list_array[file_count].fname[FILE_NAME_LEN - 1] = '\0';
+          //memcpy(file_list_array[file_count].fname, fno.fname, FILE_NAME_LEN -1);
+          //file_list_array[file_count].fname[FILE_NAME_LEN - 1] = '\0';
+          continue;
         }
       }
       file_count++;
@@ -261,7 +263,6 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
     if (rc)
     {
       DEBUGPRINTF("f_readdir error(%d)\r\n", rc);
-      dwin_process.show_usb_pull_out_page();
       return rc;
     }
     if(is_action == LS_SERIAL_PRINT)
@@ -331,6 +332,17 @@ void udisk_reader::open_file(char * const path, const bool read)
 {
   FRESULT rc;
   uint8_t doing = 0;
+  memset(abs_file_name, 0, sizeof(abs_file_name));
+  if(strcmp(current_file_path, "/") == 0)
+  {
+    strcpy(abs_file_name, path);
+  }
+  else
+  {
+    strcat(abs_file_name,current_file_path);
+    strcat(abs_file_name,"/");
+    strcat(abs_file_name,path);
+  }
   if (!is_usb_detected())
   {
     return;
@@ -359,7 +371,7 @@ void udisk_reader::open_file(char * const path, const bool read)
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM("Now ");
     serialprintPGM(doing == 1 ? PSTR("doing") : PSTR("fresh"));
-    SERIAL_ECHOLNPAIR(" file: ", path);
+    SERIAL_ECHOLNPAIR(" file: ", abs_file_name);
   }
   else
   {
@@ -370,15 +382,15 @@ void udisk_reader::open_file(char * const path, const bool read)
 
   if(read)
   {
-    rc = f_open(&file_obj, path, FA_READ);
+    rc = f_open(&file_obj, abs_file_name, FA_READ);
     if (rc)
     {
-      DEBUGPRINTF("Unable to open file: %s from USB Disk\r\n", path);
+      DEBUGPRINTF("Unable to open file: %s from USB Disk\r\n", abs_file_name);
       return;
     }
     else
     {
-      if(strlen(path) <= FILE_NAME_LEN * 4)
+      if(strlen(abs_file_name) <= FILE_NAME_LEN * 4)
       {
         opened_file_name = new char[strlen(path)];
         strcpy(opened_file_name, path);
@@ -494,9 +506,18 @@ void udisk_reader::printing_has_finished()
   }
 
 #if ENABLED(NEWPANEL)
-  dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
-  dwin_process.show_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
-  dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+  if(IS_HEAD_PRINT())
+  {
+    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
+    dwin_process.show_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
+    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+  }
+  else if(IS_HEAD_LASER())
+  {
+    dwin_process.set_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
+    dwin_process.show_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
+    dwin_process.change_lcd_page(LASER_EXCEPTION_SURE_PAGE_EN, LASER_EXCEPTION_SURE_PAGE_CH);
+  }
 #endif
 }
 
@@ -814,6 +835,64 @@ void udisk_reader::remove_job_recovery_file(void)
   }
 }
 #endif // POWER_LOSS_RECOVERY
+
+bool udisk_reader::get_fram_xy_position(char * const path)
+{
+  float laser_postion;
+  if (!is_usb_detected())
+  {
+    return false;
+  }
+  if(!is_gm_file_type(path))
+  {
+    return false;
+  }
+  set_index(LASER_FRAM_POSITION_INDEX);
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  laser_postion = val4byte.intVal;
+  dwin_process.laser_fram_xy_position.upper_left_x_position = laser_postion;
+  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  laser_postion = val4byte.intVal;
+  dwin_process.laser_fram_xy_position.upper_left_y_position = laser_postion;
+  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  laser_postion = val4byte.intVal;
+  dwin_process.laser_fram_xy_position.buttom_right_x_position = laser_postion;
+  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+
+  val4byte.byteVal[0] = get();
+  val4byte.byteVal[1] = get();
+  val4byte.byteVal[2] = get();
+  val4byte.byteVal[3] = get();
+  laser_postion = val4byte.intVal;
+  dwin_process.laser_fram_xy_position.buttom_right_y_position = laser_postion;
+  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+  return true;
+}
+
+uint8_t udisk_reader::get_directory_depth(char *dir_path)
+{
+  uint8_t depth = 0;
+  while(*dir_path != '\0')
+  {
+    if(*dir_path == '/')
+      depth ++;
+    dir_path ++;
+  }
+  return depth;
+}
 
 #endif // USB_DISK_SUPPORT
 #endif // TARGET_LPC1768

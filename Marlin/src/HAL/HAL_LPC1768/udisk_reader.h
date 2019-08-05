@@ -91,9 +91,10 @@ enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 #define PRINT_DIST_INDEX             40
 #define PRINT_TIME_INDEX             44
 #define PRINT_MATERIAL_INDEX         48
+#define LASER_FRAM_POSITION_INDEX    52
 
 typedef struct
-{ 
+{
   uint32_t ftime;
   uint32_t fsize;
   file_type_t ftype;
@@ -149,6 +150,8 @@ public:
   void open_job_recovery_file(const bool read);
   void remove_job_recovery_file(void);
 #endif
+  bool get_fram_xy_position(char * const path);
+  uint8_t get_directory_depth(char *dir_path);
 private:
   //Variable definitions
   FATFS fatFS; /* File system object */
@@ -170,6 +173,9 @@ private:
   FIL file_obj;
   char *opened_file_name;
   file_info_t file_list_array[MAX_ELEMENT_FOR_FILES_LIST];
+
+  char current_file_path[FILE_DIRECTORY_DEPTH*FILE_NAME_LEN];
+  char abs_file_name[(FILE_DIRECTORY_DEPTH + 1)*FILE_NAME_LEN];
 };
 
 #define IS_UDISK_PRINTING() udisk.get_udisk_printing_flag()

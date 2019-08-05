@@ -76,17 +76,19 @@ public:
 
   inline int get_current_page_index(void){ return current_page_index;}
   inline void set_file_read_status(bool status){ file_read_status = status;}
+  inline void set_file_list_open_status(bool status){ file_list_open_status = status;}
+  inline bool get_file_list_open_status(void){ return file_list_open_status;}
 
   void refresh_current_path(void);
-  int laser_focus;
+  char * current_path;
+  float laser_focus;
 private:
   lcd_cmd_type type;
   unsigned short receive_data;
-  unsigned long receive_addr;
-
-  char * current_path;
+  unsigned short receive_addr;
 
   bool file_read_status;
+  bool file_list_open_status;
   int current_page_index;
 
 };

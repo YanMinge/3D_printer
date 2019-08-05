@@ -1239,7 +1239,7 @@ void do_homing_move(const AxisEnum axis, const float distance, const float fr_mm
       if (axis == Z_AXIS) probing_pause(false);
     #endif
 
-    endstops.validate_homing_move();
+    //endstops.validate_homing_move();
 
     // Re-enable stealthChop if used. Disable diag1 pin on driver.
     #if ENABLED(SENSORLESS_HOMING)

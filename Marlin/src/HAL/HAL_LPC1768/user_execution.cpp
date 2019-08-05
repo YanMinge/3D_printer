@@ -61,6 +61,7 @@
 #include "../../Marlin.h"
 #include "../../module/motion.h"
 #include "../../module/planner.h"
+#include "lcd_process.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -91,21 +92,21 @@ void user_execution::cmd_g1(float x, float y, float z, float e)
 void user_execution::cmd_g1_x(float x)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F3000 X%4.1f"), 2*x);
+  sprintf_P(cmd, PSTR("G1 F3000 X%4.1f"), 2*x);
   enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g1_y(float y)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F3000 Y%4.1f"), 2*y);
+  sprintf_P(cmd, PSTR("G1 F3000 Y%4.1f"), 2*y);
   enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g1_z(float z)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F300 Z%4.1f"), 2*z);
+  sprintf_P(cmd, PSTR("G1 F600 Z%4.1f"), 2*z);
   enqueue_and_echo_command(cmd);
 }
 
@@ -135,6 +136,7 @@ void user_execution::user_hardware_stop(void)
 void user_execution::cmd_M109(uint16_t temperature)
 {
   char cmd[32];
+  dwin_process.pre_percentage = 0;
   sprintf_P(cmd, PSTR("M109 S%d"),temperature);
   enqueue_and_echo_command(cmd);
 }
@@ -142,18 +144,20 @@ void user_execution::cmd_M109(uint16_t temperature)
 void user_execution::cmd_M109_M701(void)
 {
   //enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nG38.2 F480 Z400\nM701"));
-  enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nM701"));
+  dwin_process.pre_percentage = 0;
+  enqueue_and_echo_commands_P(PSTR("M106 S150\nM109 S210\nM701"));
 }
 
 void user_execution::cmd_M109_M702(void)
 {
-  enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nM702"));
+  dwin_process.pre_percentage = 0;
+  enqueue_and_echo_commands_P(PSTR("M106 S120\nM109 S210\nM702"));
 }
 
 void user_execution::cmd_M2023(char *file_name)
 {
-  char cmd[32];
-  sprintf_P(cmd, PSTR("M2023 /%s"), file_name);
+  char cmd[50];
+  sprintf_P(cmd, PSTR("M2023 %s"), file_name);
   enqueue_and_echo_command(cmd);
 }
 

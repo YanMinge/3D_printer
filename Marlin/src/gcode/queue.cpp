@@ -685,6 +685,11 @@ inline void get_serial_commands() {
           last_command_time = ms;
         #endif
 
+#if ENABLED(USE_DWIN_LCD)
+        if ((strstr_P(command, "M104") != NULL) || (strstr_P(command, "M109") != NULL))
+          dwin_process.set_computer_print_status(true);
+#endif
+
         // Add the command to the queue
         _enqueuecommand(serial_line_buffer[i], true
           #if NUM_SERIAL > 1
@@ -840,7 +845,7 @@ inline void get_udisk_commands(void) {
 
   uint16_t udsik_count = 0;
   bool udisk_eof = udisk.eof();
-  
+
   while (commands_in_queue < BUFSIZE && !udisk_eof && !stop_buffering) {
     const int16_t n = udisk.get();
     char udsik_char = (char)n;
@@ -880,7 +885,7 @@ inline void get_udisk_commands(void) {
       if (!udsik_count) { thermalManager.manage_heater(); continue;}
 
       command_queue[cmd_queue_index_w][udsik_count] = '\0'; // terminate string
-      udsik_count = 0; // clear udisk line buffe 
+      udsik_count = 0; // clear udisk line buffe
       _commit_command(false);
     }
     else if (udsik_count >= MAX_CMD_SIZE - 1) {

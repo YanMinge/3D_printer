@@ -99,6 +99,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
   #include "lcd_process.h"
+  #include "lcd_parser.h"
 #endif
 
 #if ENABLED(FACTORY_MACHINE_INFO)
@@ -295,6 +296,13 @@ typedef struct SettingsDataStruct {
     toolchange_settings_t toolchange_settings;          // M217 S P R
   #endif
 
+  #if ENABLED(USE_DWIN_LCD)
+  bool buzzer_status;
+  language_type language_current_type;
+  uint8_t uuid[8];
+  uint32_t time;
+  float focus;
+  #endif
 } SettingsData;
 
 MarlinSettings settings;
@@ -1127,6 +1135,13 @@ void MarlinSettings::postprocess() {
       _FIELD_TEST(buzzer_status);
       EEPROM_WRITE(buzzer_status);
     #endif
+
+    #if ENABLED(SPINDLE_LASER_ENABLE)
+      float laser_focus = 0;
+      laser_focus = dwin_parser.laser_focus;
+      _FIELD_TEST(laser_focus);
+      EEPROM_WRITE(laser_focus);
+    #endif
     #endif
 
     //
@@ -1871,6 +1886,14 @@ void MarlinSettings::postprocess() {
         _FIELD_TEST(buzzer_status);
         EEPROM_READ(buzzer_status);
 	    buzzer.set_buzzer_switch(buzzer_status);
+      #endif
+
+      #if ENABLED(SPINDLE_LASER_ENABLE)
+        float laser_focus = 0;
+        laser_focus = dwin_parser.laser_focus;
+        _FIELD_TEST(laser_focus);
+        EEPROM_READ(laser_focus);
+        SERIAL_PRINTF("laser_focus = %f\r\n", laser_focus);
       #endif
       #endif
 

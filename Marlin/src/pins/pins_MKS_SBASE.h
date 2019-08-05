@@ -93,6 +93,7 @@
 #define TEMP_BED_PIN        1   // A1 (TH2)
 #define TEMP_1_PIN          2   // A2 (TH3)
 #define TEMP_2_PIN          3   // A3 (TH4)
+#define TEMP_CHAMBER_PIN    2
 
 //
 // Heaters / Fans

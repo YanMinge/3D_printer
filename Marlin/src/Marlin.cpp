@@ -785,7 +785,6 @@ void idle(
 
 #if ENABLED(USE_DWIN_LCD)
   dwin_parser.lcd_update();
-  dwin_process.lcd_loop();
   MachineInfo.lcd_print_information_update();
   MachineInfo.lcd_material_info_update();
 #endif //USE_DWIN_LCD
@@ -878,6 +877,7 @@ void minkill() {
 void stop() {
   thermalManager.disable_all_heaters(); // 'unpause' taken care of in here
   print_job_timer.stop();
+  quickstop_stepper();
 
   #if ENABLED(PROBING_FANS_OFF)
     if (thermalManager.fans_paused) thermalManager.set_fans_paused(false); // put things back the way they were

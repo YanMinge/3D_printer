@@ -376,7 +376,7 @@
 #define TEMP_SENSOR_4 0
 #define TEMP_SENSOR_5 0
 #define TEMP_SENSOR_BED 11
-#define TEMP_SENSOR_CHAMBER 0
+#define TEMP_SENSOR_CHAMBER 11
 #define CHAMBER_HEATER_PIN -1  // On/off pin for enclosure heating system
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
@@ -694,7 +694,8 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 150, 150, 20, 25 }
+//#define DEFAULT_MAX_FEEDRATE          { 150, 150, 20, 25 }
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 20, 150 }
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -702,7 +703,10 @@
  * Override with M201
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 600, 3000 }
+//#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 600, 3000 }
+#define DEFAULT_MAX_ACCELERATION      { 150, 150, 300, 3000 }
+
+
 
 /**
  * Default Acceleration (change/s) change = mm/s
@@ -868,7 +872,7 @@
 #define Z_PROBE_OFFSET_FROM_EXTRUDER 0     // Z offset: -below +above  [the nozzle]
 
 // Certain types of probes need to stay away from edges
-#define MIN_PROBE_EDGE 10
+#define MIN_PROBE_EDGE 1
 
 // X and Y axis travel speed (mm/m) between probes
 #define XY_PROBE_SPEED 8000
@@ -986,8 +990,8 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 240
-#define Y_BED_SIZE 230
+#define X_BED_SIZE 247
+#define Y_BED_SIZE 220
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
 #define X_MIN_POS 0
@@ -995,7 +999,7 @@
 #define Z_MIN_POS 0
 #define X_MAX_POS X_BED_SIZE
 #define Y_MAX_POS Y_BED_SIZE
-#define Z_MAX_POS 244
+#define Z_MAX_POS 295
 
 /**
  * Software Endstops
@@ -1211,12 +1215,12 @@
  * Override if the automatically selected points are inadequate.
  */
 #if EITHER(AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_UBL)
-  #define PROBE_PT_1_X 35
-  #define PROBE_PT_1_Y 60
-  #define PROBE_PT_2_X 35
-  #define PROBE_PT_2_Y 185
-  #define PROBE_PT_3_X 225
-  #define PROBE_PT_3_Y 120
+  #define PROBE_PT_1_X 16
+  #define PROBE_PT_1_Y 37
+  #define PROBE_PT_2_X 245
+  #define PROBE_PT_2_Y 46
+  #define PROBE_PT_3_X 245
+  #define PROBE_PT_3_Y 180
 #endif
 
 /**
@@ -1277,7 +1281,8 @@
 
 // Homing speeds (mm/m)
 #define HOMING_FEEDRATE_XY (80*60)
-#define HOMING_FEEDRATE_Z  (8*60)
+//#define HOMING_FEEDRATE_Z  (8*60)
+#define HOMING_FEEDRATE_Z  (16*60)
 
 // Validate that endstops are triggered on homing moves
 #define VALIDATE_HOMING_ENDSTOPS

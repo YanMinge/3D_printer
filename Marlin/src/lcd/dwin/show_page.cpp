@@ -122,16 +122,14 @@ inline void lcd_process::send_page(unsigned long addr,int page,int num, unsigned
 
 void lcd_process::send_first_page_data(void)
 {
-  DEBUGPRINTF("fil_page = %d, last_page = %d\r\n",file_info.page_count,file_info.last_page_file);
-
   get_file_info();
   clear_page(PRINT_FILE_TEXT_BASE_ADDR);
-  send_file_list_page_num(file_info.current_page + 1, file_info.page_count);
+  send_file_list_page_num(file_info.current_page + 1, file_info.page_count); //send page num to lcd
 
   if((file_info.page_count > 1) && file_info.current_page == 0)
   {
-    send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,PAGE_FILE_NUM);
-    SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
+    send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,PAGE_FILE_NUM);  //send load icon to lcd
+    SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);  // show first file_list page
   }
   else if((file_info.page_count == 1) && file_info.current_page == 0)
   {
@@ -194,6 +192,46 @@ void lcd_process::send_last_page_data(void)
   LcdFile.set_current_page(file_info.current_page - 1);
   get_file_info();
   send_file_list_page_num(file_info.current_page, file_info.page_count);
+}
+
+void lcd_process::send_given_page_data(void)
+{
+  get_file_info();
+  clear_page(PRINT_FILE_TEXT_BASE_ADDR);
+  send_file_list_page_num(file_info.current_page, file_info.page_count);
+
+  if(1 == file_info.current_page)
+  {
+    if(1 == file_info.page_count)
+    {
+      if(0 == file_info.last_page_file) file_info.last_page_file = PAGE_FILE_NUM;
+      send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page - 1,file_info.last_page_file);
+      SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
+    }
+    else if(file_info.page_count >= 2)
+    {
+      send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page - 1,PAGE_FILE_NUM);
+      SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
+    }
+    else if(file_info.page_count == 0)
+    {
+      SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
+    }
+  }
+
+  else if(file_info.current_page >= 2)
+  {
+    if(file_info.current_page == file_info.page_count)
+    {
+      send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page - 1,file_info.last_page_file);
+      SEND_PAGE(PRINT, _FILE_LIST_END_PAGE, PAGE_BASE, LASER);
+    }
+    else if(file_info.current_page < file_info.page_count)
+    {
+      send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page - 1, PAGE_FILE_NUM);
+      SEND_PAGE(PRINT, _FILE_LIST_MIDDLE_PAGE, PAGE_BASE, LASER);
+    }
+  }
 }
 
 void lcd_process::show_print_set_page(void)
@@ -269,7 +307,10 @@ void lcd_process::show_machine_status(uint8_t ch_type)
 
   if(LAN_CHINESE == ui_language)
   {
-    lcd_send_data(ch_type,PRINT_MACHINE_STATUS_ICON_ADDR);
+    if(ch_type <= MACHINE_STATUS_NUM)
+      lcd_send_data(ch_type,PRINT_MACHINE_STATUS_ICON_ADDR);
+    else
+      lcd_send_data(ch_type - MACHINE_STATUS_NUM,PRINT_PREPARE_TEXT_ICON_ADDR);
   }
   else if(LAN_ENGLISH == ui_language)
   {
@@ -287,21 +328,30 @@ void lcd_process::show_machine_continue_print_page(void)
   {
     return;
   }
-  change_lcd_page(EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_EN,EXCEPTION_CONFIRM_CANCEL_HINT_PAGE_CH);
+  change_lcd_page(PRINT_CONFIRM_CANCEL_HINT_PAGE_EN,PRINT_CONFIRM_CANCEL_HINT_PAGE_CH);
   machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
 }
 
 void lcd_process::show_machine_recovery_print_page(void)
 {
-  dwin_process.image_send_delay();
-  dwin_process.reset_image_parameters();
-  dwin_process.simage_send_end();
+  dwin_process.reset_image_send_parameters();
   LcdFile.set_current_status(out_printing);
 
 #if ENABLED(POWER_LOSS_RECOVERY)
   if(udisk.job_recover_file_exists())
   {
     malloc_current_file();
+    int16_t value = udisk.ls(LS_GET_FILE_NAME, dwin_parser.current_path, ".gcode");
+    if(USB_NOT_DETECTED == value || value)
+    {
+      dwin_process.show_usb_pull_out_page();
+      return;
+    }
+    dwin_parser.set_file_read_status(true);
+    dwin_parser.set_file_list_open_status(true);
+    LcdFile.set_file_page_info();
+    LcdFile.set_current_page(1);
+
     strcpy(current_file->file_name,recovery.info.udisk_filename);
     if(udisk.check_gm_file(current_file->file_name))
     {
@@ -349,11 +399,11 @@ void lcd_process::show_start_print_file_page(pfile_list_t temp)
 {
   if( TYPE_DEFAULT_FILE == temp->file_type)
   {
-    change_lcd_page(PRINT_FILE_PRINT_NOSTANDARD_START_PAGE_EN,PRINT_FILE_PRINT_NOSTANDARD_START_PAGE_CH);
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_START_PAGE_, EN, CH)
   }
   else
   {
-    change_lcd_page(PRINT_FILE_PRINT_STANDARD_START_PAGE_EN,PRINT_FILE_PRINT_STANDARD_START_PAGE_CH);
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH)
     lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
 }
@@ -366,12 +416,10 @@ void lcd_process::show_stop_print_file_page(pfile_list_t temp)
   }
   if( TYPE_DEFAULT_FILE == temp->file_type)
   {
-    //change_lcd_page(PRINT_FILE_PRINT_NOSTANDARD_STOP_PAGE_EN,PRINT_FILE_PRINT_NOSTANDARD_STOP_PAGE_CH);
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_STOP_PAGE_, EN, CH)
   }
   else
   {
-    //change_lcd_page(PRINT_FILE_PRINT_STANDARD_STOP_PAGE_EN,PRINT_FILE_PRINT_STANDARD_STOP_PAGE_CH);
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_STOP_PAGE_, EN, CH)
     lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
@@ -379,10 +427,11 @@ void lcd_process::show_stop_print_file_page(pfile_list_t temp)
 
 void lcd_process::show_usb_pull_out_page(void)
 {
+  dwin_parser.set_file_list_open_status(false);
   dwin_parser.refresh_current_path();
-  dwin_parser.set_file_read_status(false);
+  LcdFile.directory_stack_init();
 
-  reset_usb_pull_out_parameters();
+  reset_image_send_parameters();
   show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
   set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
   change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
@@ -396,44 +445,109 @@ void lcd_process::process_lcd_subcommands_now(PGM_P pgcode)
     gcode.process_subcommands_now_P(pgcode);
   }
 }
+
 void lcd_process::show_laser_prepare_focus_page(void)
 {
   char cmd[40];
   lcd_subcommand_status = true;
-  show_machine_status_page(machine_status_type(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH - MACHINE_STATUS_NUM),\
-                 LASER_PREPARE_PAGE_EN,LASER_PREPARE_PAGE_CH);
+  show_machine_status_page(machine_status_type(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH),LASER_PREPARE_PAGE_EN,LASER_PREPARE_PAGE_CH);
   machine_status = LASER_MACHINE_STATUS_PREPARE_FOCUS_CH;
 
-  process_lcd_subcommands_now(PSTR("G28\nG1 F3000 X32 Y55"));
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus - 0.2);
+  sprintf_P(cmd, PSTR("G38.2 Z%f F900"), current_position[Z_AXIS] + 20);
+  process_lcd_subcommands_now(cmd);
+  if (!TEST(axis_known_position, X_AXIS) || !TEST(axis_known_position, Y_AXIS))
+  {
+    process_lcd_subcommands_now(PSTR("G28 X Y"));
+  }
+  process_lcd_subcommands_now(PSTR("G1 X120 Y100 F3000"));
+  SERIAL_PRINTF("current_position = %f\r\n", current_position[Z_AXIS]);
+  process_lcd_subcommands_now(PSTR("G38.2 Z-20 F900"));
+  SERIAL_PRINTF("current_position = %f\r\n", current_position[Z_AXIS]);
+  process_lcd_subcommands_now(PSTR("G92 Z0"));
+  SERIAL_PRINTF("current_position = %f\r\n", current_position[Z_AXIS]);
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus - 2);
   process_lcd_subcommands_now(cmd);
   process_lcd_subcommands_now(PSTR("M114"));
 
   //line1 and num1
   process_lcd_subcommands_now(PSTR("G1 X80 Y150 F3000"));
-  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
   process_lcd_subcommands_now(PSTR("G1 X80 Y130"));
-  process_lcd_subcommands_now(PSTR("M107 P2"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
 
   process_lcd_subcommands_now(PSTR("G1 X80 Y100"));
-  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
   process_lcd_subcommands_now(PSTR("G1 X80 Y80"));
-  process_lcd_subcommands_now(PSTR("M107 P2"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
 
   //line2 and num2
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus - 0.2);
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus - 1);
   process_lcd_subcommands_now(cmd);
   process_lcd_subcommands_now(PSTR("G1 X95 Y150 F3000"));
-  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
   process_lcd_subcommands_now(PSTR("G1 X95 Y130 F3000"));
-  process_lcd_subcommands_now(PSTR("M107 P2"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
 
   process_lcd_subcommands_now(PSTR("G1 X90 Y100"));
-  process_lcd_subcommands_now(PSTR("M106 P2 S200"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
   process_lcd_subcommands_now(PSTR("G1 X100 Y100"));
   process_lcd_subcommands_now(PSTR("G1 X90 Y80"));
   process_lcd_subcommands_now(PSTR("G1 X100 Y80"));
-  process_lcd_subcommands_now(PSTR("M107 P2"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+
+  //line3 and num3
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now(PSTR("G1 X110 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X110 Y130 F3000"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+
+  process_lcd_subcommands_now(PSTR("G1 X105 Y100"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X115 Y100"));
+  process_lcd_subcommands_now(PSTR("G1 X115 Y80"));
+  process_lcd_subcommands_now(PSTR("G1 X105 Y80"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+  process_lcd_subcommands_now(PSTR("G1 X105 Y90"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X115 Y90"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+
+  //line4 and num4
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus + 1);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now(PSTR("G1 X125 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X125 Y130 F3000"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+
+  process_lcd_subcommands_now(PSTR("G1 X120 Y100"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X120 Y93"));
+  process_lcd_subcommands_now(PSTR("G1 X130 Y93"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+  process_lcd_subcommands_now(PSTR("G1 X125 Y100"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X125 Y80"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+
+  //line5 and num5
+  sprintf_P(cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus + 2);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now(PSTR("G1 X140 Y150 F3000"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X140 Y130 F3000"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
+
+  process_lcd_subcommands_now(PSTR("G1 X150 Y100"));
+  process_lcd_subcommands_now(PSTR("M3 F100 S1000"));
+  process_lcd_subcommands_now(PSTR("G1 X140 Y100"));
+  process_lcd_subcommands_now(PSTR("G1 X140 Y90"));
+  process_lcd_subcommands_now(PSTR("G1 X150 Y90"));
+  process_lcd_subcommands_now(PSTR("G1 X150 Y80"));
+  process_lcd_subcommands_now(PSTR("G1 X140 Y80"));
+  process_lcd_subcommands_now(PSTR("M3 S0"));
 
   if(lcd_subcommand_status)
   {
@@ -449,13 +563,54 @@ void lcd_process::show_laser_prepare_focus_page(void)
 
 void lcd_process::laser_walking_frame(void)
 {
-  process_lcd_subcommands_now(PSTR("G28 X Y"));
+  char cmd[42];
+  lcd_subcommand_status = true;
+  sprintf_P(cmd, PSTR("G38.2 Z%f F900"), current_position[Z_AXIS] + 10);
+  process_lcd_subcommands_now(cmd);
+  if (!TEST(axis_known_position, X_AXIS) || !TEST(axis_known_position, Y_AXIS))
+  {
+    process_lcd_subcommands_now(PSTR("G28 X Y"));
+  }
+  sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_fram_xy_position.upper_left_x_position,laser_fram_xy_position.buttom_right_y_position);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now("M3 F1000 S2");
+  sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_fram_xy_position.upper_left_x_position,laser_fram_xy_position.upper_left_y_position);
+  process_lcd_subcommands_now(cmd);
+  sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_fram_xy_position.buttom_right_x_position,laser_fram_xy_position.upper_left_y_position);
+  process_lcd_subcommands_now(cmd);
+  sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_fram_xy_position.buttom_right_x_position,laser_fram_xy_position.upper_left_y_position);
+  process_lcd_subcommands_now(cmd);
+  sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_fram_xy_position.buttom_right_x_position,laser_fram_xy_position.buttom_right_y_position);
+  process_lcd_subcommands_now(cmd);
+  sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_fram_xy_position.upper_left_x_position,laser_fram_xy_position.buttom_right_y_position);
+  process_lcd_subcommands_now(cmd);
+  process_lcd_subcommands_now("M3 F0 S0");
+}
 
-  process_lcd_subcommands_now(PSTR("G1 X40 Y90 F3000"));
-  process_lcd_subcommands_now(PSTR("G1 X40 Y150 F3000"));
-  process_lcd_subcommands_now(PSTR("G1 X100 Y150 F3000"));
-  process_lcd_subcommands_now(PSTR("G1 X100 Y90 F3000"));
-  process_lcd_subcommands_now(PSTR("G1 X40 Y90 F3000"));
+void lcd_process::laser_before_print_move(void)
+{
+  char home_cmd[42];
+  lcd_subcommand_status = true;
+  float center_x;
+  float center_y;
+  center_x = (laser_fram_xy_position.buttom_right_x_position + laser_fram_xy_position.upper_left_x_position)/2;
+  center_y = (laser_fram_xy_position.upper_left_y_position + laser_fram_xy_position.buttom_right_y_position)/2;
+  sprintf_P(home_cmd, PSTR("G38.2 Z%f F900"), current_position[Z_AXIS] + 10);
+  process_lcd_subcommands_now(home_cmd);
+
+  if (!TEST(axis_known_position, X_AXIS) || !TEST(axis_known_position, Y_AXIS))
+  {
+    process_lcd_subcommands_now(PSTR("G28 X Y"));
+  }
+
+  sprintf_P(home_cmd, PSTR("G1 X%f Y%f F3000"), center_x, center_y);
+  process_lcd_subcommands_now(home_cmd);
+  process_lcd_subcommands_now(PSTR("G38.2 Z-20 F900"));
+  process_lcd_subcommands_now("G92 Z0 F900");
+
+  sprintf_P(home_cmd, PSTR("G1 Z%f F900"), dwin_parser.laser_focus);
+  process_lcd_subcommands_now(home_cmd);
+  process_lcd_subcommands_now("G1 F3000");
 }
 
 #endif // USB_DISK_SUPPORT

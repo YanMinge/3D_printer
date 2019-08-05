@@ -884,7 +884,7 @@ private:
     static void M2027();
     static void M2524();
   #endif
-  
+
   #if PIN_EXISTS(BEEPER)
     static void M2033();
   #endif
@@ -895,6 +895,9 @@ private:
   #endif
 
   #if ENABLED(USE_DWIN_LCD)
+  #if ENABLED(SPINDLE_LASER_ENABLE)
+    static void M2040();
+  #endif
     static void M2050();
   #endif
 

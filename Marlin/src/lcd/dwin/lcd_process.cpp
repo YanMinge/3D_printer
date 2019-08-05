@@ -42,6 +42,7 @@
 #include "dwin.h"
 #include "lcd_file.h"
 #include "lcd_process.h"
+#include "lcd_parser.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -433,10 +434,9 @@ void lcd_process::send_current_temperature(int tempbed, int temphotend)
   lcd_send_data(str[1],PRINT_TEMP_HOTEND_ADDR);
 }
 
-void lcd_process::temperature_progress_update(unsigned int percentage,int tempbed, int tempbedt, int temphotend, int temphotendt)
+void lcd_process::temperature_progress_update(unsigned int percentage)
 {
   send_temperature_percentage((uint16_t)percentage);
-  send_current_temperature(tempbed,temphotend);
   lcd_send_data(percentage/5 > 19 ? 19 : percentage/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
 }
 
@@ -466,16 +466,14 @@ void lcd_process::set_simage_count(void)
   if(image_status.simage_set_status)
   {
     int file_size;
-
     get_file_info();
     file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.send_file_num+1);
     current_file = LcdFile.file_list_index(file_info.current_index);
-    DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
-
     DEBUGPRINTF("file_name = %s file_type = %d\r\n",current_file->file_name, current_file->file_type);
+
     if(TYPE_FOLDER == current_file->file_type)
     {
-      lcd_send_data(TYPE_FOLDER,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
+      lcd_send_data(TYPE_FOLDER,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num)); //send folder icon to file_list page
     }
     if(TYPE_DEFAULT_FILE == current_file->file_type)
     {
@@ -485,31 +483,31 @@ void lcd_process::set_simage_count(void)
       }
       else
       {
-        lcd_send_data(TYPE_DEFAULT_FILE,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
+        lcd_send_data(TYPE_DEFAULT_FILE,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num)); //send default icon to file_list page
       }
     }
+
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
     {
       image_status.simage_delay_status = false;
-
       file_size = udisk.get_simage_size(current_file->file_name);
       if(-1 == file_size)
       {
-        //usb is not inserted
-
+        show_usb_pull_out_page();
+        return;
       }
       file_info.image_send_count = file_size/SEND_IMAGE_LEN;
       file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
-
+      if(file_info.image_last_count_len > 0) file_info.image_send_count += 1;
       image_status.simage_set_status = false;
       image_status.simage_send_status = true;
-      uint32_t offset = udisk.get_simage_offset(current_file->file_name);
-      udisk.set_index(offset);
-
-      if(file_info.image_last_count_len > 0)
+      int32_t offset = udisk.get_simage_offset(current_file->file_name);  //set the file index for send simage;
+      if(-1 == offset)
       {
-        file_info.image_send_count += 1;
+        show_usb_pull_out_page();
+        return;
       }
+      udisk.set_index(offset);
       DEBUGPRINTF("read image_send_count = %d image_last_count_len = %d\r\n",file_info.image_send_count,file_info.image_last_count_len);
     }
     else
@@ -517,12 +515,7 @@ void lcd_process::set_simage_count(void)
       image_status.simage_set_status = true;
       image_status.simage_send_status = false;
       file_info.send_file_num += 1;
-      if(file_info.send_file_num > 2)
-      {
-        image_status.simage_send_status = false;
-        image_status.simage_set_status = false;
-        image_status.simage_status = false;
-      }
+      if(file_info.send_file_num > 2) simage_send_end();
     }
   }
 }
@@ -536,31 +529,25 @@ void lcd_process::send_simage(void)
     {
       get_image_data(SEND_NUM(file_info.image_last_count_len));
       lcd_send_image(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
-
       lcd_send_data(TYPE_NULL,(PRINT_FILE_SIMAGE_ICON_ADDR + file_info.send_file_num));
       lcd_show_picture(PRINT_SIMAGE_X_POSITION(file_info.send_file_num),PRINT_SIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
-      DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
-      DEBUGPRINTF("send_file_num = %d \r\n",file_info.send_file_num);
 
       image_status.simage_delay_status = true;
-
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;
       file_info.image_last_count_len = 0;
-
       file_info.send_file_num += 1;
       image_status.simage_set_status = true;
       image_status.simage_send_status = false;
 
-      if((file_info.current_page == file_info.page_count) && \
-        (file_info.send_file_num > (file_info.last_page_file - 1)))
+      // if file have send finish
+      if((file_info.current_page == file_info.page_count) && (file_info.send_file_num > (file_info.last_page_file - 1)))
       {
           image_status.simage_status = false;
           image_status.simage_set_status = false;
           file_info.send_file_num = 0;
       }
-      else if((file_info.current_page < file_info.page_count) && \
-             (file_info.send_file_num > (PAGE_FILE_NUM - 1)))
+      else if((file_info.current_page < file_info.page_count) && (file_info.send_file_num > (PAGE_FILE_NUM - 1)))
       {
         image_status.simage_status = false;
         image_status.simage_set_status = false;
@@ -573,7 +560,6 @@ void lcd_process::send_simage(void)
       get_image_data(SEND_IMAGE_LEN);
       lcd_send_image(SEND_IMAGE_LEN,file_info.image_current_send_count);
       file_info.image_current_send_count += 1;
-      DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
   }
 }
@@ -582,7 +568,7 @@ void lcd_process::set_limage_count(void)
 {
   if(image_status.limage_set_status)
   {
-    uint32_t file_size;
+    int32_t file_size;
     if(!udisk.job_recover_file_exists())
     {
       get_file_info();
@@ -594,14 +580,27 @@ void lcd_process::set_limage_count(void)
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
     {
       file_size = udisk.get_limage_size(current_file->file_name);
+      if(-1 == file_size)
+      {
+        show_usb_pull_out_page();
+        return;
+      }
       file_info.image_send_count = file_size/SEND_IMAGE_LEN;
       file_info.image_last_count_len = file_size % SEND_IMAGE_LEN;
-
       image_status.limage_set_status = false;
       image_status.limage_send_status = true;
-      uint32_t offset = udisk.get_limage_offset(current_file->file_name);
+      if(!udisk.get_fram_xy_position(current_file->file_name))
+      {
+        show_usb_pull_out_page();
+        return;
+      }
+      int32_t offset = udisk.get_limage_offset(current_file->file_name);
+      if(-1 == offset)
+      {
+        show_usb_pull_out_page();
+        return;
+      }
       udisk.set_index(offset);
-
       if(file_info.image_last_count_len > 0)
       {
         file_info.image_send_count += 1;
@@ -626,7 +625,6 @@ void lcd_process::send_limage(void)
     {
       get_image_data(SEND_NUM(file_info.image_last_count_len));
       lcd_send_image(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
-
       lcd_send_data(TYPE_NULL,PRINT_FILE_LIMAGE_ICON_ADDR);
       lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
 
@@ -634,7 +632,7 @@ void lcd_process::send_limage(void)
       file_info.image_send_count = 0;
       file_info.image_last_count_len = 0;
       image_status.limage_status = false;
-
+      image_status.simage_delay_status = true;
       DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
     if(file_info.image_current_send_count < file_info.image_send_count -1)
@@ -642,17 +640,7 @@ void lcd_process::send_limage(void)
       get_image_data(SEND_IMAGE_LEN);
       lcd_send_image(SEND_IMAGE_LEN,file_info.image_current_send_count);
       file_info.image_current_send_count += 1;
-      DEBUGPRINTF("read time = %d\r\n", file_info.image_current_send_count);
     }
-  }
-}
-
-void lcd_process::image_send_delay(void)
-{
-  if(image_status.simage_delay_status)
-  {
-    delay(100);
-    DEBUGPRINTF("\r\nimage_send_delay happened\r\n");
   }
 }
 
@@ -679,10 +667,13 @@ void lcd_process::send_temperature_percentage(uint16_t percentage)
 {
   char str[8];
   char str1[4] = {0x25,0xff,0xff,0x0};
-
-  itoa(percentage,str,10);
-  strcat(str,str1);
-  lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
+  if(pre_percentage < percentage)
+  {
+    itoa(percentage,str,10);
+    strcat(str,str1);
+    lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
+    pre_percentage = percentage;
+  }
 }
 
 void lcd_process::lcd_loop(void)
@@ -721,28 +712,22 @@ void lcd_process::reset_image_parameters(void)
   file_info.send_file_num = 0;
 }
 
-void lcd_process::reset_usb_pull_out_parameters(void)
+void lcd_process::reset_image_send_parameters(void)
 {
-  if(image_status.simage_delay_status)
-  {
-    delay(100);
-  }
-
+  if(image_status.simage_delay_status) delay(IMAGE_SHOW_DELAY);
   memset(&file_info,0,sizeof(file_info));
   memset(&image_status,0,sizeof(image_status));
 }
 
-
 void lcd_process::get_image_data(int len)
 {
-  char c;
+  int16_t c;
   for(int i = 0; i < len; i++)
   {
   	c = udisk.get();
     if(-1 == c)
     {
-      //read error
-      DEBUGPRINTF("get char error\r\n");
+      dwin_process.show_usb_pull_out_page();
       return;
     }
     send_data_buf[6+i] = c;

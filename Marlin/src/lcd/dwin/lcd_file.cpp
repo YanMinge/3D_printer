@@ -62,6 +62,7 @@ lcd_file::lcd_file()
   last_page_file_count = 0;
 
   current_file_index = 0;
+  directory_stack_init();
 }
 
 /**

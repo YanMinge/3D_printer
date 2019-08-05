@@ -96,8 +96,6 @@ void filament_ui_show::show_unload_end_page(void)
     dwin_process.set_machine_status(PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH);
     reset_progress_status();
   }
-  UserExecution.cmd_M2034(true);
-  UserExecution.cmd_M2032(true);
   UserExecution.cmd_M107();
 }
 
@@ -188,7 +186,7 @@ void filament_ui_show::show_load_unload_start_page(void)
       }
       else //unload the filament
       {
-        dwin_process.change_lcd_page(PRINT_PREPARE_HEAT_PAGE,PRINT_PREPARE_HEAT_PAGE);
+        dwin_process.change_lcd_page(PRINT_UNLOAD_FIILMENT_PAGE_CH,PRINT_UNLOAD_FIILMENT_PAGE_CH);
         dwin_process.lcd_send_data(4,PRINT_PREPARE_TEXT_ICON_ADDR);
       }
     }

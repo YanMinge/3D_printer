@@ -280,7 +280,7 @@ void machine_info::lcd_print_information_update(void)
   //Report the temperature every 1 seconds
   if(millis() - previous_time > LCD_PRINT_TIME_UPDATE_PERIOD)
   {
-    dwin_process.send_current_temperature(50, int(thermalManager.degHotend(HOTEND_INDEX)));
+    dwin_process.send_current_temperature(int(thermalManager.degBed()), int(thermalManager.degHotend(HOTEND_INDEX)));
     if(IS_UDISK_PRINTING())
     {
       dwin_process.send_print_time(udisk.get_print_time_dynamic());
@@ -323,6 +323,11 @@ void machine_info::lcd_usb_status_update(void)
 #if PIN_EXISTS(LED)
       OUT_WRITE(LED_PIN, false);
       dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_PC_ICON_ADDR);
+      if(dwin_process.is_computer_print())
+      {
+        dwin_process.show_start_up_page();
+        dwin_process.set_computer_print_status(false);
+      }
 #endif
     }
     //Lcd status bar update
@@ -414,11 +419,11 @@ void machine_info::send_print_work_time(void)
   time = get_total_printing_time();
   lcd_time = time / 3600;
   sprintf_P(print_time, "%i %s", lcd_time, hour_gbk);
+  dwin_process.lcd_send_data(print_time, PRINT_MACHINE_INFO_PRINT_TIME_ADDR);
 
   time = get_total_engraving_time();
   lcd_time = time / 3600;
   sprintf_P(laser_time, "%i %s", lcd_time, hour_gbk);
-  dwin_process.lcd_send_data(print_time, PRINT_MACHINE_INFO_PRINT_TIME_ADDR);
   dwin_process.lcd_send_data(laser_time, PRINT_MACHINE_INFO_LASER_TIME_ADDR);
 }
 #endif

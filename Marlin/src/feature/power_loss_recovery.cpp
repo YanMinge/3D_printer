@@ -263,13 +263,6 @@ void PrintJobRecovery::resume() {
   // Set Z to 0, raise Z by 2mm, and Home (XY only for Cartesian) with no raise
   // (Only do simulated homing in Marlin Dev Mode.)
   gcode.process_subcommands_now_P(PSTR("G28\nG1 F3000 X32 Y55"));
-  gcode.process_subcommands_now_P(PSTR("G38.2 Z-20 F300"));
-  gcode.process_subcommands_now_P(PSTR("G92.0 Z0"));
-  gcode.process_subcommands_now_P(PSTR("M114"));
-
-  gcode.process_subcommands_now_P(PSTR("G1 F300 Z0.40"));
-  gcode.process_subcommands_now_P(PSTR("G92.0 Z0"));
-  planner.synchronize();
   gcode.process_subcommands_now_P(PSTR("M114"));
 
   // Pretend that all axes are homed
@@ -338,21 +331,21 @@ void PrintJobRecovery::resume() {
     memcpy(&mixer.gradient, &info.gradient, sizeof(info.gradient));
   #endif
 
-  // Restore Z (plus raise) and E positions with G92.0
-  dtostrf(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, 1, 3, str_1);
-  dtostrf(info.current_position[E_AXIS]
-    #if ENABLED(SAVE_EACH_CMD_MODE)
-      - 5 // Extra extrusion on restart
-    #endif
-    , 1, 3, str_2
-  );
+  //// Restore Z (plus raise) and E positions with G92.0
+  //dtostrf(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, 1, 3, str_1);
+  //dtostrf(info.current_position[E_AXIS]
+  //  #if ENABLED(SAVE_EACH_CMD_MODE)
+  //    - 5 // Extra extrusion on restart
+  // #endif
+  // , 1, 3, str_2
+  //);
   //sprintf_P(cmd, PSTR("G92.0 Z%s E%s"), str_1, str_2);
   //gcode.process_subcommands_now(cmd);
-  dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, Z_AXIS), 1, 3, str_1);
-  sprintf_P(cmd, PSTR("G1 Z%s F200"), str_1);
-  gcode.process_subcommands_now(cmd);
-  sprintf_P(cmd, PSTR("G92.0 E%s"),str_2);
-  gcode.process_subcommands_now(cmd);
+  //dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, Z_AXIS), 1, 3, str_1);
+  //sprintf_P(cmd, PSTR("G1 Z%s F200"), str_1);
+  //gcode.process_subcommands_now(cmd);
+  //sprintf_P(cmd, PSTR("G92.0 E%s"),str_2);
+  //gcode.process_subcommands_now(cmd);
 
   // Move back to the saved XY
   dtostrf(info.current_position[X_AXIS], 1, 3, str_1);
@@ -362,7 +355,7 @@ void PrintJobRecovery::resume() {
 
   // Move back to the saved Z
   dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS],Z_AXIS), 1, 3, str_1);
-  sprintf_P(cmd, PSTR("G1 Z%s F200"), str_1);
+  sprintf_P(cmd, PSTR("G1 Z%s F500"), str_1);
   gcode.process_subcommands_now(cmd);
 
   // Restore the feedrate

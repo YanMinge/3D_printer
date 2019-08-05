@@ -1,4 +1,4 @@
-/**   
+/**
  * \par Copyright (C), 2018-2019, MakeBlock
  * \class   user_execution
  * \brief   Execution command API for LCD.

@@ -2903,7 +2903,8 @@ void Temperature::isr() {
        #if (HAS_TEMP_HOTEND && HAS_HEATED_BED)
 	     if((degTargetHotend(HOTEND_INDEX) + degTargetBed()) != 0)
          {
-	       processing_percentage = (degHotend(HOTEND_INDEX) + degBed()) / (degTargetHotend(HOTEND_INDEX) + degTargetBed());
+	       //processing_percentage = (degHotend(HOTEND_INDEX) + degBed()) / (degTargetHotend(HOTEND_INDEX) + degTargetBed());
+	       processing_percentage = degHotend(HOTEND_INDEX) / degTargetHotend(HOTEND_INDEX);
          }
 	   #elif HAS_TEMP_HOTEND
          if(degTargetHotend(HOTEND_INDEX) != 0)
@@ -2912,7 +2913,7 @@ void Temperature::isr() {
          }
 	   #endif
 	   uint8_t percentage_int = round(processing_percentage * 100) < 100 ? round(processing_percentage * 100) : 100;
-	   dwin_process.temperature_progress_update(percentage_int, 80, 80, int(degHotend(HOTEND_INDEX)), int(degTargetHotend(HOTEND_INDEX)));
+	   dwin_process.temperature_progress_update(percentage_int);
     #endif
     #if HAS_TEMP_CHAMBER
       #if HAS_HEATED_CHAMBER

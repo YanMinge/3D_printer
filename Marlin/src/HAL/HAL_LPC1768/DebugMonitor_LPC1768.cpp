@@ -30,6 +30,7 @@
 #include "../shared/backtrace/unwmemaccess.h"
 #include "watchdog.h"
 #include <debug_frmwrk.h>
+#include "../../../Marlin.h"
 
 
 // Debug monitor that dumps to the Programming port all status when
@@ -206,6 +207,7 @@ void HardFault_HandlerC(unsigned long *sp, unsigned long lr, unsigned long cause
   // Reset controller
   NVIC_SystemReset();
 
+  kill();
   for (;;) watchdog_init();
 }
 
