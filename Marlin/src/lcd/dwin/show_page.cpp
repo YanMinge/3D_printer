@@ -92,7 +92,7 @@ void lcd_process::change_lcd_page(int en_page_num, int ch_page_num)
   {
     lcd_send_data(PAGE_BASE + ch_page_num, PAGE_ADDR);
   }
-  else if(LAN_NULL == ui_language)
+  else if(LAN_ENGLISH == ui_language)
   {
     lcd_send_data(PAGE_BASE + en_page_num, PAGE_ADDR);
   }
@@ -434,6 +434,24 @@ void lcd_process::show_usb_pull_out_page(void)
   reset_image_send_parameters();
   show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
   set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
+  change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+}
+
+void lcd_process::show_no_firmware_page(void)
+{
+  show_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
+  set_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
+  change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+}
+
+void lcd_process::show_firmware_upate_page(void)
+{
+  temperature_progress_update(0);
+  send_progress_percentage(0);
+  change_lcd_page(PRINT_UPDATE_PAGE_EN,PRINT_UPDATE_PAGE_CH);
+
+  show_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
+  set_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
   change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
 }
 

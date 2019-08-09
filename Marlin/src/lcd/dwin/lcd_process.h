@@ -95,6 +95,7 @@ public:
   void send_limage(void);
   void lcd_loop(void);
   void send_temperature_percentage(uint16_t percentage);
+  void send_progress_percentage(uint16_t percentage);
 
   void set_limage_count(void);
   void set_simage_count(void);
@@ -147,6 +148,8 @@ public:
   void show_start_print_file_page(pfile_list_t temp);
   void show_stop_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
+  void show_no_firmware_page(void);
+  void show_firmware_upate_page(void);
   void show_laser_prepare_focus_page(void);
   void process_lcd_subcommands_now(PGM_P pgcode);
   void laser_walking_frame(void);

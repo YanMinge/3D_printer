@@ -59,6 +59,7 @@ public:
   void response_return_button(void);
   void response_next_page_button(void);
   void response_last_page_button(void);
+  void response_upate_firmware_button(void);
   void response_menu_file(void);
   void response_select_file(void);
   void response_print_file(void);

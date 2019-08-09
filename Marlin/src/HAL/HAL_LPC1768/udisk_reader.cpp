@@ -836,6 +836,19 @@ void udisk_reader::remove_job_recovery_file(void)
 }
 #endif // POWER_LOSS_RECOVERY
 
+constexpr char firmware_name[13] = "firmware.bin";
+bool udisk_reader::firmware_upate_file_exists(void)
+{
+  FILINFO fno;
+  FRESULT f_result = f_stat(firmware_name, &fno);
+  if(f_result)
+  {
+    DEBUGPRINTF("job_recover_file_exists f_stat(%d)\r\n", f_result);
+    return false;
+  }
+  return true;
+}
+
 bool udisk_reader::get_fram_xy_position(char * const path)
 {
   float laser_postion;

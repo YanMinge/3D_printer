@@ -474,6 +474,13 @@ void MarlinSettings::postprocess() {
 
     working_crc = 0; // clear before first "real data"
 
+#if ENABLED(USE_DWIN_LCD)
+    language_type language_current_type = LAN_NULL;
+    language_current_type = dwin_process.get_language_type();
+    _FIELD_TEST(language_current_type);
+    EEPROM_WRITE(language_current_type);
+#endif
+
     _FIELD_TEST(esteppers);
 
     const uint8_t esteppers = COUNT(planner.settings.axis_steps_per_mm) - XYZ;
@@ -1109,13 +1116,6 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(toolchange_settings);
     #endif
 
-    #if ENABLED(USE_DWIN_LCD)
-      language_type language_current_type = LAN_NULL;
-      language_current_type = dwin_process.get_language_type();
-      _FIELD_TEST(language_current_type);
-      EEPROM_WRITE(language_current_type);
-    #endif
-
     #if ENABLED(FACTORY_MACHINE_INFO)
       uint8_t uuid[8];
       memcpy(uuid, MachineInfo.get_uuid(), 8);
@@ -1209,6 +1209,14 @@ void MarlinSettings::postprocess() {
       // Number of esteppers may change
       uint8_t esteppers;
       EEPROM_READ_ALWAYS(esteppers);
+
+#if ENABLED(USE_DWIN_LCD)
+      language_type language_current_type = LAN_NULL;
+      _FIELD_TEST(language_current_type);
+      SERIAL_PRINTF("eeprom_index = %d\r\n",eeprom_index);
+      EEPROM_READ_ALWAYS(language_current_type);
+      dwin_process.set_language_type(language_current_type);
+#endif
 
       //
       // Planner Motion
@@ -1315,6 +1323,7 @@ void MarlinSettings::postprocess() {
           }
         #else
           // MBL is disabled - skip the stored data
+          mesh_num_x = 3, mesh_num_y = 3;
           for (uint16_t q = mesh_num_x * mesh_num_y; q--;) EEPROM_READ(dummy);
         #endif // MESH_BED_LEVELING
       }
@@ -1860,22 +1869,15 @@ void MarlinSettings::postprocess() {
         EEPROM_READ(toolchange_settings);
       #endif
 
-      #if ENABLED(USE_DWIN_LCD)
-	    language_type language_current_type = LAN_NULL;
-        _FIELD_TEST(language_current_type);
-        EEPROM_READ(language_current_type);
-		dwin_process.set_language_type(language_current_type);
-      #endif
-
       #if ENABLED(FACTORY_MACHINE_INFO)
 	    uint8_t uuid[8];
         _FIELD_TEST(uuid);
-        EEPROM_READ(uuid);
+        EEPROM_READ_ALWAYS(uuid);
         MachineInfo.set_uuid(uuid);
 
         uint32_t time;
         _FIELD_TEST(time);
-        EEPROM_READ(time);
+        EEPROM_READ_ALWAYS(time);
         MachineInfo.set_total_working_time(time);
       #endif
 
@@ -1884,7 +1886,7 @@ void MarlinSettings::postprocess() {
         bool buzzer_status = false;
         buzzer_status = buzzer.get_buzzer_switch();
         _FIELD_TEST(buzzer_status);
-        EEPROM_READ(buzzer_status);
+        EEPROM_READ_ALWAYS(buzzer_status);
 	    buzzer.set_buzzer_switch(buzzer_status);
       #endif
 
@@ -1892,7 +1894,7 @@ void MarlinSettings::postprocess() {
         float laser_focus = 0;
         laser_focus = dwin_parser.laser_focus;
         _FIELD_TEST(laser_focus);
-        EEPROM_READ(laser_focus);
+        EEPROM_READ_ALWAYS(laser_focus);
         SERIAL_PRINTF("laser_focus = %f\r\n", laser_focus);
       #endif
       #endif

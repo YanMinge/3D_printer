@@ -150,6 +150,7 @@ public:
   void open_job_recovery_file(const bool read);
   void remove_job_recovery_file(void);
 #endif
+  bool firmware_upate_file_exists(void);
   bool get_fram_xy_position(char * const path);
   uint8_t get_directory_depth(char *dir_path);
 private:

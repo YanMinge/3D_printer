@@ -437,7 +437,6 @@ void lcd_process::send_current_temperature(int tempbed, int temphotend)
 void lcd_process::temperature_progress_update(unsigned int percentage)
 {
   send_temperature_percentage((uint16_t)percentage);
-  lcd_send_data(percentage/5 > 19 ? 19 : percentage/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
 }
 
 void lcd_process::send_file_list_page_num(int current_page, int page_num)
@@ -672,9 +671,20 @@ void lcd_process::send_temperature_percentage(uint16_t percentage)
     itoa(percentage,str,10);
     strcat(str,str1);
     lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
+    lcd_send_data(percentage/5 > 19 ? 19 : percentage/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
     pre_percentage = percentage;
   }
 }
+
+void lcd_process::send_progress_percentage(uint16_t percentage)
+{
+  char str[8];
+  char str1[4] = {0x25,0xff,0xff,0x0};
+  itoa(percentage,str,10);
+  strcat(str,str1);
+  lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
+}
+
 
 void lcd_process::lcd_loop(void)
 {

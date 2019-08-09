@@ -236,6 +236,7 @@ typedef struct
 #define SET_LANGUAGE_CONFIRM_PAGE_CH                25
 #define PRINT_INFO_PAGE_CH                          27
 #define EXCEPTION_NO_HEAD_PAGE_CH                   28
+#define PRINT_UPDATE_PAGE_CH                        35
 #define PRINT_PREPARE_HEAT_PAGE                     36
 #define EXCEPTION_SURE_HINT_PAGE_CH                 38
 #define PRINT_CONFIRM_CANCEL_HINT_PAGE_CH           40
@@ -256,6 +257,7 @@ typedef struct
 #define SET_LANGUAGE_CONFIRM_PAGE_EN                60
 #define PRINT_INFO_PAGE_EN                          27
 #define EXCEPTION_NO_HEAD_PAGE_EN                   60
+#define PRINT_UPDATE_PAGE_EN                        35
 #define EXCEPTION_SURE_HINT_PAGE_EN                 60
 #define PRINT_CONFIRM_CANCEL_HINT_PAGE_EN           60
 #define EXCEPTION_COMPLETE_HINT_PAGE_EN             60

@@ -291,6 +291,22 @@ void lcd_parser::response_last_page_button(void)
   dwin_process.simage_send_start();           //start send last page simage
 }
 
+void lcd_parser::response_upate_firmware_button(void)
+{
+  void(*resetFunc)(void) = 0; // Declare resetFunc() at address 0
+  if(!udisk.is_usb_detected())
+  {
+    dwin_process.show_usb_pull_out_page();
+    return;
+  }
+  if(!udisk.firmware_upate_file_exists())
+  {
+    dwin_process.show_no_firmware_page();
+    return;
+  }
+  resetFunc();                // Jump to address 0
+}
+
 void lcd_parser::response_menu_file(void)
 {
   //main page print button
@@ -312,6 +328,12 @@ void lcd_parser::response_menu_file(void)
   else if(0x04 == receive_data)
   {
     response_last_page_button();
+  }
+
+  //check the firmware upadate file
+  else if(0x05 == receive_data)
+  {
+    response_upate_firmware_button();
   }
 }
 
