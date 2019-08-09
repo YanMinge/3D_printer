@@ -474,17 +474,17 @@ void MarlinSettings::postprocess() {
 
     working_crc = 0; // clear before first "real data"
 
+    _FIELD_TEST(esteppers);
+
+    const uint8_t esteppers = COUNT(planner.settings.axis_steps_per_mm) - XYZ;
+    EEPROM_WRITE(esteppers);
+
 #if ENABLED(USE_DWIN_LCD)
     language_type language_current_type = LAN_NULL;
     language_current_type = dwin_process.get_language_type();
     _FIELD_TEST(language_current_type);
     EEPROM_WRITE(language_current_type);
 #endif
-
-    _FIELD_TEST(esteppers);
-
-    const uint8_t esteppers = COUNT(planner.settings.axis_steps_per_mm) - XYZ;
-    EEPROM_WRITE(esteppers);
 
     //
     // Planner Motion
@@ -1213,11 +1213,9 @@ void MarlinSettings::postprocess() {
 #if ENABLED(USE_DWIN_LCD)
       language_type language_current_type = LAN_NULL;
       _FIELD_TEST(language_current_type);
-      SERIAL_PRINTF("eeprom_index = %d\r\n",eeprom_index);
       EEPROM_READ_ALWAYS(language_current_type);
       dwin_process.set_language_type(language_current_type);
 #endif
-
       //
       // Planner Motion
       //
@@ -1322,8 +1320,8 @@ void MarlinSettings::postprocess() {
             for (uint16_t q = mesh_num_x * mesh_num_y; q--;) EEPROM_READ(dummy);
           }
         #else
+		  mesh_num_x = 3, mesh_num_y = 3;
           // MBL is disabled - skip the stored data
-          mesh_num_x = 3, mesh_num_y = 3;
           for (uint16_t q = mesh_num_x * mesh_num_y; q--;) EEPROM_READ(dummy);
         #endif // MESH_BED_LEVELING
       }
