@@ -231,7 +231,6 @@ uint8_t* machine_info::get_uuid(void)
 
 head_t machine_info::get_head_type(void)
 {
-  head_type = HEAD_PRINT;
   return head_type;
 }
 

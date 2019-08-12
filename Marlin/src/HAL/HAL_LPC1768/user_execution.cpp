@@ -145,13 +145,13 @@ void user_execution::cmd_M109_M701(void)
 {
   //enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nG38.2 F480 Z400\nM701"));
   dwin_process.pre_percentage = 0;
-  enqueue_and_echo_commands_P(PSTR("M106 S150\nM109 S210\nM701"));
+  enqueue_and_echo_commands_P(PSTR("M106 S150\nM109 S230\nM701"));
 }
 
 void user_execution::cmd_M109_M702(void)
 {
   dwin_process.pre_percentage = 0;
-  enqueue_and_echo_commands_P(PSTR("M106 S120\nM109 S210\nM702"));
+  enqueue_and_echo_commands_P(PSTR("M106 S120\nM109 S230\nM702"));
 }
 
 void user_execution::cmd_M2023(char *file_name)
