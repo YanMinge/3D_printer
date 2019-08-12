@@ -35,6 +35,12 @@
   #include "../../module/stepper.h"
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+#endif
+
 extern float destination[XYZE];
 
 #if ENABLED(VARIABLE_G0_FEEDRATE)
@@ -68,6 +74,17 @@ void GcodeSuite::G0_G1(
 
     get_destination_from_command(); // For X Y Z E F
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+   if(IS_HEAD_LASER()){
+     if(fast_move){
+       MachineInfo.set_spindle_laser_ocr(0);
+	 }
+	 else if (parser.seen('S')) {
+       uint16_t spindle_laser_power = parser.value_ushort();
+       MachineInfo.set_spindle_laser_ocr(spindle_laser_power);
+     }
+   }
+#endif
     #ifdef G0_FEEDRATE
       if (fast_move) {
         #if ENABLED(VARIABLE_G0_FEEDRATE)

@@ -770,7 +770,7 @@ bool udisk_reader::job_recover_file_exists(void)
   FRESULT f_result = f_stat(job_recovery_file_name, &fno);
   if(f_result)
   {
-    DEBUGPRINTF("job_recover_file_exists f_stat(%d)\r\n", f_result);
+    DEBUGPRINTF("job recover file not exists(%d)\r\n", f_result);
     return false;
   }
   return true;
@@ -843,7 +843,7 @@ bool udisk_reader::firmware_upate_file_exists(void)
   FRESULT f_result = f_stat(firmware_name, &fno);
   if(f_result)
   {
-    DEBUGPRINTF("job_recover_file_exists f_stat(%d)\r\n", f_result);
+    DEBUGPRINTF("firmware upate file not exists(%d)\r\n", f_result);
     return false;
   }
   return true;

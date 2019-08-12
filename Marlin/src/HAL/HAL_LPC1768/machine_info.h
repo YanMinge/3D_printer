@@ -103,10 +103,13 @@ public:
   void send_work_time(void);
   void send_print_work_time(void);
 #endif
+#if ENABLED(SPINDLE_LASER_PWM)
+  void set_spindle_laser_ocr(const uint16_t ocr);
+#endif // SPINDLE_LASER_PWM
   void set_exception_status(bool status){ exception_status = status;}
   head_t get_command_type(void);
 private:
-  uint8_t factory_uuid[8];
+  uint8_t factory_uuid[12];
   head_t head_type;
   head_t command_type;
   uint32_t total_working_time;

@@ -70,18 +70,6 @@ inline void delay_for_power_up() { safe_delay(SPINDLE_LASER_POWERUP_DELAY); }
 // Wait for spindle to stop turning
 inline void delay_for_power_down() { safe_delay(SPINDLE_LASER_POWERDOWN_DELAY); }
 
-/**
- * ocr_val_mode() is used for debugging and to get the points needed to compute the RPM vs ocr_val line
- *
- * it accepts inputs of 0-255
- */
-
-inline void set_spindle_laser_ocr(const uint16_t ocr) {
-  //WRITE(SPINDLE_LASER_ENABLE_PIN, SPINDLE_LASER_ENABLE_INVERT); // turn spindle on (active low)
-  uint16_t ocr_val = constrain(ocr, 0, 1000);
-  pwm_write_ratio(SPINDLE_LASER_PWM_PIN, float(ocr_val/1000.0));
-}
-
 #if ENABLED(SPINDLE_LASER_PWM)
 
   void update_spindle_laser_power() {
@@ -98,7 +86,7 @@ inline void set_spindle_laser_ocr(const uint16_t ocr) {
            if (spindle_laser_power <= SPEED_POWER_MIN) ocr_val = min_ocr;                 // Use minimum if set below
       else if (spindle_laser_power >= SPEED_POWER_MAX) ocr_val = max_ocr;                 // Use maximum if set above
       else ocr_val = (spindle_laser_power - (SPEED_POWER_INTERCEPT)) * inv_slope;         // Use calculated OCR value
-      set_spindle_laser_ocr(ocr_val & 0xFF);                                              // ...limited to Atmel PWM max
+      MachineInfo.set_spindle_laser_ocr(ocr_val & 0xFF);                                              // ...limited to Atmel PWM max
       delay_for_power_up();
     }
   }
@@ -170,7 +158,7 @@ void GcodeSuite::M3_M4(const bool is_M4) {
 
     if (parser.seen('S')) {
       spindle_laser_power = parser.value_ushort();
-      set_spindle_laser_ocr(spindle_laser_power);
+      MachineInfo.set_spindle_laser_ocr(spindle_laser_power);
     }
   #else
     set_spindle_laser_enabled(true);

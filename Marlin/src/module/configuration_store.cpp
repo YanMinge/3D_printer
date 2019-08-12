@@ -136,6 +136,12 @@ typedef struct SettingsDataStruct {
   // DISTINCT_E_FACTORS
   //
   uint8_t   esteppers;                                  // XYZE_N - XYZ
+#if ENABLED(USE_DWIN_LCD)
+  language_type language_current_type;
+#endif
+#if ENABLED(FACTORY_MACHINE_INFO)
+  uint8_t uuid[12];
+#endif
 
   planner_settings_t planner_settings;
 
@@ -296,13 +302,18 @@ typedef struct SettingsDataStruct {
     toolchange_settings_t toolchange_settings;          // M217 S P R
   #endif
 
-  #if ENABLED(USE_DWIN_LCD)
-  bool buzzer_status;
-  language_type language_current_type;
-  uint8_t uuid[8];
+#if ENABLED(FACTORY_MACHINE_INFO)
   uint32_t time;
+#endif
+
+#if ENABLED(TARGET_LPC1768)
+#if PIN_EXISTS(BEEPER)
+  bool buzzer_status;
+#endif
+#if ENABLED(SPINDLE_LASER_ENABLE)
   float focus;
-  #endif
+#endif
+#endif
 } SettingsData;
 
 MarlinSettings settings;
@@ -484,6 +495,13 @@ void MarlinSettings::postprocess() {
     language_current_type = dwin_process.get_language_type();
     _FIELD_TEST(language_current_type);
     EEPROM_WRITE(language_current_type);
+#endif
+
+#if ENABLED(FACTORY_MACHINE_INFO)
+    uint8_t uuid[12];
+    memcpy(uuid, MachineInfo.get_uuid(), 12);
+    _FIELD_TEST(uuid);
+    EEPROM_WRITE(uuid);
 #endif
 
     //
@@ -1117,11 +1135,6 @@ void MarlinSettings::postprocess() {
     #endif
 
     #if ENABLED(FACTORY_MACHINE_INFO)
-      uint8_t uuid[8];
-      memcpy(uuid, MachineInfo.get_uuid(), 8);
-      _FIELD_TEST(uuid);
-      EEPROM_WRITE(uuid);
-
       uint32_t time;
       time = MachineInfo.get_total_working_time();
       _FIELD_TEST(time);
@@ -1215,6 +1228,13 @@ void MarlinSettings::postprocess() {
       _FIELD_TEST(language_current_type);
       EEPROM_READ_ALWAYS(language_current_type);
       dwin_process.set_language_type(language_current_type);
+#endif
+
+#if ENABLED(FACTORY_MACHINE_INFO)
+      uint8_t uuid[12];
+      _FIELD_TEST(uuid);
+      EEPROM_READ_ALWAYS(uuid);
+      MachineInfo.set_uuid(uuid);
 #endif
       //
       // Planner Motion
@@ -1868,11 +1888,6 @@ void MarlinSettings::postprocess() {
       #endif
 
       #if ENABLED(FACTORY_MACHINE_INFO)
-	    uint8_t uuid[8];
-        _FIELD_TEST(uuid);
-        EEPROM_READ_ALWAYS(uuid);
-        MachineInfo.set_uuid(uuid);
-
         uint32_t time;
         _FIELD_TEST(time);
         EEPROM_READ_ALWAYS(time);
@@ -1890,10 +1905,9 @@ void MarlinSettings::postprocess() {
 
       #if ENABLED(SPINDLE_LASER_ENABLE)
         float laser_focus = 0;
-        laser_focus = dwin_parser.laser_focus;
         _FIELD_TEST(laser_focus);
         EEPROM_READ_ALWAYS(laser_focus);
-        SERIAL_PRINTF("laser_focus = %f\r\n", laser_focus);
+		dwin_parser.laser_focus = laser_focus;
       #endif
       #endif
 
@@ -2372,6 +2386,27 @@ void MarlinSettings::reset() {
   #endif
 
   postprocess();
+
+#if ENABLED(USE_DWIN_LCD)
+  language_type language_current_type = LAN_NULL;
+  dwin_process.set_language_type(language_current_type);
+#endif
+
+#if ENABLED(FACTORY_MACHINE_INFO)
+  //MachineInfo.reset_total_working_time();
+#endif
+
+#if ENABLED(TARGET_LPC1768)
+#if PIN_EXISTS(BEEPER)
+  bool buzzer_status = false;
+  buzzer.set_buzzer_switch(buzzer_status);
+#endif
+  
+#if ENABLED(SPINDLE_LASER_ENABLE)
+  float laser_focus = 30;
+  dwin_parser.laser_focus = laser_focus;
+#endif
+#endif
 
   DEBUG_ECHO_START();
   DEBUG_ECHOLNPGM("Hardcoded Default Settings Loaded");

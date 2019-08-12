@@ -101,12 +101,15 @@ void machine_info::init(void)
 
 void machine_info::print_uuid_info(void)
 {
-  for(uint8_t i=0; i<8; i++)
+  for(uint8_t i = 0; i < 6; i++)
   {
-    if(i == 3)
-    {
-      SERIAL_ECHOPGM("-");
-    }
+    SERIAL_PRINTF("%c", factory_uuid[i]);
+  }
+  SERIAL_ECHOPGM("-");
+  SERIAL_PRINTF("%02x", factory_uuid[6]);
+  SERIAL_ECHOPGM("-");
+  for(uint8_t i = 7; i < 12; i++)
+  {
     SERIAL_PRINTF("%02x", factory_uuid[i]);
   }
   SERIAL_EOL();
@@ -115,14 +118,13 @@ void machine_info::print_uuid_info(void)
 void machine_info::send_uuid_string(void)
 {
   char str_product[7];
-  char str_machine[12];
-  char str_uuid[18];
-  sprintf_P(str_product,"%02x%02x%02x", factory_uuid[0], factory_uuid[1], factory_uuid[2]);
-  sprintf_P(str_machine,"-%02x%02x%02x%02x%02x", factory_uuid[3], factory_uuid[4], factory_uuid[5], factory_uuid[6], factory_uuid[7]);
+  char str_machine[15];
+  char str_uuid[21];
+  sprintf_P(str_product,"%c%c%c%c%c%c", factory_uuid[0], factory_uuid[1], factory_uuid[2], factory_uuid[3], factory_uuid[4], factory_uuid[5]);
+  sprintf_P(str_machine,"-%02x-%02x%02x%02x%02x%02x", factory_uuid[6], factory_uuid[7], factory_uuid[8], factory_uuid[9], factory_uuid[10], factory_uuid[11]);
   strcpy(str_uuid, str_product);
   strcat(str_uuid, str_machine);
   dwin_process.lcd_send_data(str_uuid,PRINT_MACHINE_INFO_ID_ADDR);
-  SERIAL_PRINTF("%s", str_uuid);
 }
 
 uint32_t machine_info::get_total_printing_time(void)
@@ -166,10 +168,15 @@ bool machine_info::set_uuid_from_str(char* string)
 {
   char *p = string;
   uint8_t str_len = strlen(string);
-  if(str_len == 2 * (sizeof(factory_uuid) / sizeof(factory_uuid[0])))
+  if(str_len == 2 * (sizeof(factory_uuid) / sizeof(factory_uuid[0])) - 6)
   {
-    uint8_t factory_uuid_temp[8];
-    for(uint8_t i=0; i<str_len; i++)
+    for(uint8_t i = 0; i < 6; i++)
+    {
+       factory_uuid[i] = p[i];
+    }
+
+    uint8_t factory_uuid_temp[6];
+    for(uint8_t i = 6; i < str_len; i++)
     {
       char c = p[i];
       uint8_t dbyte = 0x00;
@@ -194,16 +201,16 @@ bool machine_info::set_uuid_from_str(char* string)
       }
       if(i%2 == 0)
       {
-        factory_uuid_temp[i/2] = (dbyte << 4) & 0xf0;
+        factory_uuid_temp[(i-6)/2] = (dbyte << 4) & 0xf0;
       }
       else
       {
-        factory_uuid_temp[i/2] += dbyte & 0x0f;
+        factory_uuid_temp[(i-6)/2] += dbyte & 0x0f;
       }
     }
-    for(uint8_t i=0; i<8; i++)
+    for(uint8_t i = 0; i < (sizeof(factory_uuid_temp) / sizeof(factory_uuid_temp[0])); i++)
     {
-      factory_uuid[i] = factory_uuid_temp[i];
+      factory_uuid[i + 6] = factory_uuid_temp[i];
     }
   }
   return true;
@@ -211,7 +218,7 @@ bool machine_info::set_uuid_from_str(char* string)
 
 void machine_info::set_uuid(uint8_t *uuid)
 {
-  for(uint8_t i=0; i<8; i++)
+  for(uint8_t i = 0; i < 12; i++)
   {
     factory_uuid[i] = uuid[i];
   }
@@ -224,6 +231,7 @@ uint8_t* machine_info::get_uuid(void)
 
 head_t machine_info::get_head_type(void)
 {
+  head_type = HEAD_PRINT;
   return head_type;
 }
 
@@ -246,19 +254,6 @@ void machine_info::machine_information_update(void)
     if(temp > 1000)
     {
       head_type = HEAD_NULL;
-      if(exception_status)
-      {
-        if(LAN_NULL == dwin_process.get_language_type())
-        {
-          exception_status = false;
-          dwin_process.lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
-          dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD);
-        }
-        else
-        {
-          dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
-        }
-      }
     }
     else if(temp < 20)
     {
@@ -267,6 +262,20 @@ void machine_info::machine_information_update(void)
     else
     {
       head_type = HEAD_PRINT;
+    }
+
+    if((get_head_type() == HEAD_NULL) && (exception_status))
+    {
+      if(LAN_NULL == dwin_process.get_language_type())
+      {
+        exception_status = false;
+        dwin_process.lcd_send_data(PAGE_BASE + START_UP_LANGUAGE_SET_PAGE, PAGE_ADDR);
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD);
+      }
+      else
+      {
+        dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
+      }
     }
     previous_info_update_time = millis();
   }
@@ -393,7 +402,7 @@ void machine_info::lcd_material_info_update(void)
 void machine_info::send_version_string(void)
 {
   dwin_process.lcd_send_data(SHORT_BUILD_VERSION,PRINT_MACHINE_INFO_FIRMWARE_ADDR);
-  SERIAL_PRINTF("%s", SHORT_BUILD_VERSION);
+  SERIAL_PRINTF("%s\r\n", SHORT_BUILD_VERSION);
 }
 
 void machine_info::send_work_time(void)
@@ -429,5 +438,14 @@ void machine_info::send_print_work_time(void)
 #endif
 
 #endif // USE_DWIN_LCD
+
+#if ENABLED(SPINDLE_LASER_PWM)
+void machine_info::set_spindle_laser_ocr(const uint16_t ocr)
+{
+  //WRITE(SPINDLE_LASER_ENABLE_PIN, SPINDLE_LASER_ENABLE_INVERT); // turn spindle on (active low)
+  uint16_t ocr_val = constrain(ocr, 0, 1000);
+  pwm_write_ratio(SPINDLE_LASER_PWM_PIN, float(ocr_val/1000.0));
+}
+#endif // SPINDLE_LASER_PWM
 #endif // FACTORY_MACHINE_INFO
 #endif // TARGET_LPC1768
