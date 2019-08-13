@@ -241,5 +241,26 @@ void user_execution::cmd_M104_M2070(void)
   enqueue_and_echo_commands_P(PSTR("M106 S255\n M104 S230 \nM2070 Z500\nM701"));
 }
 
+void user_execution::cmd_g38_x(float x)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G38.2 F3000 X%4.1f"), 2*x);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_g38_y(float y)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G38.2 F3000 Y%4.1f"), 2*y);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_g38_z(float z)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
+  enqueue_and_echo_command(cmd);
+}
+
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

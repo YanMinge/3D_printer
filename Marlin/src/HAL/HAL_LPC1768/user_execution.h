@@ -93,6 +93,9 @@ public:
   void get_next_command(void);
   void cmd_M107(void);
   void cmd_M104_M2070(void);
+  void cmd_g38_x(float x);
+  void cmd_g38_y(float y);
+  void cmd_g38_z(float z);
   bool lcd_immediate_execution;
 };
 
