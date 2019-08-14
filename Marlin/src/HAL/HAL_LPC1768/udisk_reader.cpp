@@ -865,33 +865,33 @@ bool udisk_reader::get_fram_xy_position(char * const path)
   val4byte.byteVal[1] = get();
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
-  laser_postion = val4byte.intVal;
+  laser_postion = val4byte.floatVal;
   dwin_process.laser_fram_xy_position.upper_left_x_position = laser_postion;
-  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+  DEBUGPRINTF("left_x(%f)\r\n", laser_postion);
 
   val4byte.byteVal[0] = get();
   val4byte.byteVal[1] = get();
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
-  laser_postion = val4byte.intVal;
+  laser_postion = val4byte.floatVal;
   dwin_process.laser_fram_xy_position.upper_left_y_position = laser_postion;
-  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+  DEBUGPRINTF("left_y(%f)\r\n", laser_postion);
 
   val4byte.byteVal[0] = get();
   val4byte.byteVal[1] = get();
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
-  laser_postion = val4byte.intVal;
+  laser_postion = val4byte.floatVal;
   dwin_process.laser_fram_xy_position.buttom_right_x_position = laser_postion;
-  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+  DEBUGPRINTF("right_x(%f)\r\n", laser_postion);
 
   val4byte.byteVal[0] = get();
   val4byte.byteVal[1] = get();
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
-  laser_postion = val4byte.intVal;
+  laser_postion = val4byte.floatVal;
   dwin_process.laser_fram_xy_position.buttom_right_y_position = laser_postion;
-  DEBUGPRINTF("gcode_offset(%f)\r\n", laser_postion);
+  DEBUGPRINTF("right_y(%f)\r\n", laser_postion);
   return true;
 }
 
