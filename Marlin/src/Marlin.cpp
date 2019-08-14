@@ -190,6 +190,10 @@
   #include "user_execution.h"
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
+#endif
+
 bool Running = true;
 
 #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
@@ -1210,6 +1214,11 @@ void setup() {
   SET_INPUT(POWER_LOSS_PIN);
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+  if(IS_HEAD_LASER()){
+    Laser.reset();
+  }
+#endif
 }
 
 /**

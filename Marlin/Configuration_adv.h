@@ -1922,10 +1922,10 @@
   #define SPINDLE_LASER_PWM_PIN         HEATER_0_PIN  // MUST BE HARDWARE PWM
   #define SPINDLE_LASER_ENABLE_INVERT   false  // set to "true" if the on/off function is reversed
   #define SPINDLE_LASER_PWM             true   // set to true if your controller supports setting the speed/power
-  #define SPINDLE_LASER_PWM_INVERT      false   // set to "true" if the speed/power goes up when you want it to go slower
-  #define SPINDLE_LASER_POWERUP_DELAY   10   // delay in milliseconds to allow the spindle/laser to come up to speed/power
-  #define SPINDLE_LASER_POWERDOWN_DELAY 10   // delay in milliseconds to allow the spindle to stop
-  #define SPINDLE_DIR_CHANGE            false   // set to true if your spindle controller supports changing spindle direction
+  #define SPINDLE_LASER_PWM_INVERT      false  // set to "true" if the speed/power goes up when you want it to go slower
+  #define SPINDLE_LASER_POWERUP_DELAY   0      // delay in milliseconds to allow the spindle/laser to come up to speed/power
+  #define SPINDLE_LASER_POWERDOWN_DELAY 0      // delay in milliseconds to allow the spindle to stop
+  #define SPINDLE_DIR_CHANGE            false  // set to true if your spindle controller supports changing spindle direction
   #define SPINDLE_INVERT_DIR            false
   #define SPINDLE_STOP_ON_DIR_CHANGE    true   // set to true if Marlin should stop the spindle before changing rotation direction
 

@@ -35,6 +35,10 @@
 #include "../gcode.h"
 #include "udisk_reader.h"
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+
 /**
  * M2020: List usb disk files to serial output
  */
@@ -42,14 +46,14 @@ void GcodeSuite::M2020()
 {
   SERIAL_ECHOLNPGM(MSG_BEGIN_FILE_LIST);
 
-  for (char *fn = parser.string_arg; *fn; ++fn)
+  if(IS_HEAD_LASER())
   {
-    if (*fn == ' ') 
-    { 
-      *fn = '\0';
-    }
+    udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".lbx");
   }
-  udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".gcode");
+  else
+  {
+    udisk.ls(LS_SERIAL_PRINT, parser.string_arg, ".gcode");
+  }
   SERIAL_ECHOLNPGM(MSG_END_FILE_LIST);
 }
 

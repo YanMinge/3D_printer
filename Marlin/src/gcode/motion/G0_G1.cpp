@@ -36,6 +36,7 @@
 #endif
 
 #if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
 #if ENABLED(FACTORY_MACHINE_INFO)
 #include "machine_info.h"
 #endif
@@ -77,12 +78,13 @@ void GcodeSuite::G0_G1(
 #if ENABLED(SPINDLE_LASER_ENABLE)
    if(IS_HEAD_LASER()){
      if(fast_move){
-       MachineInfo.set_spindle_laser_ocr(0);
+       Laser.set_laser_ocr(0);
 	 }
 	 else if (parser.seen('S')) {
        uint16_t spindle_laser_power = parser.value_ushort();
-       MachineInfo.set_spindle_laser_ocr(spindle_laser_power);
+       Laser.set_laser_power(spindle_laser_power);
      }
+     Laser.update_laser_power();
    }
 #endif
     #ifdef G0_FEEDRATE

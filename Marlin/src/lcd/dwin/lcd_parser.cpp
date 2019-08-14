@@ -222,7 +222,14 @@ void lcd_parser::response_print_button(void)
   }
   if(!file_read_status)
   {
-    value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
+    if(IS_HEAD_LASER())
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, current_path, ".lbx");
+    }
+    else
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
+    }
     if(USB_NOT_DETECTED == value || value)
     {
       dwin_process.show_usb_pull_out_page();
@@ -240,6 +247,7 @@ void lcd_parser::response_print_button(void)
 
 void lcd_parser::response_return_button(void)
 {
+  uint16_t value;
   if(!udisk.is_usb_detected())
   {
     dwin_process.show_usb_pull_out_page();
@@ -249,7 +257,15 @@ void lcd_parser::response_return_button(void)
   dwin_process.reset_image_send_parameters(); //stop send image
   if(last_path_fresh())
   {
-    if(USB_NOT_DETECTED == udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode"))
+    if(IS_HEAD_LASER())
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, current_path, ".lbx");
+    }
+    else
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
+    }
+    if(USB_NOT_DETECTED == value)
     {
       dwin_process.show_usb_pull_out_page();
       return;
@@ -340,6 +356,7 @@ void lcd_parser::response_menu_file(void)
 void lcd_parser::response_select_file(void)
 {
   int max_index = 0;
+  uint16_t value;
   pfile_list_t temp = NULL;
 
   dwin_process.reset_image_send_parameters(); //stop send image
@@ -359,7 +376,15 @@ void lcd_parser::response_select_file(void)
   {
     LcdFile.file_list_clear();
     next_path_fresh(temp->file_name);
-    if(udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode"))
+    if(IS_HEAD_LASER())
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, current_path, ".lbx");
+    }
+    else
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, current_path, ".gcode");
+    }
+    if(value)
     {
       dwin_process.show_usb_pull_out_page();
       return;

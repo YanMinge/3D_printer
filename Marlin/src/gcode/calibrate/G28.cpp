@@ -56,6 +56,13 @@
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../../core/debug_out.h"
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
+#if ENABLED(FACTORY_MACHINE_INFO)
+#include "machine_info.h"
+#endif
+#endif
+
 #if ENABLED(QUICK_HOME)
 
   static void quick_home_xy() {
@@ -203,6 +210,12 @@ void GcodeSuite::G28(const bool always_home_all) {
       return;
     }
   #endif
+
+#if ENABLED(SPINDLE_LASER_ENABLE)
+    if(IS_HEAD_LASER()){
+      Laser.reset();
+    }
+#endif
 
   if (parser.boolval('O')) {
     if (

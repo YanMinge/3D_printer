@@ -654,10 +654,9 @@ void lcd_process::send_print_time(uint32_t time)
   }
   else
   {
-    int8_t hour = time/3600;
+    uint16_t hour = time/3600;
     int8_t min = (time % 3600) / 60;
-    int8_t sec = (time % 3600) % 60;
-    sprintf_P(str,"%02d:%02d:%02d", hour, min, sec);
+    sprintf_P(str,"%.2d:%02d", hour, min);
     lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
   }
 }

@@ -48,8 +48,6 @@
  */
 void GcodeSuite::M2023()
 {
-  // Simplify3D includes the size, so zero out all spaces (#7227)
-  for (char *fn = parser.string_arg; *fn; ++fn) if (*fn == ' ') *fn = '\0';
   udisk.open_file(parser.string_arg, true);
 
   if (udisk.is_file_open())

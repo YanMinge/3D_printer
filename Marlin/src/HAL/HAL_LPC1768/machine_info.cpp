@@ -438,14 +438,5 @@ void machine_info::send_print_work_time(void)
 #endif
 
 #endif // USE_DWIN_LCD
-
-#if ENABLED(SPINDLE_LASER_PWM)
-void machine_info::set_spindle_laser_ocr(const uint16_t ocr)
-{
-  //WRITE(SPINDLE_LASER_ENABLE_PIN, SPINDLE_LASER_ENABLE_INVERT); // turn spindle on (active low)
-  uint16_t ocr_val = constrain(ocr, 0, 1000);
-  pwm_write_ratio(SPINDLE_LASER_PWM_PIN, float(ocr_val/1000.0));
-}
-#endif // SPINDLE_LASER_PWM
 #endif // FACTORY_MACHINE_INFO
 #endif // TARGET_LPC1768
