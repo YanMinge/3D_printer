@@ -271,7 +271,7 @@ typedef struct
 #define PRINT_PREPARE_BLOCK_PAGE_CH                 34
 #define PRINT_UPDATE_PAGE_CH                        35
 #define PRINT_PREPARE_HEAT_PAGE                     36
-#define EXCEPTION_SURE_HINT_PAGE_CH                 38
+#define PRINT_EXCEPTION_SURE_PAGE_CH                38
 #define PRINT_CONFIRM_CANCEL_HINT_PAGE_CH           40
 #define EXCEPTION_COMPLETE_HINT_PAGE_CH             41
 #define HOST_COMPUTER_PRINT_PAGE_CH                 43
@@ -294,7 +294,7 @@ typedef struct
 #define PRINT_FIRMWARE_UPDATE_FAIL_PAGE_EN          32
 #define PRINT_PREPARE_BLOCK_PAGE_EN                 34
 #define PRINT_UPDATE_PAGE_EN                        35
-#define EXCEPTION_SURE_HINT_PAGE_EN                 60
+#define PRINT_EXCEPTION_SURE_PAGE_EN                60
 #define PRINT_CONFIRM_CANCEL_HINT_PAGE_EN           60
 #define EXCEPTION_COMPLETE_HINT_PAGE_EN             60
 #define HOST_COMPUTER_PRINT_PAGE_EN                 60
@@ -317,6 +317,7 @@ typedef struct
 #define LASER_EXCEPTION_SURE_PAGE_CH                62
 #define LASER_EXCEPTION_SURE_RETURN_PAGE_CH         63
 #define LASER_INFO_PAGE_CH                          64
+#define LASER_PREPARE_BLOCK_PAGE_CH                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_CH           40
 
 //laser page english
@@ -333,6 +334,7 @@ typedef struct
 #define LASER_EXCEPTION_SURE_PAGE_EN                62
 #define LASER_EXCEPTION_SURE_RETURN_PAGE_EN         63
 #define LASER_INFO_PAGE_EN                          64
+#define LASER_PREPARE_BLOCK_PAGE_EN                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_EN           40
 
 //print icon_addr

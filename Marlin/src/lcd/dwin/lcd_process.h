@@ -141,7 +141,8 @@ public:
   void show_start_print_file_page(pfile_list_t temp);
   void show_stop_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
-  void show_no_firmware_page(void);
+  void show_sure_block_page(machine_status_type ch_type);
+  void show_prepare_block_page(machine_status_type ch_type);
   void show_firmware_upate_page(void);
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
   uint16_t pre_percentage;

@@ -66,18 +66,18 @@ void filament_ui_show::show_load_end_page(void)
   if(PRINT_MACHINE_STATUS_NO_FILAMENT_CH == dwin_process.get_machine_status())
   {
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
     return;
   }
   if(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH == dwin_process.get_machine_status())
   {
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
     return;
   }
   if(progress_status.start_stop_status)
   {
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN,PRINT_EXCEPTION_SURE_PAGE_CH);
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH);
     dwin_process.set_machine_status(PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH);
 
@@ -91,7 +91,7 @@ void filament_ui_show::show_unload_end_page(void)
 {
   if(progress_status.start_stop_status)
   {
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN,PRINT_EXCEPTION_SURE_PAGE_CH);
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH);
     dwin_process.set_machine_status(PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH);
     reset_progress_status();
@@ -118,7 +118,7 @@ void filament_ui_show::show_file_print_end_page(void)
     if(PRINT_MACHINE_STATUS_NO_FILAMENT_CH == dwin_process.get_machine_status())
     {
       dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-      dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+      dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
       return;
     }
     if(udisk.job_recover_file_exists())
@@ -160,13 +160,13 @@ void filament_ui_show::show_load_unload_start_page(void)
   if(PRINT_MACHINE_STATUS_NO_FILAMENT_CH == dwin_process.get_machine_status())
   {
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
     return;
   }
   if(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH == dwin_process.get_machine_status())
   {
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
     return;
   }
   if(progress_status.start_stop_status)

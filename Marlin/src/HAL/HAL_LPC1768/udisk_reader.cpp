@@ -526,7 +526,7 @@ void udisk_reader::printing_has_finished()
   {
     dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
     dwin_process.show_machine_status(PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH);
-    dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
   }
   else if(IS_HEAD_LASER())
   {

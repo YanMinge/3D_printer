@@ -364,7 +364,7 @@ void machine_info::lcd_material_info_update(void)
       //LCD Pop-ups
       udisk.pause_udisk_print();
       dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-      dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+      dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
       dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
       lcd_exception_stop();
     }
@@ -386,7 +386,7 @@ void machine_info::lcd_material_info_update(void)
           {
             udisk.pause_udisk_print();
             dwin_process.show_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
-            dwin_process.change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN, EXCEPTION_SURE_HINT_PAGE_CH);
+            dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
           }
           dwin_process.set_machine_status(PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH);
           lcd_exception_stop();

@@ -434,14 +434,21 @@ void lcd_process::show_usb_pull_out_page(void)
   reset_image_send_parameters();
   show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
   set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-  change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+  CHANGE_PAGE(PRINT, LASER, _EXCEPTION_SURE_PAGE_, EN, CH)
 }
 
-void lcd_process::show_no_firmware_page(void)
+void lcd_process::show_sure_block_page(machine_status_type ch_type)
 {
-  show_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
-  set_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
-  change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+  show_machine_status(ch_type);
+  set_machine_status(ch_type);
+  CHANGE_PAGE(PRINT, LASER, _EXCEPTION_SURE_PAGE_, EN, CH);
+}
+
+void lcd_process::show_prepare_block_page(machine_status_type ch_type)
+{
+  show_machine_status(ch_type);
+  set_machine_status(ch_type);
+  CHANGE_PAGE(PRINT, LASER, _PREPARE_BLOCK_PAGE_, EN, CH);
 }
 
 void lcd_process::show_firmware_upate_page(void)
@@ -452,7 +459,7 @@ void lcd_process::show_firmware_upate_page(void)
 
   show_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
   set_machine_status(PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH);
-  change_lcd_page(EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+  change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN,PRINT_EXCEPTION_SURE_PAGE_CH);
 }
 
 #endif // USB_DISK_SUPPORT

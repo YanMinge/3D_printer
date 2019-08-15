@@ -321,13 +321,13 @@ void lcd_parser::response_upate_firmware_button(void)
   }
   if(!udisk.firmware_upate_file_exists())
   {
-    dwin_process.show_no_firmware_page();
+    dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FIRMWARE_FILE_EN);
     return;
   }
-  dwin_process.show_machine_status_page(PRINT_MACHINE_STATUS_PREPARE_UPDATE_CH,PRINT_PREPARE_BLOCK_PAGE_EN,PRINT_PREPARE_BLOCK_PAGE_CH);
+  dwin_process.show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_UPDATE_CH);
   if(udisk.is_firmware_same())
   {
-    dwin_process.show_machine_status_page(PRINT_MACHINE_STATUS_SAME_FIRMWARE_FILE_CH,EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
+    dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_SAME_FIRMWARE_FILE_CH);
     return;
   }
   resetFunc();                // Jump to address 0
