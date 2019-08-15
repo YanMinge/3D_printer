@@ -114,6 +114,10 @@
 #endif
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
+#endif
+
 #pragma pack(push, 1) // No padding between variables
 
 typedef struct { uint16_t X, Y, Z, X2, Y2, Z2, Z3, E0, E1, E2, E3, E4, E5; } tmc_stepper_current_t;
@@ -433,7 +437,7 @@ void MarlinSettings::postprocess() {
   #endif
 
   #define EEPROM_START()          int eeprom_index = EEPROM_OFFSET; persistentStore.access_start()
-  #define EEPROM_START_ADDR(VAR) int eeprom_index = VAR; persistentStore.access_start()
+  #define EEPROM_START_ADDR(VAR)  int eeprom_index = VAR; persistentStore.access_start()
   #define EEPROM_FINISH()         persistentStore.access_finish()
   #define EEPROM_WRITE(VAR)       do{ persistentStore.write_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc);              UPDATE_TEST_INDEX(VAR); }while(0)
   #define EEPROM_READ(VAR)        do{ persistentStore.read_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc, !validating);  UPDATE_TEST_INDEX(VAR); }while(0)
@@ -1154,7 +1158,7 @@ void MarlinSettings::postprocess() {
 
     #if ENABLED(SPINDLE_LASER_ENABLE)
       float laser_focus = 0;
-      laser_focus = dwin_parser.laser_focus;
+      laser_focus = Laser.laser_focus;
       _FIELD_TEST(laser_focus);
       EEPROM_WRITE(laser_focus);
     #endif
@@ -1910,7 +1914,7 @@ void MarlinSettings::postprocess() {
         float laser_focus = 0;
         _FIELD_TEST(laser_focus);
         EEPROM_READ_ALWAYS(laser_focus);
-		dwin_parser.laser_focus = laser_focus;
+		Laser.laser_focus = laser_focus;
       #endif
       #endif
 
@@ -2407,7 +2411,7 @@ void MarlinSettings::reset() {
   
 #if ENABLED(SPINDLE_LASER_ENABLE)
   float laser_focus = 30;
-  dwin_parser.laser_focus = laser_focus;
+  Laser.laser_focus = laser_focus;
 #endif
 #endif
 

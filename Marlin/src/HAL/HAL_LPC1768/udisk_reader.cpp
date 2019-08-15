@@ -83,6 +83,10 @@
 #include "../../feature/power_loss_recovery.h"
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
+#endif
+
 udisk_reader udisk;
 
 //#define DEBUGPRINTF(...)
@@ -230,6 +234,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       {
         continue;
       }
+
       if(is_action != LS_COUNT)
       {
         file_list_array[file_count].ftime = ((fno.fdate & 0xffff) << 16) + (fno.ftime & 0xffff);
@@ -260,7 +265,15 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
           continue;
         }
       }
-      file_count++;
+      if(file_count >= (MAX_ELEMENT_FOR_FILES_LIST - 1))
+      {
+         DEBUGPRINTF("File list exceeds the length that can be supported\r\n");
+		 break;
+	  }
+	  else
+      {
+        file_count++;
+      }
     }
     if (rc)
     {
@@ -341,10 +354,11 @@ void udisk_reader::open_file(char * const path, const bool read)
   }
   else
   {
-    strcat(abs_file_name,current_file_path);
+    strcat(abs_file_name, current_file_path);
     strcat(abs_file_name,"/");
     strcat(abs_file_name,path);
   }
+
   if (!is_usb_detected())
   {
     return;
@@ -912,7 +926,7 @@ bool udisk_reader::get_fram_xy_position(char * const path)
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
   laser_postion = val4byte.floatVal;
-  dwin_process.laser_fram_xy_position.upper_left_x_position = laser_postion;
+  Laser.laser_border_xy_position.upper_left_x_position = laser_postion;
   DEBUGPRINTF("left_x(%f)\r\n", laser_postion);
 
   val4byte.byteVal[0] = get();
@@ -920,7 +934,7 @@ bool udisk_reader::get_fram_xy_position(char * const path)
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
   laser_postion = val4byte.floatVal;
-  dwin_process.laser_fram_xy_position.upper_left_y_position = laser_postion;
+  Laser.laser_border_xy_position.upper_left_y_position = laser_postion;
   DEBUGPRINTF("left_y(%f)\r\n", laser_postion);
 
   val4byte.byteVal[0] = get();
@@ -928,7 +942,7 @@ bool udisk_reader::get_fram_xy_position(char * const path)
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
   laser_postion = val4byte.floatVal;
-  dwin_process.laser_fram_xy_position.buttom_right_x_position = laser_postion;
+  Laser.laser_border_xy_position.buttom_right_x_position = laser_postion;
   DEBUGPRINTF("right_x(%f)\r\n", laser_postion);
 
   val4byte.byteVal[0] = get();
@@ -936,7 +950,7 @@ bool udisk_reader::get_fram_xy_position(char * const path)
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
   laser_postion = val4byte.floatVal;
-  dwin_process.laser_fram_xy_position.buttom_right_y_position = laser_postion;
+  Laser.laser_border_xy_position.buttom_right_y_position = laser_postion;
   DEBUGPRINTF("right_y(%f)\r\n", laser_postion);
   return true;
 }

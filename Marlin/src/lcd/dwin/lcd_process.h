@@ -45,13 +45,6 @@
 #include "dwin.h"
 #include "lcd_file.h"
 
-typedef struct{
-  float upper_left_x_position;
-  float upper_left_y_position;
-  float buttom_right_x_position;
-  float buttom_right_y_position;
-}laser_fram_xy_position_t;
-
 class lcd_process
 {
 public:
@@ -150,13 +143,7 @@ public:
   void show_usb_pull_out_page(void);
   void show_no_firmware_page(void);
   void show_firmware_upate_page(void);
-  void show_laser_prepare_focus_page(void);
-  void process_lcd_subcommands_now(PGM_P pgcode);
-  void laser_walking_frame(void);
-  void laser_before_print_move(void);
-  bool lcd_subcommand_status;
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
-  laser_fram_xy_position_t laser_fram_xy_position;
   uint16_t pre_percentage;
 private:
   bool is_lcd_command; /*whether receive a lcd command*/

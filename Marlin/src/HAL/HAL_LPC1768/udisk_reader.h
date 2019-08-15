@@ -81,7 +81,7 @@ enum is_action_t : uint8_t { LS_SERIAL_PRINT, LS_COUNT, LS_GET_FILE_NAME };
 
 #define USB_NOT_DETECTED             100
 
-#define MAX_ELEMENT_FOR_FILES_LIST   40
+#define MAX_ELEMENT_FOR_FILES_LIST   50
 
 
 #define GCODE_SIZE_INDEX             4
@@ -178,9 +178,8 @@ private:
   FIL file_obj;
   char *opened_file_name;
   file_info_t file_list_array[MAX_ELEMENT_FOR_FILES_LIST];
-
-  char current_file_path[FILE_DIRECTORY_DEPTH*FILE_NAME_LEN];
-  char abs_file_name[(FILE_DIRECTORY_DEPTH + 1)*FILE_NAME_LEN];
+  char current_file_path[FILE_DIRECTORY_DEPTH * FILE_NAME_LEN];
+  char abs_file_name[(FILE_DIRECTORY_DEPTH + 1) * FILE_NAME_LEN];
 };
 
 #define IS_UDISK_PRINTING() udisk.get_udisk_printing_flag()

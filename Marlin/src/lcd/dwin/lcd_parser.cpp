@@ -67,6 +67,10 @@
 #include "../../feature/power_loss_recovery.h"
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
+#endif
+
 lcd_parser dwin_parser;
 const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1217,0x1218,0x121A,0x121B,0};
 
@@ -80,10 +84,7 @@ lcd_parser::lcd_parser(void)
   current_path[0] = '/';
   current_path[1] = '\0';
 
-  laser_focus = 30;
   file_list_open_status = false;
-  firmware_size = 0;
-  firmware_crc = 0;
 }
 
 void lcd_parser::lcd_update(void)
@@ -513,7 +514,6 @@ void lcd_parser::response_print_file(void)
   {
     dwin_process.show_stop_print_file_page(temp);
     LcdFile.set_current_status(on_printing);
-    dwin_process.laser_before_print_move();
     UserExecution.cmd_M2023(temp->file_name);
     UserExecution.cmd_M2024();
   }
@@ -579,11 +579,11 @@ void lcd_parser::response_print_move_axis(void)
   {
     if(0x00 == receive_data)
     {
-      UserExecution.cmd_g92(0,0,current_position[Z_AXIS],0);
+      Laser.set_current_position_zero();
     }
     else if(0x01 == receive_data)
     {
-      dwin_process.laser_walking_frame();
+      Laser.laser_walking_border();
     }
   }
 }
@@ -726,7 +726,7 @@ void lcd_parser::response_print_set(void)
   }
   else if(0x07 <= receive_data && receive_data <= 0X0B) //enter into laser_focus confirm set page
   {
-    laser_focus += (receive_data - 9);
+    Laser.laser_focus += (receive_data - 9);
     dwin_process.show_machine_status_page(LASER_MACHINE_STATUS_FOCUS_FINISHED_CH,\
                       LASER_EXCEPTION_SURE_PAGE_EN,LASER_EXCEPTION_SURE_PAGE_CH);
   }
@@ -857,7 +857,7 @@ void lcd_parser::response_print_machine_status()
       case LASER_MACHINE_STATUS_PREPARE_FOCUS_CH:
         UserExecution.user_stop();
         UserExecution.cmd_M410();
-        dwin_process.lcd_subcommand_status = false;
+        Laser.synchronize_status = false;
         dwin_process.set_machine_status(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH);
 
       case LASER_MACHINE_STATUS_ENGRAVE_FINISHED_EN:
@@ -907,7 +907,7 @@ void lcd_parser::response_print_machine_status()
 
       //confirm laser_focus set,goto to fucus_prepare page
       case LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH:
-        dwin_process.show_laser_prepare_focus_page();
+        Laser.show_laser_prepare_focus_page();
         break;
 
       default:

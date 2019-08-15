@@ -53,6 +53,14 @@
 #include "../../inc/MarlinConfig.h"
 
 #if ENABLED(SPINDLE_LASER_ENABLE)
+
+typedef struct{
+  float upper_left_x_position;
+  float upper_left_y_position;
+  float buttom_right_x_position;
+  float buttom_right_y_position;
+}laser_border_xy_position_t;
+
 class laser_class
 {
 public:
@@ -65,6 +73,14 @@ public:
   void set_laser_ocr(uint16_t power);
   void reset(void);
   void update_laser_power(void);
+  void set_current_position_zero(void);
+  void process_synchronize_subcommands_now(PGM_P pgcode);
+  void laser_walking_border(void);
+  void show_laser_prepare_focus_page(void);
+  void laser_before_print(void);
+  laser_border_xy_position_t laser_border_xy_position;
+  float laser_focus;
+  bool synchronize_status;
 private:
   uint16_t laser_power;
 };

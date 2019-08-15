@@ -776,6 +776,7 @@ void GcodeSuite::process_parsed_command(
 
       #if ENABLED(USE_DWIN_LCD)
       #if ENABLED(SPINDLE_LASER_ENABLE)
+        case 2038: M2038(); break;
         case 2040: M2040(); break;
       #endif
         case 2050: M2050(); break;

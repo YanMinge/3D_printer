@@ -1,10 +1,10 @@
 /**
  * \par Copyright (C), 2018-2019, MakeBlock
- * @file    M2040.cpp
+ * @file    M2038.cpp
  * @author  Mark Yan
  * @version V1.0.0
  * @date    2019/06/11
- * @brief   source code for M2040.
+ * @brief   source code for M2038.
  *
  * \par Copyright
  * This software is Copyright (C), 2018-2019, MakeBlock. Use is subject to license \n
@@ -19,11 +19,11 @@
  * distributed. See http://www.gnu.org/copyleft/gpl.html
  *
  * \par Description
- * setting/query laser focus distance.
+ * Laser height adjustment.
  * \par History:
  * <pre>
  * `<Author>`         `<Time>`        `<Version>`        `<Descr>`
- * Mark Yan         2019/06/11     1.0.0            Initial function design.
+ * Mark Yan         2019/08/15     1.0.0            Initial function design.
  * </pre>
  *
  */
@@ -37,18 +37,11 @@
 #include "../gcode.h"
 
 /**
- * M2040: set the laser focus value;
+ * M2038: Laser height adjustment;
  */
-void GcodeSuite::M2040()
+void GcodeSuite::M2038()
 {
-  if (parser.seen('S'))
-  {
-    Laser.laser_focus = parser.value_float();
-  }
-  else
-  {
-    SERIAL_PRINTF("laser focus is %f mm\r\n", Laser.laser_focus);
-  }
+  Laser.laser_before_print();
 }
 
 #endif // SPINDLE_LASER_ENABLE
