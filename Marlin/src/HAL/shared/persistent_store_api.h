@@ -46,6 +46,7 @@ public:
     uint16_t crc = 0;
     return read_data(data_pos, value, size, &crc);
   }
+  uint32_t caculate_flash_crc32(uint32_t file_size);
 };
 
 extern PersistentStore persistentStore;

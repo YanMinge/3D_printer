@@ -116,6 +116,8 @@ inline void serial_delay(const millis_t ms) {
 
 #endif // ULTRA_LCD
 
+uint32_t crc32(uint32_t crc, uint8_t *buffer, uint32_t size, uint8_t mode);
+
 #if ENABLED(DEBUG_LEVELING_FEATURE)
   void log_machine_info();
 #else

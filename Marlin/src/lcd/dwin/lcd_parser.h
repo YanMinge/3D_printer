@@ -83,6 +83,8 @@ public:
   void refresh_current_path(void);
   char * current_path;
   float laser_focus;
+  uint32_t firmware_size;
+  uint32_t firmware_crc;
 private:
   lcd_cmd_type type;
   unsigned short receive_data;

@@ -66,12 +66,14 @@
 #ifdef TARGET_LPC1768
 #include "../../module/planner.h"
 #include "../../module/printcounter.h"
-
+#include "../../module/configuration_store.h"
 #include "lcd_process.h"
 #include "lcd_parser.h"
 #include "../../gcode/queue.h"
+#include "./persistent_store_api.h"
 
 #include HAL_PATH(.., HAL.h)
+#include HAL_PATH(.., persistent_store_api.h)
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -847,6 +849,50 @@ bool udisk_reader::firmware_upate_file_exists(void)
     return false;
   }
   return true;
+}
+
+uint32_t udisk_reader::caculate_file_crc32(FIL* fp)
+{
+  FRESULT rc;
+  uint8_t buf[512];
+  UINT br = sizeof(buf);
+  uint32_t crc_value = 0xffffffff;
+  while(br == sizeof(buf))
+  {
+    if((rc = f_read(fp, buf, sizeof(buf), &br)) != FR_OK)
+    {
+      DEBUGPRINTF("Unable to read file: (%d)\r\n", rc);
+      f_close(fp);
+      return 0;
+    }
+    crc_value = crc32(crc_value, buf, br, 0);
+  }
+  crc_value = crc_value^0xFFFFFFFF;
+  DEBUGPRINTF("caculate file crc32: 0x%x\r\n", crc_value);
+  return crc_value;
+}
+
+bool udisk_reader::is_firmware_same(void)
+{
+  FRESULT rc;
+  FIL file_obj;
+  uint32_t file_crc32;
+  uint32_t firmware_flash_crc;
+
+  settings.load_firmware_data();
+  rc = f_open(&file_obj, firmware_name, FA_READ);
+  if(rc != FR_OK)
+  {
+    DEBUGPRINTF("Unable to open file: %s (%d)\r\n", firmware_name, rc);
+    return false;
+  }
+  //check crc;
+  file_crc32 = caculate_file_crc32(&file_obj);
+  firmware_flash_crc = persistentStore.caculate_flash_crc32(dwin_parser.firmware_size);
+  if(firmware_flash_crc == file_crc32)
+    return true;
+  else
+    return false;
 }
 
 bool udisk_reader::get_fram_xy_position(char * const path)

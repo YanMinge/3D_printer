@@ -39,6 +39,7 @@
 #include "../Marlin.h"
 #include "../../module/planner.h"
 #include "../../gcode/gcode.h"
+#include "../../module/configuration_store.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -81,6 +82,8 @@ lcd_parser::lcd_parser(void)
 
   laser_focus = 30;
   file_list_open_status = false;
+  firmware_size = 0;
+  firmware_crc = 0;
 }
 
 void lcd_parser::lcd_update(void)
@@ -318,6 +321,12 @@ void lcd_parser::response_upate_firmware_button(void)
   if(!udisk.firmware_upate_file_exists())
   {
     dwin_process.show_no_firmware_page();
+    return;
+  }
+  dwin_process.show_machine_status_page(PRINT_MACHINE_STATUS_PREPARE_UPDATE_CH,PRINT_PREPARE_BLOCK_PAGE_EN,PRINT_PREPARE_BLOCK_PAGE_CH);
+  if(udisk.is_firmware_same())
+  {
+    dwin_process.show_machine_status_page(PRINT_MACHINE_STATUS_SAME_FIRMWARE_FILE_CH,EXCEPTION_SURE_HINT_PAGE_EN,EXCEPTION_SURE_HINT_PAGE_CH);
     return;
   }
   resetFunc();                // Jump to address 0
@@ -729,6 +738,18 @@ void lcd_parser::response_print_set(void)
   {
     dwin_process.show_start_up_page();
   }
+  else if(0x0E == receive_data) //bed leveling
+  {
+
+  }
+  else if(0x10 == receive_data) //calibration
+  {
+
+  }
+  else if(0x11 == receive_data) //restore the factory setting
+  {
+
+  }
 }
 
 void lcd_parser::response_filament(void)
@@ -842,6 +863,15 @@ void lcd_parser::response_print_machine_status()
       case LASER_MACHINE_STATUS_ENGRAVE_FINISHED_EN:
         file_list_open_status = false;
         dwin_process.change_lcd_page(LASER_HOME_PAGE_EN,LASER_HOME_PAGE_CH);
+        break;
+
+      case PRINT_MACHINE_STATUS_SAME_FIRMWARE_FILE_CH:
+        dwin_process.change_lcd_page(PRINT_INFO_PAGE_EN,PRINT_INFO_PAGE_CH);
+        break;
+
+      case PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH:
+        CHANGE_PAGE(PRINT, LASER, _HOME_PAGE_, EN, CH);
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
         break;
 
       default:

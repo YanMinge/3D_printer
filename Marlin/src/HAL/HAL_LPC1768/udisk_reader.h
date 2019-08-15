@@ -151,6 +151,9 @@ public:
   void remove_job_recovery_file(void);
 #endif
   bool firmware_upate_file_exists(void);
+  bool is_firmware_same(void);
+  uint32_t caculate_file_crc32(FIL* fp);
+
   bool get_fram_xy_position(char * const path);
   uint8_t get_directory_depth(char *dir_path);
 private:

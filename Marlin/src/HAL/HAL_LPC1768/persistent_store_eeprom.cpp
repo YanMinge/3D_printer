@@ -101,5 +101,14 @@ size_t PersistentStore::capacity()
   return E2END + 1;
 }
 
+#define SECTOR_START(sector)  ((sector < 16) ? (sector * 0x1000) : ((sector - 14) * 0x8000))
+uint32_t PersistentStore::caculate_flash_crc32(uint32_t file_size)
+{
+  uint32_t crc_value = 0xffffffff;
+  uint8_t *pmem= (uint8_t *)SECTOR_START(16);
+  crc_value = crc32(crc_value, pmem, file_size, 1);
+  return crc_value;
+}
+
 #endif // EEPROM_SETTINGS
 #endif // TARGET_LPC1768

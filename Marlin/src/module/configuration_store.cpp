@@ -39,6 +39,8 @@
 // Change EEPROM version if the structure changes
 #define EEPROM_VERSION "V64"
 #define EEPROM_OFFSET 100
+#define FIRMWARE_OFFSET 2000
+
 
 // Check the integrity of data offsets.
 // Can be disabled for production build.
@@ -431,6 +433,7 @@ void MarlinSettings::postprocess() {
   #endif
 
   #define EEPROM_START()          int eeprom_index = EEPROM_OFFSET; persistentStore.access_start()
+  #define EEPROM_START_ADDR(VAR) int eeprom_index = VAR; persistentStore.access_start()
   #define EEPROM_FINISH()         persistentStore.access_finish()
   #define EEPROM_WRITE(VAR)       do{ persistentStore.write_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc);              UPDATE_TEST_INDEX(VAR); }while(0)
   #define EEPROM_READ(VAR)        do{ persistentStore.read_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc, !validating);  UPDATE_TEST_INDEX(VAR); }while(0)
@@ -3262,6 +3265,21 @@ void MarlinSettings::reset() {
       SERIAL_EOL();
     #endif
     #endif
+  }
+
+  void MarlinSettings::load_firmware_data(void)
+  {
+    uint16_t working_crc = 0;
+
+    EEPROM_START_ADDR(FIRMWARE_OFFSET);
+    EEPROM_READ(dwin_parser.firmware_size);
+    EEPROM_READ(dwin_parser.firmware_crc);
+    EEPROM_FINISH();
+    if(dwin_parser.firmware_size >= 0x64000)
+    {
+      dwin_parser.firmware_size = 0x64000;
+    }
+    SERIAL_PRINTF("firmware_size:(%ud), firmware_crc(0x%x)\r\n", dwin_parser.firmware_size, dwin_parser.firmware_crc);
   }
 
 #endif // !DISABLE_M503

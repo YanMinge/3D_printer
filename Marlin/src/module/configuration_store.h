@@ -81,6 +81,7 @@ class MarlinSettings {
       FORCE_INLINE
       static void report(const bool forReplay=false) { UNUSED(forReplay); }
     #endif
+      void load_firmware_data(void);
 
   private:
     static void postprocess();
