@@ -786,6 +786,7 @@ void GcodeSuite::process_parsed_command(
         case 2060: M2060(); break;
         case 2061: M2061(); break;
         case 2062: M2062(); break;
+        case 2115: M2115(); break;
       #endif
 
       #if ENABLED(USE_DWIN_LCD)

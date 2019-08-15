@@ -86,7 +86,7 @@
   /**
    * Default generic printer UUID.
    */
-  #define DEFAULT_MACHINE_UUID "000000-0123456789"
+  #define DEFAULT_MACHINE_UUID "TPK000-00-0000000000"
 
   /**
    * The WEBSITE_URL is the location where users can get more information such as

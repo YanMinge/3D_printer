@@ -906,6 +906,7 @@ private:
     static void M2060();
     static void M2061();
     static void M2062();
+    static void M2115();
   #endif
 
   #if ENABLED(USE_DWIN_LCD)
