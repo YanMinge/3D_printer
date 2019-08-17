@@ -851,7 +851,7 @@ inline void get_udisk_commands(void) {
     char udsik_char = (char)n;
     udisk_eof = udisk.eof();
 
-    if (udisk_eof || n == -1
+    if (udisk_eof || n == -1 || n == -USB_NOT_DETECTED
         || udsik_char == '\n' || udsik_char == '\r'
         || ((udsik_char == '#' || udsik_char == ':') && !udisk_comment_mode)) {
       if (udisk_eof) {
@@ -875,8 +875,14 @@ inline void get_udisk_commands(void) {
           #endif // PRINTER_EVENT_LEDS
         }
       }
-      else if (n == -1)
-        SERIAL_ERROR_MSG(MSG_SD_ERR_READ);
+      else if (n == -1){
+        SERIAL_ERROR_MSG(MSG_UDISK_ERR_READ);
+	  }
+	  else if(n == -USB_NOT_DETECTED){
+        udisk.stop_udisk_print();  //stop print
+        lcd_exception_stop();      //stop steppre and heaters
+        return;
+      }
       if (udsik_char == '#') stop_buffering = true;
 
       udisk_comment_mode = false; // for new command

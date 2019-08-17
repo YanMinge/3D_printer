@@ -51,6 +51,10 @@
   #include "../feature/mixing.h"
 #endif
 
+#if ENABLED(SPINDLE_LASER_ENABLE)
+#include "laser.h"
+#endif
+
 enum BlockFlagBit : char {
   // Recalculate trapezoids on entry junction. For optimization.
   BLOCK_BIT_RECALCULATE,
@@ -154,6 +158,10 @@ typedef struct block_t {
   #if ENABLED(BARICUDA)
     uint8_t valve_pressure, e_to_p_pressure;
   #endif
+
+#if ENABLED(SPINDLE_LASER_ENABLE)
+    uint16_t spindle_pwm;
+#endif
 
   uint32_t segment_time_us;
 

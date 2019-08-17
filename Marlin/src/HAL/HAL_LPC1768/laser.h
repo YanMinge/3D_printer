@@ -81,6 +81,7 @@ public:
   laser_border_xy_position_t laser_border_xy_position;
   float laser_focus;
   bool synchronize_status;
+  uint16_t spindle_pwm;
 private:
   uint16_t laser_power;
 };

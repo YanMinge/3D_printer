@@ -1931,6 +1931,10 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
     FANS_LOOP(i) block->fan_speed[i] = thermalManager.fan_speed[i];
   #endif
 
+  #if ENABLED(SPINDLE_LASER_ENABLE)
+    block->spindle_pwm = Laser.spindle_pwm;
+  #endif
+
   #if ENABLED(BARICUDA)
     block->valve_pressure = baricuda_valve_pressure;
     block->e_to_p_pressure = baricuda_e_to_p_pressure;

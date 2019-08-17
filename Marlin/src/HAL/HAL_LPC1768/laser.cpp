@@ -157,8 +157,7 @@ void laser_class::laser_walking_border(void)
 {
   char cmd[42];
   synchronize_status = true;
-  sprintf_P(cmd, PSTR("G38.2 Z%f F900"), current_position[Z_AXIS] + 5);
-  process_synchronize_subcommands_now(cmd);
+  laser_before_print();
   //if (!TEST(axis_known_position, X_AXIS) || !TEST(axis_known_position, Y_AXIS))
   //{
   //  process_synchronize_subcommands_now(PSTR("G28 X Y"));
@@ -173,8 +172,7 @@ void laser_class::laser_walking_border(void)
   sprintf_P(cmd, PSTR("G1 X%f Y%f F3000"), laser_border_xy_position.upper_left_x_position,laser_border_xy_position.upper_left_y_position);
   process_synchronize_subcommands_now(cmd);
   process_synchronize_subcommands_now("M3 S0");
-  sprintf_P(cmd, PSTR("G38.2 Z%f F900"), current_position[Z_AXIS]);
-  process_synchronize_subcommands_now(cmd);
+  planner.synchronize();
 }
 
 void laser_class::show_laser_prepare_focus_page(void)

@@ -1664,6 +1664,8 @@ uint32_t Stepper::stepper_block_phase_isr() {
       }
 
       // Flag all moving axes for proper endstop handling
+      uint16_t laser_pwm = current_block->spindle_pwm;
+	  Laser.set_laser_ocr(laser_pwm);
 
       #if IS_CORE
         // Define conditions for checking endstops

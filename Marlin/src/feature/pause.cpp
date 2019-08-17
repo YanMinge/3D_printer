@@ -234,8 +234,10 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
     #endif
 
     for (float purge_count = purge_length; purge_count > 0 && wait_for_user; --purge_count){
-      do_pause_e_move(5, ADVANCED_PAUSE_PURGE_FEEDRATE);
-      idle();
+      do_pause_e_move(1, ADVANCED_PAUSE_PURGE_FEEDRATE);
+	  if(int(purge_count) % 4 == 0){
+        idle();
+      }
     }
     wait_for_user = false;
 
@@ -325,8 +327,16 @@ bool unload_filament(const float &unload_length, const bool show_lcd/*=false*/,
   // Retract filament
   do_pause_e_move(-FILAMENT_UNLOAD_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 
+  wait_for_user = true;
+
   // Wait for filament to cool
-  safe_delay(FILAMENT_UNLOAD_DELAY);
+  for(uint16_t i = 0; i < FILAMENT_UNLOAD_DELAY; i = i + 20){
+    safe_delay(20);
+	idle();
+	if(wait_for_user == false){
+	  return true;
+	}
+  }
 
   // Quickly purge
   do_pause_e_move(FILAMENT_UNLOAD_RETRACT_LENGTH + FILAMENT_UNLOAD_PURGE_LENGTH, planner.settings.max_feedrate_mm_s[E_AXIS]);
@@ -337,7 +347,11 @@ bool unload_filament(const float &unload_length, const bool show_lcd/*=false*/,
     planner.settings.retract_acceleration = FILAMENT_CHANGE_UNLOAD_ACCEL;
   #endif
 
-  do_pause_e_move(unload_length, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+   for (float purge_count = unload_length; purge_count < 0 && wait_for_user; purge_count = purge_count + 10){
+      do_pause_e_move(-10, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
+      idle();
+    }
+    wait_for_user = false;
 
   #if FILAMENT_CHANGE_FAST_LOAD_ACCEL > 0
     planner.settings.retract_acceleration = saved_acceleration;

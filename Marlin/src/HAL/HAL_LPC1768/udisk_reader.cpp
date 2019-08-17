@@ -463,6 +463,10 @@ int16_t udisk_reader::get(void)
   rc = f_read(&file_obj, data, 1, &br);
   if (rc)
   {
+    if(!is_usb_detected())
+    {
+      return -USB_NOT_DETECTED;
+	}
     DEBUGPRINTF("f_read error(%d)\r\n", rc);
     return -1;
   }
