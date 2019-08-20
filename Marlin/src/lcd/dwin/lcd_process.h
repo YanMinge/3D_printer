@@ -144,6 +144,11 @@ public:
   void show_sure_block_page(machine_status_type ch_type);
   void show_prepare_block_page(machine_status_type ch_type);
   void show_firmware_upate_page(void);
+  void show_calibration_page(void);
+  void show_bed_leveling_page(void);
+  void show_save_calibration_data_page(void);
+  void show_restore_factory_page(void);
+  void show_xyz_prepare_home_page(void);
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
   uint16_t pre_percentage;
 private:

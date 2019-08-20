@@ -54,6 +54,7 @@
 
 #ifdef TARGET_LPC1768
 #include "user_execution.h"
+#include "../../gcode/gcode.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include HAL_PATH(.., HAL.h)
@@ -89,6 +90,14 @@ void user_execution::cmd_g1(float x, float y, float z, float e)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_now_g1_xy(float x, float y, float f)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 X%4.1f Y%4.1f F%4.1f"), x, y, f);
+  gcode.process_subcommands_now_P(cmd);
+}
+
+
 void user_execution::cmd_g1_x(float x)
 {
   char cmd[32];
@@ -110,9 +119,47 @@ void user_execution::cmd_g1_z(float z)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_g1_single_z(float z)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 F600 Z%4.1f"), z);
+  enqueue_and_echo_command(cmd);
+}
+
+
 void user_execution::cmd_g28(void)
 {
   enqueue_and_echo_command("G28");
+}
+
+void user_execution::cmd_now_g28(void)
+{
+  gcode.process_subcommands_now_P("G28");
+}
+
+void user_execution::cmd_now_M420(bool onoff)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M420 S%d"), onoff);
+  gcode.process_subcommands_now_P("cmd");
+}
+
+void user_execution::cmd_now_M206(float height)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M206 Z%0.1f"), height);
+  SERIAL_PRINTF("show_save_calibration_data_page Z%0.1f\r\n",height);
+  gcode.process_subcommands_now_P(cmd);
+}
+
+void user_execution::cmd_g29(void)
+{
+  enqueue_and_echo_command("G29");
+}
+
+void user_execution::cmd_now_g29(void)
+{
+  gcode.process_subcommands_now_P("G29");
 }
 
 void user_execution::user_start(void)
@@ -133,12 +180,26 @@ void user_execution::user_hardware_stop(void)
   enqueue_and_echo_command(PSTR("M109 S0"));
 }
 
+void user_execution::cmd_now_M104(uint16_t temperature)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M104 S%d"),temperature);
+  gcode.process_subcommands_now_P(cmd);
+}
+
 void user_execution::cmd_M109(uint16_t temperature)
 {
   char cmd[32];
   dwin_process.pre_percentage = 0;
   sprintf_P(cmd, PSTR("M109 S%d"),temperature);
   enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_now_M109(uint16_t temperature)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M109 S%d"),temperature);
+  gcode.process_subcommands_now_P(cmd);
 }
 
 void user_execution::cmd_M109_M701(void)
@@ -260,6 +321,29 @@ void user_execution::cmd_g38_z(float z)
   char cmd[32];
   sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
   enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_now_g38_z(float z)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
+  gcode.process_subcommands_now_P(cmd);
+}
+
+
+void user_execution::cmd_user_synchronize(void)
+{
+  planner.synchronize();
+}
+
+void user_execution::cmd_now_M500(void)
+{
+  gcode.process_subcommands_now_P(PSTR("M500"));
+}
+
+void user_execution::cmd_now_M502(void)
+{
+  gcode.process_subcommands_now_P(PSTR("M502"));
 }
 
 #endif // USE_DWIN_LCD

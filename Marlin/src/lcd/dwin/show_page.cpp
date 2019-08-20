@@ -462,6 +462,69 @@ void lcd_process::show_firmware_upate_page(void)
   change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN,PRINT_EXCEPTION_SURE_PAGE_CH);
 }
 
+void lcd_process::show_calibration_page(void)
+{
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_CALIBRATION_CH);
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_M104(200);
+  UserExecution.cmd_now_M206(0);
+  UserExecution.cmd_now_M420(false); //turn off bed leveling
+  dwin_parser.leveling_status = false;
+  UserExecution.cmd_now_g28();
+  UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
+  UserExecution.cmd_now_M109(200);
+  UserExecution.cmd_now_g38_z(2.5);
+  UserExecution.cmd_user_synchronize();
+  change_lcd_page(PRINT_CALIBRATION_PAGE_EN, PRINT_CALIBRATION_PAGE_CH);
+}
+
+void lcd_process::show_bed_leveling_page(void)
+{
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_LEVELING_CH);
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_M104(200);
+  UserExecution.cmd_now_g28();
+  UserExecution.cmd_now_M109(200);
+  UserExecution.cmd_now_g29();
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_M104(0);
+  UserExecution.cmd_now_g28();
+  UserExecution.cmd_user_synchronize();
+  show_sure_block_page(PRINT_MACHINE_STATUS_LEVELING_OK_CH);
+}
+
+void lcd_process::show_save_calibration_data_page(void)
+{
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_SAVE_OFFSET_CH);
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_M206(-current_position[Z_AXIS]);
+  UserExecution.cmd_now_g28();
+  dwin_parser.leveling_status = true;
+  //UserExecution.cmd_now_M420(true); //turn on bed leveling
+  UserExecution.cmd_now_M500();
+  UserExecution.cmd_user_synchronize();
+  show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
+  SERIAL_PRINTF("show_save_calibration_data_page \r\n");
+}
+
+void lcd_process::show_restore_factory_page(void)
+{
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_RESTORE_CH);
+  UserExecution.cmd_now_M502();
+  UserExecution.cmd_now_M500();
+  UserExecution.cmd_user_synchronize();
+  delay(1000);
+  show_sure_block_page(PRINT_MACHINE_STATUS_RESTORE_FACOTORY_CH);
+}
+
+void lcd_process::show_xyz_prepare_home_page(void)
+{
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_HOMEING_CH);
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_g28();
+  UserExecution.cmd_user_synchronize();
+  show_sure_block_page(PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH);
+}
 #endif // USB_DISK_SUPPORT
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

@@ -72,7 +72,8 @@
 #endif
 
 lcd_parser dwin_parser;
-const unsigned long button_addr[] = {0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1217,0x1218,0x121A,0x121B,0};
+const unsigned long button_addr[] =
+{0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1217,0x1218,0x121A,0x121B,0X121C,0};
 
 lcd_parser::lcd_parser(void)
 {
@@ -85,6 +86,7 @@ lcd_parser::lcd_parser(void)
   current_path[1] = '\0';
 
   file_list_open_status = false;
+  leveling_status = true;
 }
 
 void lcd_parser::lcd_update(void)
@@ -139,7 +141,8 @@ void lcd_parser::get_command_type(void)
         {
           type = CMD_PRINT_FILE;
         }
-        else if(button_addr[i] >= PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE && button_addr[i] <= LASER_SET_XY_AXIS_ZERO_BTN)
+        else if(button_addr[i] >= PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE && button_addr[i] <= LASER_SET_XY_AXIS_ZERO_BTN \
+               || button_addr[i] == HOME_OFFSET_BTN)
         {
           type = CMD_PRINT_AXIS_MOVE;
         }
@@ -573,7 +576,7 @@ void lcd_parser::response_print_move_axis(void)
   }
   else if(PRINT_SET_PAGE_HOME_MOVE_BTN == receive_addr)
   {
-    UserExecution.cmd_g28();
+    dwin_process.show_xyz_prepare_home_page();
   }
   else if(LASER_SET_XY_AXIS_ZERO_BTN == receive_addr)
   {
@@ -584,6 +587,17 @@ void lcd_parser::response_print_move_axis(void)
     else if(0x01 == receive_data)
     {
       Laser.laser_walking_border();
+    }
+  }
+  else if(HOME_OFFSET_BTN == receive_addr)
+  {
+    if(0x01 == receive_data) //add home offset
+    {
+      UserExecution.cmd_g1_single_z(current_position[Z_AXIS] + 0.1);
+    }
+    else if(0x02 == receive_data) // mins home offset
+    {
+      UserExecution.cmd_g1_single_z(current_position[Z_AXIS] - 0.1);
     }
   }
 }
@@ -740,15 +754,15 @@ void lcd_parser::response_print_set(void)
   }
   else if(0x0E == receive_data) //bed leveling
   {
-
+    dwin_process.show_bed_leveling_page();
   }
   else if(0x10 == receive_data) //calibration
   {
-
+    dwin_process.show_calibration_page();
   }
   else if(0x11 == receive_data) //restore the factory setting
   {
-
+    dwin_process.show_restore_factory_page();
   }
 }
 
@@ -832,6 +846,9 @@ void lcd_parser::response_print_machine_status()
       //cancel laser_focus set,goto to set page
       case LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH:
       case LASER_MACHINE_STATUS_FOCUS_FINISHED_CH:
+      case PRINT_MACHINE_STATUS_LEVELING_OK_CH:
+      case PRINT_MACHINE_STATUS_CALIBRATION_OK_CH:
+      case PRINT_MACHINE_STATUS_RESTORE_FACOTORY_CH:
         dwin_process.show_machine_set_page();
         break;
 
@@ -872,6 +889,14 @@ void lcd_parser::response_print_machine_status()
       case PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH:
         CHANGE_PAGE(PRINT, LASER, _HOME_PAGE_, EN, CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+        break;
+
+      case PRINT_MACHINE_STATUS_PREPARE_CALIBRATION_CH:
+        dwin_process.show_save_calibration_data_page();
+        break;
+
+      case PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH:
+        dwin_process.change_lcd_page(PRINT_XYZ_MOVE_PAGE_EN,PRINT_XYZ_MOVE_PAGE_CH);
         break;
 
       default:
