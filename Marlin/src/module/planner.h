@@ -778,7 +778,7 @@ class Planner {
           --delay_before_delivering;
           // If the number of movements queued is less than 3, and there is still time
           //  to wait, do not deliver anything
-          if (nr_moves < 3 && delay_before_delivering) return NULL;
+          if (nr_moves < (BLOCK_BUFFER_SIZE / 2) && delay_before_delivering) return NULL;
           delay_before_delivering = 0;
         }
 
