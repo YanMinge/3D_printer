@@ -230,7 +230,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
       {
         break;                  /* Error or end of dir */
       }
-      if((match != NULL) && (strstr(fno.fname, match) == NULL) && (!(fno.fattrib & AM_DIR)))
+      if((match != NULL) && (strstr(strlwr(fno.fname), match) == NULL) && (!(fno.fattrib & AM_DIR)))
       {
         continue;
       }
