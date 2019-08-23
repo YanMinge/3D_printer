@@ -100,7 +100,7 @@ Stepper stepper; // Singleton
 #include "../sd/cardreader.h"
 #include "../Marlin.h"
 #include "../HAL/shared/Delay.h"
-
+#include "machine_info.h"
 #if MB(ALLIGATOR)
   #include "../feature/dac/dac_dac084s085.h"
 #endif
@@ -1664,8 +1664,12 @@ uint32_t Stepper::stepper_block_phase_isr() {
       }
 
       // Flag all moving axes for proper endstop handling
-      uint16_t laser_pwm = current_block->spindle_pwm;
-	  Laser.set_laser_ocr(laser_pwm);
+#if ENABLED(SPINDLE_LASER_ENABLE)
+      if(IS_HEAD_LASER()){
+        uint16_t laser_pwm = current_block->spindle_pwm;
+        Laser.set_laser_ocr(laser_pwm);
+      }
+#endif
 
       #if IS_CORE
         // Define conditions for checking endstops

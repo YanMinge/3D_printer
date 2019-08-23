@@ -1371,9 +1371,9 @@ void Planner::check_axes_activity() {
    */
   void Planner::apply_leveling(float &rx, float &ry, float &rz) {
     //if (!leveling_active) return;
-    if (!leveling_active
+    if ( //!leveling_active
     #if ENABLED(USE_DWIN_LCD)
-      || !dwin_parser.leveling_status
+       !dwin_parser.leveling_status
     #endif
     ) return;
 
