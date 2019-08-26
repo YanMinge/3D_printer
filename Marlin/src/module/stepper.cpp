@@ -1663,13 +1663,14 @@ uint32_t Stepper::stepper_block_phase_isr() {
           return interval; // No more queued movements!
       }
 
-      // Flag all moving axes for proper endstop handling
 #if ENABLED(SPINDLE_LASER_ENABLE)
       if(IS_HEAD_LASER()){
         uint16_t laser_pwm = current_block->spindle_pwm;
         Laser.set_laser_ocr(laser_pwm);
       }
 #endif
+
+      // Flag all moving axes for proper endstop handling
 
       #if IS_CORE
         // Define conditions for checking endstops

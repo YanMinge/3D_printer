@@ -141,7 +141,7 @@ public:
   file_type_t get_opened_file_type(void);
   uint32_t get_opened_file_size(void);
   inline bool eof() { return udisk_pos >= file_size; }
-  inline bool is_file_open() { return is_usb_detected() && is_file_opened;}
+  inline bool is_file_open() { return is_file_opened;}
   inline void set_index(const uint32_t index) { udisk_pos = index; f_lseek(&file_obj, index); }
   inline uint32_t get_index() { return udisk_pos; }
   bool abort_udisk_printing;
