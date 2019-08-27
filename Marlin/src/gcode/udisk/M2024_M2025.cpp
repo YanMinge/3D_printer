@@ -41,7 +41,7 @@
  */
 void GcodeSuite::M2024()
 {
-  if (udisk.is_file_open())
+  if (udisk.is_usb_detected() && udisk.is_file_open())
   {
 #if ENABLED(POWER_LOSS_RECOVERY)
     if (parser.seenval('S')) udisk.set_index(parser.value_long());

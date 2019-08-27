@@ -172,6 +172,7 @@ private:
 
   uint32_t udisk_pos;
   uint32_t file_size;
+  uint32_t file_gcode_offset;
   uint32_t print_time_dynamic;
   uint32_t file_print_time;
 

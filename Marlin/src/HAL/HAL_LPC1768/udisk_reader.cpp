@@ -333,7 +333,7 @@ uint16_t udisk_reader::get_num_Files(const char *path, const char * const match)
 
 char* udisk_reader::get_file_name(void)
 {
-  if(is_file_open())
+  if(is_usb_detected() && is_file_open())
   {
     if(opened_file_name != NULL)
     {
@@ -693,6 +693,7 @@ uint32_t udisk_reader::get_gcode_offset(char * const path)
   val4byte.byteVal[2] = get();
   val4byte.byteVal[3] = get();
   uint32_t gcode_offset = val4byte.uintVal;
+  file_gcode_offset = gcode_offset;
   DEBUGPRINTF("gcode_offset(%d)\r\n", gcode_offset);
   return gcode_offset;
 }
@@ -727,9 +728,13 @@ void udisk_reader::recovery_print_time_dynamic(uint32_t time)
 uint32_t udisk_reader::get_print_time_dynamic(void)
 {
   //Enable algorithm equalization time when the time is less than 6 minutes.
-  if((print_time_dynamic < 360) && ((file_size - udisk_pos) > 0))
+  if((print_time_dynamic <= 360) && ((file_size - udisk_pos) > 0))
   {
-    print_time_dynamic = uint32_t(ceil(print_time_dynamic * 0.5 + file_print_time * ((file_size - udisk_pos)/file_size) * 0.5));
+    print_time_dynamic = uint32_t(ceil(print_time_dynamic * 0.5 + file_print_time * ((file_size - udisk_pos) * 1.0 / (file_size - file_gcode_offset)) * 0.5));
+	if(print_time_dynamic > 360)
+    {
+      print_time_dynamic = 360;
+    }
   }
   return print_time_dynamic;
 }

@@ -140,8 +140,9 @@ void lcd_parser::get_command_type(void)
         {
           type = CMD_PRINT_FILE;
         }
-        else if(button_addr[i] >= PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE && button_addr[i] <= LASER_SET_XY_AXIS_ZERO_BTN \
-               || button_addr[i] == HOME_OFFSET_BTN)
+        else if(((button_addr[i] >= PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE) && \
+			     (button_addr[i] <= LASER_SET_XY_AXIS_ZERO_BTN)) || \
+			    (button_addr[i] == HOME_OFFSET_BTN))
         {
           type = CMD_PRINT_AXIS_MOVE;
         }

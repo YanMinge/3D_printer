@@ -40,7 +40,7 @@
  */
 void GcodeSuite::M2026()
 {
-  if (udisk.is_file_open() && parser.seenval('S'))
+  if (udisk.is_usb_detected() && udisk.is_file_open() && parser.seenval('S'))
   {
     udisk.set_index(parser.value_long());
   }

@@ -844,6 +844,7 @@ inline void get_udisk_commands(void) {
   if (commands_in_queue == 0) stop_buffering = false;
 
   uint16_t udsik_count = 0;
+  uint16_t udsik_error_count = 0;
   bool udisk_eof = udisk.eof();
 
   while (commands_in_queue < BUFSIZE && !udisk_eof && !stop_buffering) {
@@ -876,7 +877,13 @@ inline void get_udisk_commands(void) {
         }
       }
       else if (n == -1){
+        udsik_error_count++;
         SERIAL_ERROR_MSG(MSG_UDISK_ERR_READ);
+		if(udsik_error_count > 20){
+          udisk.stop_udisk_print();  //stop print
+          lcd_exception_stop();      //stop steppre and heaters
+          return;
+        }
 	  }
 	  else if(n == -USB_NOT_DETECTED){
         udisk.stop_udisk_print();  //stop print

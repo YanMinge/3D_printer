@@ -50,7 +50,7 @@ void GcodeSuite::M2023()
 {
   udisk.open_file(parser.string_arg, true);
 
-  if (udisk.is_file_open())
+  if (udisk.is_usb_detected() && udisk.is_file_open())
   {
     if(udisk.check_gm_file(udisk.get_file_name()))
     {

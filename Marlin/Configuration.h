@@ -704,7 +704,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 //#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 600, 3000 }
-#define DEFAULT_MAX_ACCELERATION      { 150, 150, 300, 3000 }
+#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 600, 3000 }
 
 
 
