@@ -469,7 +469,6 @@ void lcd_process::show_calibration_page(void)
   UserExecution.cmd_now_M104(200);
   UserExecution.cmd_now_M206(0);
   UserExecution.cmd_now_M420(false); //turn off bed leveling
-  dwin_parser.leveling_status = false;
   UserExecution.cmd_now_g28();
   UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
   UserExecution.cmd_now_M109(200);
@@ -499,8 +498,7 @@ void lcd_process::show_save_calibration_data_page(void)
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_M206(-current_position[Z_AXIS]);
   UserExecution.cmd_now_g28();
-  dwin_parser.leveling_status = true;
-  //UserExecution.cmd_now_M420(true); //turn on bed leveling
+  UserExecution.cmd_now_M420(true); //turn on bed leveling
   UserExecution.cmd_now_M500();
   UserExecution.cmd_user_synchronize();
   show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);

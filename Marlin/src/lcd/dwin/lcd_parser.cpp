@@ -86,7 +86,6 @@ lcd_parser::lcd_parser(void)
   current_path[1] = '\0';
 
   file_list_open_status = false;
-  leveling_status = true;
 }
 
 void lcd_parser::lcd_update(void)

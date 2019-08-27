@@ -84,7 +84,6 @@ public:
   char * current_path;
   uint32_t firmware_size;
   uint32_t firmware_crc;
-  bool leveling_status;
 private:
   lcd_cmd_type type;
   unsigned short receive_data;

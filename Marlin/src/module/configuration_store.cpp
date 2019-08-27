@@ -659,6 +659,10 @@ void MarlinSettings::postprocess() {
       #if ENABLED(AUTO_BED_LEVELING_UBL)
         EEPROM_WRITE(planner.leveling_active);
         EEPROM_WRITE(ubl.storage_slot);
+      #elif ABL_PLANAR
+        EEPROM_WRITE(planner.leveling_active);
+        const int8_t storage_slot = -1;
+        EEPROM_WRITE(storage_slot);
       #else
         const bool ubl_active = false;
         const int8_t storage_slot = -1;
@@ -1410,6 +1414,10 @@ void MarlinSettings::postprocess() {
         #if ENABLED(AUTO_BED_LEVELING_UBL)
           EEPROM_READ(planner.leveling_active);
           EEPROM_READ(ubl.storage_slot);
+        #elif ABL_PLANAR
+          EEPROM_READ(planner.leveling_active);
+          uint8_t ubl_storage_slot;
+          EEPROM_READ(ubl_storage_slot);
         #else
           bool planner_leveling_active;
           uint8_t ubl_storage_slot;

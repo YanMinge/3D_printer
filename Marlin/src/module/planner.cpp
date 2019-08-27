@@ -94,7 +94,6 @@
 
 #if ENABLED(USE_DWIN_LCD)
 #include "user_execution.h"
-#include "lcd_parser.h"
 #endif
 
 // Delay for delivery of first block to the stepper ISR, if the queue contains 2 or
@@ -1370,12 +1369,7 @@ void Planner::check_axes_activity() {
    *              Leveled XYZ on completion
    */
   void Planner::apply_leveling(float &rx, float &ry, float &rz) {
-    //if (!leveling_active) return;
-    if ( //!leveling_active
-    #if ENABLED(USE_DWIN_LCD)
-       !dwin_parser.leveling_status
-    #endif
-    ) return;
+    if (!leveling_active) return;
 
     #if ABL_PLANAR
 
