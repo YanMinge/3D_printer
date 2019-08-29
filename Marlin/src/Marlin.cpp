@@ -1198,7 +1198,7 @@ void setup() {
 
 #if ENABLED(FACTORY_MACHINE_INFO)
   UserExecution.cmd_M2032(false);
-  UserExecution.cmd_M2034(false);
+  UserExecution.cmd_M2034(true);
   MachineInfo.machine_information_update();
   MachineInfo.send_uuid_string();
   MachineInfo.send_version_string();

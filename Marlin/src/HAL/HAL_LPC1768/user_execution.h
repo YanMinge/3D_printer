@@ -72,6 +72,7 @@ public:
   void cmd_g92(float x, float y, float z, float e);
   void cmd_g92_e(float e);
   void cmd_g1(float x, float y, float z, float e);
+  void cmd_now_g1(float x[3]);
   void cmd_now_g1_xy(float x, float y, float f);
   void cmd_g1_x(float x, float feedrate = 3000);
   void cmd_g1_y(float y, float feedrate = 3000);
@@ -87,10 +88,16 @@ public:
   void user_stop(void);
   void user_hardware_stop(void);
   void cmd_now_M104(uint16_t temperature);
+  void cmd_M106(uint16_t speed);
+  void cmd_now_M106(uint16_t speed);
   void cmd_M109(uint16_t temperature);
   void cmd_now_M109(uint16_t temperature);
+  void cmd_now_M140(uint16_t temperature);
+  void cmd_now_M190(uint16_t temperature);
   void cmd_M109_M701(void);
   void cmd_M109_M702(void);
+  void cmd_now_M701(void);
+  void cmd_now_M702(void);
   void cmd_M2023(char *file_name);
   void cmd_M2024(void);
   void cmd_M2026(int32_t pos);
@@ -102,16 +109,21 @@ public:
   void cmd_M410(void);
   void cmd_M2033(bool val);
   void get_next_command(void);
+  void get_remain_command(void);
+  void cmd_now_g_m(const char * cmd);
   void cmd_M107(void);
+  void cmd_now_M107(void);
   void cmd_M104_M2070(void);
   void cmd_M2090_test(void);
   void cmd_g38_x(float x);
   void cmd_g38_y(float y);
   void cmd_g38_z(float z);
+  void cmd_g38_z_single(float z);
   void cmd_now_g38_z(float z);
   void cmd_user_synchronize(void);
   void cmd_now_M500(void);
   void cmd_now_M502(void);
+  void cmd_now_M2524(void);
   bool lcd_immediate_execution;
 };
 

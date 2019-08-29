@@ -44,39 +44,28 @@
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
 
-typedef struct
-{
-  bool start_stop_status;
-  bool load_return_status;
-  bool heat_cool_status;
-  bool file_print_status;
-} progress_show_status_t;
+enum heating_status_type : uint8_t {
+   HEAT_NULL_STATUS = 0,
+   HEAT_LOAD_STATUS,
+   HEAT_UNLOAD_STATUS,
+   HEAT_PRINT_STATUS,
+};
 
 class filament_ui_show
 {
 public:
   filament_ui_show();
-  virtual ~filament_ui_show(void) { }
+  virtual ~filament_ui_show(void) { };
 
-  void show_heat_prepare_page(void);
-  void show_file_prepare_page(void);
-  void show_load_unload_start_page(void);
-  void show_load_end_page(void);
-  void show_unload_end_page(void);
-  void show_file_print_end_page(void);
-
-  void reset_progress_status(void){memset(&progress_status,0,sizeof(progress_show_status_t)); }
-  void set_progress_start_status(bool status){ progress_status.start_stop_status         = status;}
-  void set_progress_load_return_status(bool status){  progress_status.load_return_status = status        ;}
-  void set_progress_heat_cool_status(bool status){  progress_status.heat_cool_status = status        ;}
-  void set_progress_file_print_status(bool status){  progress_status.file_print_status = status        ;}
-  bool get_progress_start_status(void){ return progress_status.start_stop_status        ;}
-  bool get_progress_load_return_status(void){ return progress_status.load_return_status         ;}
-  bool get_progress_heat_cool_status(void){ return progress_status.heat_cool_status         ;}
-  bool get_progress_file_print_status(void){ return progress_status.file_print_status         ;}
+  void show_file_print_page(void);
+  void set_heating_status_type(heating_status_type status){heating_status = status;}
+  heating_status_type get_heating_status_type(void ){return heating_status;}
+  void set_print_after_heat_status(bool status){print_after_heat_status = status;}
+  bool get_print_after_heat_status(void){return print_after_heat_status;}
 
 private:
-  progress_show_status_t progress_status;
+  heating_status_type heating_status;
+  bool print_after_heat_status;
 };
 
 extern filament_ui_show filament_show;

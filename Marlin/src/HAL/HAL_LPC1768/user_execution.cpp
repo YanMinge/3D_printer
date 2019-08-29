@@ -96,19 +96,26 @@ void user_execution::cmd_g92_e(float e)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_now_g1(float x[3])
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G1 X%4.1f Y%4.1f Z%4.1f F3000"), x[0], x[1], x[2]);
+  cmd_now_g_m(cmd);
+}
 
 void user_execution::cmd_g1(float x, float y, float z, float e)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("G1 X%4.1f Y%4.1f Z%4.1f E%4.1f"), x, y, z, e);
   enqueue_and_echo_command(cmd);
+  cmd_now_g_m(cmd);
 }
 
 void user_execution::cmd_now_g1_xy(float x, float y, float f)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("G1 X%4.1f Y%4.1f F%4.1f"), x, y, f);
-  gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(cmd);
 }
 
 
@@ -147,14 +154,14 @@ void user_execution::cmd_g28(void)
 
 void user_execution::cmd_now_g28(void)
 {
-  gcode.process_subcommands_now_P("G28");
+  cmd_now_g_m("G28");
 }
 
 void user_execution::cmd_now_M420(bool onoff)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("M420 S%d"), onoff);
-  gcode.process_subcommands_now_P("cmd");
+  cmd_now_g_m(cmd);
 }
 
 void user_execution::cmd_now_M206(float height)
@@ -162,7 +169,7 @@ void user_execution::cmd_now_M206(float height)
   char cmd[32];
   sprintf_P(cmd, PSTR("M206 Z%0.1f"), height);
   SERIAL_PRINTF("show_save_calibration_data_page Z%0.1f\r\n",height);
-  gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(cmd);
 }
 
 void user_execution::cmd_g29(void)
@@ -172,7 +179,7 @@ void user_execution::cmd_g29(void)
 
 void user_execution::cmd_now_g29(void)
 {
-  gcode.process_subcommands_now_P("G29");
+  cmd_now_g_m("G29");
 }
 
 void user_execution::user_start(void)
@@ -197,7 +204,22 @@ void user_execution::cmd_now_M104(uint16_t temperature)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("M104 S%d"),temperature);
-  gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(cmd);
+}
+
+void user_execution::cmd_M106(uint16_t speed)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M106 P0 S%d"),speed);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_now_M106(uint16_t speed)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M106 P0 S%d"),speed);
+  //gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(cmd);
 }
 
 void user_execution::cmd_M109(uint16_t temperature)
@@ -212,7 +234,21 @@ void user_execution::cmd_now_M109(uint16_t temperature)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("M109 S%d"),temperature);
-  gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(cmd);
+}
+
+void user_execution::cmd_now_M140(uint16_t temperature)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M140 S%d"),temperature);
+  cmd_now_g_m(cmd);
+}
+
+void user_execution::cmd_now_M190(uint16_t temperature)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M190 S%d"),temperature);
+  cmd_now_g_m(cmd);
 }
 
 void user_execution::cmd_M109_M701(void)
@@ -220,6 +256,18 @@ void user_execution::cmd_M109_M701(void)
   //enqueue_and_echo_commands_P(PSTR("M106 S255\nM109 S210\nG38.2 F480 Z400\nM701"));
   dwin_process.pre_percentage = 0;
   enqueue_and_echo_commands_P(PSTR("M106 S150\nM109 S230\nM701"));
+}
+
+void user_execution::cmd_now_M701(void)
+{
+  //gcode.process_subcommands_now_P(PSTR("M701"));
+  cmd_now_g_m(PSTR("M701"));
+}
+
+void user_execution::cmd_now_M702(void)
+{
+  //gcode.process_subcommands_now_P(PSTR("M702"));
+  cmd_now_g_m(PSTR("M702"));
 }
 
 void user_execution::cmd_M109_M702(void)
@@ -270,11 +318,11 @@ void user_execution::pause_udisk_print(void)
   {
     udisk.pause_udisk_print();
     print_job_timer.pause();
-	clear_command_queue();
-	quickstop_stepper();
-    //thermalManager.disable_all_heaters();
+    clear_command_queue();
+    quickstop_stepper();
+    thermalManager.disable_all_heaters();
     //thermalManager.zero_fan_speeds();
-    //wait_for_heatup = false;
+    wait_for_heatup = false;
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
     pause_print_data.udisk_pos = udisk.udisk_block_pos;
 #endif
@@ -320,9 +368,34 @@ void user_execution::get_next_command(void)
   idle();
 }
 
+void user_execution::get_remain_command(void)
+{
+  planner.synchronize();
+  while(commands_in_queue)
+  {
+    //get_available_commands();
+    advance_command_queue();
+    idle();
+  }
+  planner.synchronize();
+}
+
+void user_execution::cmd_now_g_m(const char * cmd)
+{
+  get_remain_command();
+  enqueue_and_echo_command(cmd);
+  get_remain_command();
+}
+
 void user_execution::cmd_M107(void)
 {
   enqueue_and_echo_command(PSTR("M107"));
+}
+
+void user_execution::cmd_now_M107(void)
+{
+  //gcode.process_subcommands_now_P(PSTR("M107"));
+  cmd_now_g_m(PSTR("M107"));
 }
 
 void user_execution::cmd_M104_M2070(void)
@@ -351,11 +424,19 @@ void user_execution::cmd_g38_z(float z)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_g38_z_single(float z)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.2f"), z);
+  //gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(cmd);
+}
+
 void user_execution::cmd_now_g38_z(float z)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
-  gcode.process_subcommands_now_P(cmd);
+  cmd_now_g_m(PSTR("M107"));
 }
 
 
@@ -366,12 +447,17 @@ void user_execution::cmd_user_synchronize(void)
 
 void user_execution::cmd_now_M500(void)
 {
-  gcode.process_subcommands_now_P(PSTR("M500"));
+  cmd_now_g_m(PSTR("M500"));
 }
 
 void user_execution::cmd_now_M502(void)
 {
-  gcode.process_subcommands_now_P(PSTR("M502"));
+  cmd_now_g_m(PSTR("M502"));
+}
+
+void user_execution::cmd_now_M2524(void)
+{
+  cmd_now_g_m(PSTR("M2524"));
 }
 
 #endif // USE_DWIN_LCD

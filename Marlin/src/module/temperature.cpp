@@ -2899,21 +2899,27 @@ void Temperature::isr() {
       );
     #endif
     #if ENABLED(USE_DWIN_LCD)
-       float processing_percentage = 1;
-       #if (HAS_TEMP_HOTEND && HAS_HEATED_BED)
-	     if((degTargetHotend(HOTEND_INDEX) + degTargetBed()) != 0)
-         {
-	       //processing_percentage = (degHotend(HOTEND_INDEX) + degBed()) / (degTargetHotend(HOTEND_INDEX) + degTargetBed());
-	       processing_percentage = degHotend(HOTEND_INDEX) / degTargetHotend(HOTEND_INDEX);
-         }
-	   #elif HAS_TEMP_HOTEND
-         if(degTargetHotend(HOTEND_INDEX) != 0)
-         {
-	       processing_percentage = degHotend(HOTEND_INDEX) / degTargetHotend(HOTEND_INDEX);
-         }
-	   #endif
-	   uint8_t percentage_int = round(processing_percentage * 100) < 100 ? round(processing_percentage * 100) : 100;
-	   dwin_process.temperature_progress_update(percentage_int);
+      if(dwin_process.get_lcd_temp_show_status())
+      {
+        float processing_percentage = 1;
+      #if (HAS_TEMP_HOTEND && HAS_HEATED_BED)
+        if((degTargetHotend(HOTEND_INDEX) != 0 && degTargetBed()) != 0)
+        {
+          processing_percentage = (degHotend(HOTEND_INDEX) + degBed()) / (degTargetHotend(HOTEND_INDEX) + degTargetBed());
+        }
+        else if(degTargetHotend(HOTEND_INDEX) != 0)
+        {
+        processing_percentage = degHotend(HOTEND_INDEX) / degTargetHotend(HOTEND_INDEX);
+        }
+      #elif HAS_TEMP_HOTEND
+        if(degTargetHotend(HOTEND_INDEX) != 0)
+        {
+        processing_percentage = degHotend(HOTEND_INDEX) / degTargetHotend(HOTEND_INDEX);
+        }
+      #endif
+        uint8_t percentage_int = round(processing_percentage * 100) < 100 ? round(processing_percentage * 100) : 100;
+        dwin_process.temperature_progress_update(percentage_int);
+      }
     #endif
     #if HAS_TEMP_CHAMBER
       #if HAS_HEATED_CHAMBER

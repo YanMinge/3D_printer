@@ -67,6 +67,8 @@ lcd_process::lcd_process()
   memset(recevie_data_buf,0, sizeof(recevie_data_buf));
   memset(send_data_buf,0, sizeof(send_data_buf));
   memset(&file_info,0,sizeof(data_info_t));
+
+  lcd_temp_show_status = false;
 }
 
 /**

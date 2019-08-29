@@ -39,6 +39,7 @@
 #include "../Marlin.h"
 #include "../../module/planner.h"
 #include "../../gcode/gcode.h"
+#include "../../module/temperature.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -49,6 +50,7 @@
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
 #include "user_execution.h"
+#include "filament_ui.h"
 
 #if PIN_EXISTS(BEEPER)
 #include "../../libs/buzzer.h"
@@ -58,8 +60,16 @@
 #include "machine_info.h"
 #endif
 
+#ifdef USE_MATERIAL_MOTION_CHECK
+#include "material_check.h"
+#endif
+
 #if ENABLED(POWER_LOSS_RECOVERY)
 #include "../../feature/power_loss_recovery.h"
+#endif
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include "../../feature/pause.h"
 #endif
 
 void lcd_process::show_start_up_page(void)
@@ -444,11 +454,32 @@ void lcd_process::show_sure_block_page(machine_status_type ch_type)
   CHANGE_PAGE(PRINT, LASER, _EXCEPTION_SURE_PAGE_, EN, CH);
 }
 
+void lcd_process::show_confirm_cancel_page(machine_status_type ch_type)
+{
+  show_machine_status(ch_type);
+  set_machine_status(ch_type);
+  CHANGE_PAGE(PRINT, LASER, _CONFIRM_CANCEL_HINT_PAGE_, EN, CH);
+}
+
+void lcd_process::show_complete_hint_page(machine_status_type ch_type)
+{
+  show_machine_status(ch_type);
+  set_machine_status(ch_type);
+  CHANGE_PAGE(PRINT, LASER, _EXCEPTION_COMPLETE_HINT_PAGE_, EN, CH);
+}
+
 void lcd_process::show_prepare_block_page(machine_status_type ch_type)
 {
   show_machine_status(ch_type);
   set_machine_status(ch_type);
   CHANGE_PAGE(PRINT, LASER, _PREPARE_BLOCK_PAGE_, EN, CH);
+}
+
+void lcd_process::show_prepare_no_block_page(machine_status_type ch_type)
+{
+  show_machine_status(ch_type);
+  set_machine_status(ch_type);
+  CHANGE_PAGE(PRINT, LASER, _PREPARE_HEAT_PAGE_, EN, CH);
 }
 
 void lcd_process::show_firmware_upate_page(void)
@@ -523,6 +554,252 @@ void lcd_process::show_xyz_prepare_home_page(void)
   UserExecution.cmd_user_synchronize();
   show_sure_block_page(PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH);
 }
+
+void lcd_process::show_prepare_print_page(pfile_list_t temp)
+{
+  dwin_process.set_lcd_temp_show_status(true);
+  filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
+  filament_show.set_print_after_heat_status(true);
+  UserExecution.user_start();
+  show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);  //change to prepare_print_page
+
+  //progress = 0;percentage = 0;
+  pre_percentage = 0;
+  send_temperature_percentage(pre_percentage);
+
+  UserExecution.cmd_M2023(temp->file_name);  //open file and start read file
+  UserExecution.cmd_M2024();                 //start print
+}
+//SERIAL_PRINTF("pause_position_x[%f],pause_position_y[%f],pause_position_z[%f],pause_position_e[%f]\r\n",(destination[X_AXIS]),(destination[Y_AXIS]),(destination[Z_AXIS]),(destination[E_AXIS]));
+//SERIAL_PRINTF("pause_position_x[%f],pause_position_y[%f],pause_position_z[%f],pause_position_e[%f]\r\n",(LOGICAL_X_POSITION(current_position[X_AXIS])),(LOGICAL_X_POSITION(current_position[Y_AXIS])),(LOGICAL_X_POSITION(current_position[Z_AXIS])),(current_position[E_AXIS]));
+//SERIAL_PRINTF("pause_position_x[%f],pause_position_y[%f],pause_position_z[%f],pause_position_e[%f]\r\n",planner.get_axis_position_mm(X_AXIS),planner.get_axis_position_mm(Y_AXIS),planner.get_axis_position_mm(Z_AXIS),planner.get_axis_position_mm(E_AXIS));
+
+void lcd_process::show_pause_print_page(pfile_list_t temp)
+{
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  immediately_pause_flag = false;
+#endif
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_STOP_TASK_CH);
+
+  pause_print_data.fan_speed[0] =  thermalManager.fan_speed[0];
+  pause_print_data.feedrate = uint16_t(feedrate_mm_s * 60.0f);
+  pause_print_data.target_temperature[0] = thermalManager.degTargetHotend(0);
+  pause_print_data.target_temperature_bed = thermalManager.degTargetBed();
+
+  UserExecution.pause_udisk_print();
+
+  //save current position, fan speed, temperature hotended bed,
+  pause_print_data.current_position[X_AXIS] = planner.get_axis_position_mm(X_AXIS);
+  pause_print_data.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
+  pause_print_data.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
+  pause_print_data.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
+
+  //turn on fan
+  UserExecution.cmd_M106(255);
+  safe_delay(20);
+
+  //go home
+  SERIAL_PRINTF("before cmd_now_g28\r\n");
+  UserExecution.cmd_now_g28();
+
+  dwin_process.show_start_print_file_page(temp);
+  LcdFile.set_current_status(stop_printing);
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  immediately_pause_flag = true;
+#endif
+}
+
+void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
+{
+
+  show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);  //change to prepare_print_page
+  filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  immediately_pause_flag = false;
+#endif
+
+  //turn on the peripheral fan temperature.
+  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+  {
+    dwin_process.set_lcd_temp_show_status(true);
+    dwin_process.pre_percentage = 0;
+    dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+    UserExecution.cmd_now_M106(pause_print_data.fan_speed[0]);
+    UserExecution.cmd_now_M104(pause_print_data.target_temperature[0]);
+    UserExecution.cmd_now_M190(pause_print_data.target_temperature_bed);
+    UserExecution.cmd_g92_e(pause_print_data.current_position[E_AXIS]);
+    SERIAL_PRINTF("fan_speed(%d),target_temperature(%d),target_temperature_bed(%d)\r\n", pause_print_data.fan_speed[0],pause_print_data.target_temperature[0],pause_print_data.target_temperature_bed);
+  }
+
+  //turn on the peripheral fan temperature.
+  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+  {
+    UserExecution.cmd_now_M109(pause_print_data.target_temperature[0]);
+  }
+
+  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+  {
+    UserExecution.cmd_user_synchronize();
+  }
+
+  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+  {
+    UserExecution.cmd_now_g1(pause_print_data.current_position);
+  }
+
+  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+  {
+    //change to start print page
+    UserExecution.cmd_M2026(pause_print_data.udisk_pos);
+    safe_delay(20);
+    dwin_process.show_stop_print_file_page(temp);
+    //change to start print page
+    UserExecution.cmd_M2024();
+    LcdFile.set_current_status(on_printing);
+  }
+
+}
+
+
+void lcd_process::show_quit_print_page(void)
+{
+
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
+  planner.clear_block_buffer();
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_g28();
+  //dwin_parser.current_page_index = 0;
+  reset_image_send_parameters();
+  udisk.stop_udisk_print();  //stop print
+  lcd_exception_stop();      //stop steppre and heaters
+  if(IS_HEAD_LASER())
+  {
+    enqueue_and_echo_commands_P("M4 S0");
+  }
+  show_sure_block_page(PRINT_MACHINE_STATUS_TASK_CANCEL_CH);
+
+}
+
+void lcd_process::show_load_filament_page(void)
+{
+  filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
+
+  if(MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout())
+  {
+    dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+    return;
+  }
+  if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() ) //heating page before loading filament
+  {
+    dwin_process.set_lcd_temp_show_status(true);
+    dwin_process.pre_percentage = 0;
+    dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+
+    show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
+    UserExecution.user_start();
+    UserExecution.cmd_now_M106(150);
+    UserExecution.cmd_now_M109(230);
+  }
+
+  if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
+    PRINT_MACHINE_STATUS_PREPARE_LOAD_CH == dwin_process.get_machine_status()) //loading filament page
+  {
+    show_complete_hint_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH);
+    UserExecution.cmd_now_M701();
+  }
+
+  if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
+    PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()) //loading filament success page
+  {
+    show_sure_block_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH);
+    UserExecution.cmd_now_M107();
+    UserExecution.cmd_M300(300,500);
+    UserExecution.cmd_M300(500,1000);
+  }
+}
+
+void lcd_process::show_unload_filament_page(void)
+{
+  filament_show.set_heating_status_type(HEAT_UNLOAD_STATUS);
+
+  if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type()) //heating page before loading filament
+  {
+    dwin_process.set_lcd_temp_show_status(true);
+    dwin_process.pre_percentage = 0;
+    dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+
+    show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
+    UserExecution.user_start();
+    UserExecution.cmd_now_M106(150);
+    UserExecution.cmd_now_M109(230);
+  }
+
+  if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type()) //unloading filament page
+  {
+    dwin_process.set_lcd_temp_show_status(false);
+    dwin_process.pre_percentage = 0;
+    dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+
+    show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_UNLOAD_CH);
+    UserExecution.cmd_now_M702();
+  }
+
+  if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type()) //unloading filament success page
+  {
+    show_sure_block_page(PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH);
+    UserExecution.cmd_now_M107();
+    UserExecution.cmd_now_M104(0);
+    UserExecution.cmd_M300(300,500);
+    UserExecution.cmd_M300(500,1000);
+  }
+}
+
+void lcd_process::show_cancel_stop_print_page(pfile_list_t temp)
+{
+  print_status status;
+  status = LcdFile.get_current_status();
+  if(stop_printing == status)
+  {
+    show_start_print_file_page(temp);
+  }
+  else if(on_printing == status)
+  {
+    show_stop_print_file_page(temp);
+  }
+}
+
+void lcd_process::show_confirm_stop_print_page(void)
+{
+
+  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
+  dwin_process.reset_image_send_parameters();
+
+  udisk.stop_udisk_print();  //stop print
+  lcd_exception_stop();      //stop steppre and heaters
+
+  if(IS_HEAD_LASER())
+  {
+    enqueue_and_echo_commands_P("M4 S0");
+  }
+
+  UserExecution.cmd_user_synchronize();
+  delay(1);
+  LcdFile.set_current_status(out_printing);
+
+  SERIAL_PRINTF("before cmd_now_g28\r\n");
+  UserExecution.cmd_now_g28();
+  show_sure_block_page(PRINT_MACHINE_STATUS_TASK_CANCEL_CH);
+  //dwin_process.send_given_page_data();
+  //dwin_process.simage_send_start();
+  //if(udisk.job_recover_file_exists())
+  //{
+  //  udisk.remove_job_recovery_file();
+  //  dwin_process.delete_current_file();
+}
+
 #endif // USB_DISK_SUPPORT
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

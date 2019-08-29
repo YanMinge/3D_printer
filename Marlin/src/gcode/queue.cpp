@@ -47,6 +47,7 @@
 
 #if ENABLED(NEWPANEL)
   #include "lcd_process.h"
+  #include "filament_ui.h"
 #endif
 
 /**
@@ -900,6 +901,33 @@ inline void get_udisk_commands(void) {
       command_queue[cmd_queue_index_w][udsik_count] = '\0'; // terminate string
       udsik_count = 0; // clear udisk line buffe
       udisk.udisk_queue_pos = udisk.get_index();
+      #if ENABLED(USE_DWIN_LCD)
+      if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+      {
+        if ((strstr_P(command_queue[cmd_queue_index_w], "M104") != NULL) || (strstr_P(command_queue[cmd_queue_index_w], "M109") != NULL))
+        {
+          const int8_t target_extruder = gcode.get_target_extruder_from_command();
+          int16_t temp_celsius;
+          parser.parse(command_queue[cmd_queue_index_w]);
+          if(parser.seen('S'))
+          {
+            temp_celsius = parser.value_int();
+            thermalManager.setTargetHotend(temp_celsius, target_extruder);
+          }
+        }
+
+        if ((strstr_P(command_queue[cmd_queue_index_w], "M140") != NULL) || (strstr_P(command_queue[cmd_queue_index_w], "M190") != NULL))
+        {
+          int16_t temp_celsius;
+          parser.parse(command_queue[cmd_queue_index_w]);
+          if(parser.seen('S'))
+          {
+            temp_celsius = parser.value_int();
+            thermalManager.setTargetBed(temp_celsius);
+          }
+        }
+      }
+      #endif
       _commit_command(false);
     }
     else if (udsik_count >= MAX_CMD_SIZE - 1) {

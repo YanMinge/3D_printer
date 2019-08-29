@@ -66,7 +66,7 @@ void synchronize_temperature_and_motion(void)
   {
     if(filament_show.get_progress_heat_cool_status()) //load the filament
     {
-      dwin_process.change_lcd_page(EXCEPTION_COMPLETE_HINT_PAGE_EN,EXCEPTION_COMPLETE_HINT_PAGE_CH);
+      dwin_process.change_lcd_page(PRINT_EXCEPTION_COMPLETE_HINT_PAGE_EN,PRINT_EXCEPTION_COMPLETE_HINT_PAGE_CH);
       dwin_process.show_machine_status(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH);
       dwin_process.set_machine_status(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH);
     }

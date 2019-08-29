@@ -79,6 +79,7 @@ public:
   inline bool is_have_command(){ return is_lcd_command;}
   inline void reset_command(){ is_lcd_command = false;}
   inline void reset_command_type(){ lcd_command_type = CMD_NULL;}
+  inline void set_command_type(lcd_cmd_type type){ lcd_command_type = type;}
   inline lcd_cmd_type get_command_type(){      return lcd_command_type;}
   inline unsigned long get_receive_addr(){ return recive_data.addr;}
   inline unsigned short get_receive_data(){ return recive_data.data[0];}
@@ -119,6 +120,8 @@ public:
     memset(current_file,0,sizeof(file_list_t));}
   inline void set_computer_print_status(bool status){computer_print_status = status;}
   inline bool is_computer_print(void){return computer_print_status == true;}
+  inline void set_lcd_temp_show_status(bool status){ lcd_temp_show_status = status;}
+  inline bool get_lcd_temp_show_status(void){return lcd_temp_show_status;}
 
   //show_page.cpp
   void show_start_up_page(void);
@@ -142,13 +145,24 @@ public:
   void show_stop_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
   void show_sure_block_page(machine_status_type ch_type);
+  void show_confirm_cancel_page(machine_status_type ch_type);
+  void show_complete_hint_page(machine_status_type ch_type);
   void show_prepare_block_page(machine_status_type ch_type);
+  void show_prepare_no_block_page(machine_status_type ch_type);
   void show_firmware_upate_page(void);
   void show_calibration_page(void);
   void show_bed_leveling_page(void);
   void show_save_calibration_data_page(void);
   void show_restore_factory_page(void);
   void show_xyz_prepare_home_page(void);
+  void show_prepare_print_page(pfile_list_t temp);
+  void show_pause_print_page(pfile_list_t temp);
+  void show_prepare_from_pause_page(pfile_list_t temp);
+  void show_quit_print_page(void);
+  void show_load_filament_page(void);
+  void show_unload_filament_page(void);
+  void show_cancel_stop_print_page(pfile_list_t temp);
+  void show_confirm_stop_print_page(void);
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
   uint16_t pre_percentage;
 private:
@@ -175,6 +189,7 @@ private:
   machine_status_type machine_status;
 
   bool computer_print_status;
+  bool lcd_temp_show_status;
 };
 
 extern lcd_process dwin_process;

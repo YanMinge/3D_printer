@@ -171,6 +171,7 @@ void lcd_parser::get_command_type(void)
     }
   }
 }
+
 void lcd_parser::parser_lcd_command(void)
 {
   dwin_process.lcd_receive_data();
@@ -207,6 +208,7 @@ void lcd_parser::parser_lcd_command(void)
         break;
       case CMD_PRINT_MACHINE_STATUS:
         response_print_machine_status();
+        break;
 
       case CMD_WRITE_REG_OK:case CMD_WRITE_VAR_OK:case CMD_READ_REG:
         type = CMD_NULL;
@@ -443,73 +445,57 @@ void lcd_parser::response_print_file(void)
   if(0x01 == receive_data)
   {
     //first press print button, should show print prepare page
-    if(status == out_printing)
+    switch (status)
     {
-      if(dwin_process.get_limage_status()) return;
-      if(IS_HEAD_PRINT())
-      {
-        dwin_process.lcd_send_data(TYPE_LOAD,PRINT_PREPARE_TEXT_ICON_ADDR);
-        dwin_process.change_lcd_page(PRINT_PREPARE_HEAT_PAGE,PRINT_PREPARE_HEAT_PAGE);
-        UserExecution.cmd_M109(190);
-        filament_show.set_progress_file_print_status(true);
-        UserExecution.user_start();
-        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);
-      }
-      else if(IS_HEAD_LASER())
-      {
-        dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
-      }
-    }
-    //pause the print
-    else if(status == on_printing )
-    {
-      if(IS_HEAD_LASER())
-      {
-        enqueue_and_echo_commands_P("M4 S0");
-      }
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
-	  immediately_pause_flag = false;
-#endif
-      LcdFile.set_current_status(stop_printing);
-      UserExecution.pause_udisk_print();
-	  UserExecution.cmd_now_g28();
-	  UserExecution.cmd_user_synchronize();
-      dwin_process.show_start_print_file_page(temp);
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
-	  immediately_pause_flag = true;
-#endif
-    }
+      case out_printing:
+        if(dwin_process.get_limage_status()) return;
+        if(IS_HEAD_PRINT())
+        {
+          dwin_process.show_prepare_print_page(temp);
+        }
+        else if(IS_HEAD_LASER())
+        {
+          dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+        }
+        break;
 
-    //start the print
-    else if(status == stop_printing)
-    {
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
-      immediately_pause_flag = false;
-      UserExecution.cmd_M2026(pause_print_data.udisk_pos);
-	  safe_delay(20);
-#endif
-      LcdFile.set_current_status(on_printing);
-      UserExecution.cmd_M2024();
-      dwin_process.show_stop_print_file_page(temp);
-      if(IS_HEAD_LASER())
-      {
-        enqueue_and_echo_commands_P("M4 S800");
-      }
+      case on_printing:
+        if(IS_HEAD_LASER())
+        {
+          enqueue_and_echo_commands_P("M4 S0");
+          dwin_process.show_pause_print_page(temp);
+        }
+        else if(IS_HEAD_PRINT())
+        {
+          dwin_process.show_pause_print_page(temp);
+        }
+        break;
+
+      case stop_printing:
+        if(IS_HEAD_LASER())
+        {
+          enqueue_and_echo_commands_P("M4 S800");
+        }
+        else if(IS_HEAD_PRINT())
+        {
+          dwin_process.show_prepare_from_pause_page(temp);
+        }
+        break;
+
+      default:
+        break;
     }
   }
-
   // return print file.
   else if(0x02 == receive_data)
   {
     dwin_process.reset_image_send_parameters();
-    if(on_printing == status)
+    if(on_printing == status || stop_printing == status)
     {
-      dwin_process.show_machine_status(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
-      dwin_process.set_machine_status(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
-      CHANGE_PAGE(PRINT, LASER, _CONFIRM_CANCEL_HINT_PAGE_, EN, CH);
+      dwin_process.show_confirm_cancel_page(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
       return;
     }
-    else if(out_printing == status || stop_printing == status)
+    else if(out_printing == status)
     {
       dwin_process.send_given_page_data();
       udisk.stop_udisk_print();  //stop print
@@ -791,25 +777,11 @@ void lcd_parser::response_filament(void)
   }
   else if(0x03 == receive_data)
   {
-    UserExecution.cmd_M109_M701(); //load filament
-    //UserExecution.cmd_M104_M2070(); //load filament
-    filament_show.set_progress_start_status(true);
-    filament_show.set_progress_heat_cool_status(true);
-    dwin_process.lcd_send_data(3,PRINT_PREPARE_TEXT_ICON_ADDR);
-    dwin_process.change_lcd_page(PRINT_PREPARE_HEAT_PAGE,PRINT_PREPARE_HEAT_PAGE);
-    UserExecution.user_start();
-    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
+    dwin_process.show_load_filament_page();
   }
   else if(0x05 == receive_data)
   {
-    UserExecution.cmd_M109_M702(); //unload filament
-    filament_show.set_progress_start_status(true);
-    filament_show.set_progress_heat_cool_status(false);
-
-    dwin_process.lcd_send_data(3,PRINT_PREPARE_TEXT_ICON_ADDR);
-    dwin_process.change_lcd_page(PRINT_PREPARE_HEAT_PAGE,PRINT_PREPARE_HEAT_PAGE);
-    UserExecution.user_start();
-    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_PREPARE_UNLOAD_CH);
+    dwin_process.show_unload_filament_page();
   }
 }
 
@@ -842,15 +814,21 @@ void lcd_parser::response_print_machine_status()
 
       case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:   //cancel stop print file, engrave file
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
-        dwin_process.show_stop_print_file_page(temp);
+        dwin_process.show_cancel_stop_print_page(temp);
         break;
 
       case PRINT_MACHINE_STATUS_NO_FILAMENT_CH:
-        dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+        if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type())
+        {
+          dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+          dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+          filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        }
         break;
 
       case PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH:
         dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
         break;
 
       //cancel print the recovery file,goto home page
@@ -870,21 +848,38 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case PRINT_MACHINE_STATUS_PREPARE_PRINT_CH:  //stop print file prepare heating
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         UserExecution.user_stop();
-        filament_show.set_progress_load_return_status(true);
         lcd_exception_stop();
+        if(stop_printing == LcdFile.get_current_status())
+        {
+          dwin_process.show_start_print_file_page(temp);
+        }
+        else if(out_printing == LcdFile.get_current_status())
+        {
+          filament_show.set_print_after_heat_status(false);
+          dwin_process.show_start_print_file_page(temp);
+          UserExecution.cmd_now_M2524();
+        }
         break;
 
       case PRINT_MACHINE_STATUS_PREPARE_LOAD_CH: //stop load filament prepare heating
-        UserExecution.user_stop();
-        filament_show.set_progress_load_return_status(true);
-        lcd_exception_stop();
-        UserExecution.cmd_M410();
+        if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() || \
+          HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type())
+        {
+          UserExecution.user_stop();
+          dwin_process.set_lcd_temp_show_status(false);
+          filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+          dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+          lcd_exception_stop();
+        }
         break;
 
       case PRINT_MACHINE_STATUS_PREPARE_UNLOAD_CH: //stop unload filament prepare heating
         UserExecution.user_stop();
-        filament_show.set_progress_load_return_status(true);
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
         lcd_exception_stop();
         break;
 
@@ -916,6 +911,13 @@ void lcd_parser::response_print_machine_status()
         dwin_process.change_lcd_page(PRINT_XYZ_MOVE_PAGE_EN,PRINT_XYZ_MOVE_PAGE_CH);
         break;
 
+      case PRINT_MACHINE_STATUS_TASK_CANCEL_CH:
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        LcdFile.set_current_status(out_printing);
+        dwin_process.show_start_print_file_page(temp);
+        break;
+
       default:
         break;
     }
@@ -924,22 +926,16 @@ void lcd_parser::response_print_machine_status()
   {
     switch(dwin_process.get_machine_status())
     {
+      case PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH:
+        UserExecution.user_stop();
+        UserExecution.user_hardware_stop();
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
+        lcd_exception_stop();
+        break;
+
       case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:  //confirm stop print file
-        current_page_index = 0;
-        dwin_process.reset_image_send_parameters();
-        udisk.stop_udisk_print();  //stop print
-        lcd_exception_stop();      //stop steppre and heaters
-        if(IS_HEAD_LASER())
-        {
-          enqueue_and_echo_commands_P("M4 S0");
-        }
-        dwin_process.send_given_page_data();
-        dwin_process.simage_send_start();
-        if(udisk.job_recover_file_exists())
-        {
-          udisk.remove_job_recovery_file();
-          dwin_process.delete_current_file();
-        }
+        dwin_process.show_confirm_stop_print_page();
         break;
 
       //confirm print the recovery file, goto the machine print page
@@ -950,6 +946,16 @@ void lcd_parser::response_print_machine_status()
       //confirm laser_focus set,goto to fucus_prepare page
       case LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH:
         Laser.show_laser_prepare_focus_page();
+        break;
+
+      case PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH:
+        dwin_process.send_given_page_data();
+        dwin_process.simage_send_start();
+        if(udisk.job_recover_file_exists())
+        {
+          udisk.remove_job_recovery_file();
+          dwin_process.delete_current_file();
+        }
         break;
 
       default:

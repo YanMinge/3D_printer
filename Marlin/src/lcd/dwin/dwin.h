@@ -39,8 +39,10 @@
 #ifndef _DWIN_H_
 #define _DWIN_H_
 
-#define IMAGE_SHOW_DELAY      300   //delay ms before show image
-#define FILE_DIRECTORY_DEPTH  6
+#define IMAGE_SHOW_DELAY            300   //delay ms before show image
+#define FILE_DIRECTORY_DEPTH        5
+#define UNLOAD_TIME_SHOW_INTERVAL   200 //200MS
+#define UNLOAD_TIME_SHOW_PERCENTAGE (100 - FILAMENT_UNLOAD_DELAY/UNLOAD_TIME_SHOW_INTERVAL)
 
 typedef struct file_directory_stack{
     int page_num[FILE_DIRECTORY_DEPTH];
@@ -154,6 +156,7 @@ enum lcd_cmd_type : unsigned char {
   CMD_PRINT_SETTING,
   CMD_FILAMENT,
   CMD_PRINT_MACHINE_STATUS,
+  CMD_PAUSE_CONTINUE,
 };
 
 enum language_type : uint8_t {
@@ -166,6 +169,7 @@ enum usb_status : char {
   NULL_INSERT = 0,
   USB_INSERT,
   PC_CABLE_INSERT,
+  FILAMENT_INSERT,
 };
 
 enum machine_type : uint8_t {
@@ -273,10 +277,10 @@ typedef struct
 #define PRINT_CALIBRATION_PAGE_CH                   33
 #define PRINT_PREPARE_BLOCK_PAGE_CH                 34
 #define PRINT_UPDATE_PAGE_CH                        35
-#define PRINT_PREPARE_HEAT_PAGE                     36
+#define PRINT_PREPARE_HEAT_PAGE_CH                  36
 #define PRINT_EXCEPTION_SURE_PAGE_CH                38
 #define PRINT_CONFIRM_CANCEL_HINT_PAGE_CH           40
-#define EXCEPTION_COMPLETE_HINT_PAGE_CH             41
+#define PRINT_EXCEPTION_COMPLETE_HINT_PAGE_CH       41
 #define HOST_COMPUTER_PRINT_PAGE_CH                 43
 #define PRINT_UNLOAD_FIILMENT_PAGE_CH               44
 
@@ -298,9 +302,10 @@ typedef struct
 #define PRINT_CALIBRATION_PAGE_EN                   33
 #define PRINT_PREPARE_BLOCK_PAGE_EN                 34
 #define PRINT_UPDATE_PAGE_EN                        35
+#define PRINT_PREPARE_HEAT_PAGE_EN                  36
 #define PRINT_EXCEPTION_SURE_PAGE_EN                60
 #define PRINT_CONFIRM_CANCEL_HINT_PAGE_EN           60
-#define EXCEPTION_COMPLETE_HINT_PAGE_EN             60
+#define PRINT_EXCEPTION_COMPLETE_HINT_PAGE_EN       60
 #define HOST_COMPUTER_PRINT_PAGE_EN                 60
 
 //laser page chinese
@@ -323,6 +328,8 @@ typedef struct
 #define LASER_INFO_PAGE_CH                          64
 #define LASER_PREPARE_BLOCK_PAGE_CH                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_CH           40
+#define LASER_PREPARE_HEAT_PAGE_CH                  100
+#define LASER_EXCEPTION_COMPLETE_HINT_PAGE_CH       1000
 
 //laser page english
 #define LASER_HOME_PAGE_EN                          46
@@ -340,6 +347,8 @@ typedef struct
 #define LASER_INFO_PAGE_EN                          64
 #define LASER_PREPARE_BLOCK_PAGE_EN                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_EN           40
+#define LASER_PREPARE_HEAT_PAGE_EN                  100
+#define LASER_EXCEPTION_COMPLETE_HINT_PAGE_EN       1000
 
 //print icon_addr
 #define PRINT_STATUS_BAR_USB_ICON_ADDR              0X1000
@@ -350,6 +359,9 @@ typedef struct
 #define PRINT_PREPARE_PROGRESS_ICON_ADDR            0X100A
 #define PRINT_PREPARE_TEXT_ICON_ADDR                0X100B
 #define PRINT_HOST_PRINT_ICON_ADDR                  0X100C
+#define PRINT_RETURN_ICON_ADDR                      0X100D
+#define PRINT_STATUS_BAR_FILAMENT_ICON_ADDR         0X100E
+#define PRINT_STATUS_ALL_BAR_STATUS_ADDR            0X100F
 
 //print text addr
 #define PRINT_TEMP_HOTEND_ADDR                      0X1040

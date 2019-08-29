@@ -85,10 +85,6 @@ void GcodeSuite::M701() {
                 );
   #endif
 
-  #if ENABLED(NEWPANEL)
-    filament_show.show_load_end_page();
-  #endif
-
 }
 
 /**
@@ -132,10 +128,6 @@ void GcodeSuite::M702() {
 
       unload_filament(unload_length, true, PAUSE_MODE_UNLOAD_FILAMENT);
     }
-  #endif
-
-  #if ENABLED(NEWPANEL)
-    filament_show.show_unload_end_page();
   #endif
 }
 
