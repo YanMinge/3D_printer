@@ -68,6 +68,8 @@ fil_change_settings_t fc_settings[EXTRUDERS];
   #include "../sd/cardreader.h"
 #endif
 
+bool immediately_pause_flag = false;
+
 #if HAS_BUZZER
   static void filament_change_beep(const int8_t max_beep_count, const bool init=false) {
     if (pause_mode == PAUSE_MODE_PAUSE_PRINT) return;

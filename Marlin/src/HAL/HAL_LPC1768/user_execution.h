@@ -29,7 +29,7 @@
  *    2.  void    user_execution::cmd_g1(float x, float y, float z, float e);
  *    3.  void    user_execution::cmd_g1_x(float x);
  *    4.  void    user_execution::cmd_g1_y(float y);
- *    5.  void    user_execution::cmd_g1_z(float z);
+ *    5.  void    user_execution::cmd_g1_z(float z, float feedrate);
  *    6.  void    user_execution::cmd_g28(void);
  *    7.  void    user_execution::user_start(void);
  *    8.  void    user_execution::user_stop(void);
@@ -70,12 +70,13 @@ public:
   user_execution(void);
   virtual ~user_execution(void) { }
   void cmd_g92(float x, float y, float z, float e);
+  void cmd_g92_e(float e);
   void cmd_g1(float x, float y, float z, float e);
   void cmd_now_g1_xy(float x, float y, float f);
-  void cmd_g1_x(float x);
-  void cmd_g1_y(float y);
-  void cmd_g1_z(float z);
-  void cmd_g1_single_z(float z);
+  void cmd_g1_x(float x, float feedrate = 3000);
+  void cmd_g1_y(float y, float feedrate = 3000);
+  void cmd_g1_z(float z, float feedrate = 600);
+  void cmd_g1_e(float e, float feedrate = 600);
   void cmd_g28(void);
   void cmd_now_g28(void);
   void cmd_now_M420(bool onoff);

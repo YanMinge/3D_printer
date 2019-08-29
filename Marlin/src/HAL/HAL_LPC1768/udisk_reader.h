@@ -156,6 +156,9 @@ public:
 
   bool get_fram_xy_position(char * const path);
   uint8_t get_directory_depth(char *dir_path);
+
+  uint32_t udisk_queue_pos;
+  uint32_t udisk_block_pos;
 private:
   //Variable definitions
   FATFS fatFS; /* File system object */
@@ -187,6 +190,9 @@ private:
 #define IS_UDISK_FILE_OPEN()
 
 extern udisk_reader udisk;
+
+#undef MIN
+#undef MAX
 #endif // USB_DISK_SUPPORT
 #endif // TARGET_LPC1768
 #endif // _UDISK_READER_H_

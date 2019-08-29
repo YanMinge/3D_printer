@@ -899,6 +899,7 @@ inline void get_udisk_commands(void) {
 
       command_queue[cmd_queue_index_w][udsik_count] = '\0'; // terminate string
       udsik_count = 0; // clear udisk line buffe
+      udisk.udisk_queue_pos = udisk.get_index();
       _commit_command(false);
     }
     else if (udsik_count >= MAX_CMD_SIZE - 1) {

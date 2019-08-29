@@ -121,6 +121,10 @@ Stepper stepper; // Singleton
   #include "../libs/L6470/L6470_Marlin.h"
 #endif
 
+#if ENABLED(USB_DISK_SUPPORT)
+#include "udisk_reader.h"
+#endif
+
 // public:
 
 #if HAS_EXTRA_ENDSTOPS || ENABLED(Z_STEPPER_AUTO_ALIGN)
@@ -1670,6 +1674,9 @@ uint32_t Stepper::stepper_block_phase_isr() {
       }
 #endif
 
+#if ENABLED(USB_DISK_SUPPORT)
+      udisk.udisk_block_pos = current_block->udisk_block_pos;
+#endif
       // Flag all moving axes for proper endstop handling
 
       #if IS_CORE

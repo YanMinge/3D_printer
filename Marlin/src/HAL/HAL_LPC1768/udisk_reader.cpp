@@ -743,7 +743,7 @@ void udisk_reader::print_time_countdown(void)
 {
   static uint16_t print_time_count = 0;
   //count every 1s clock
-  if(IS_UDISK_PRINTING())
+  if(IS_UDISK_PRINTING() && print_job_timer.isRunning())
   {
     if((print_time_count >= 1000) && (print_time_dynamic > 0))
     {

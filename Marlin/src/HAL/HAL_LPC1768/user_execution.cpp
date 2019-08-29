@@ -29,7 +29,7 @@
  *    2.  void    user_execution::cmd_g1(float x, float y, float z, float e);
  *    3.  void    user_execution::cmd_g1_x(float x);
  *    4.  void    user_execution::cmd_g1_y(float y);
- *    5.  void    user_execution::cmd_g1_z(float z);
+ *    5.  void    user_execution::cmd_g1_z(float feedrate, float z);
  *    6.  void    user_execution::cmd_g28(void);
  *    7.  void    user_execution::user_start(void);
  *    8.  void    user_execution::user_stop(void);
@@ -62,11 +62,17 @@
 #include "../../Marlin.h"
 #include "../../module/motion.h"
 #include "../../module/planner.h"
+#include "../../module/temperature.h"
+
 #include "lcd_process.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
 #include "../../module/printcounter.h"
+#endif
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include "../../feature/pause.h"
 #endif
 
 user_execution UserExecution;
@@ -83,6 +89,14 @@ void user_execution::cmd_g92(float x, float y, float z, float e)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_g92_e(float e)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G92 E%4.1f"), e);
+  enqueue_and_echo_command(cmd);
+}
+
+
 void user_execution::cmd_g1(float x, float y, float z, float e)
 {
   char cmd[32];
@@ -98,34 +112,33 @@ void user_execution::cmd_now_g1_xy(float x, float y, float f)
 }
 
 
-void user_execution::cmd_g1_x(float x)
+void user_execution::cmd_g1_x(float x, float feedrate)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 F3000 X%4.1f"), 2*x);
+  sprintf_P(cmd, PSTR("G1 F%5.1f X%4.1f"), feedrate, x);
   enqueue_and_echo_command(cmd);
 }
 
-void user_execution::cmd_g1_y(float y)
+void user_execution::cmd_g1_y(float y, float feedrate)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 F3000 Y%4.1f"), 2*y);
+  sprintf_P(cmd, PSTR("G1 F%5.1f Y%4.1f"), feedrate, y);
   enqueue_and_echo_command(cmd);
 }
 
-void user_execution::cmd_g1_z(float z)
+void user_execution::cmd_g1_z(float z, float feedrate)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 F600 Z%4.1f"), 2*z);
+  sprintf_P(cmd, PSTR("G1 F%5.1f Z%4.1f"), feedrate, z);
   enqueue_and_echo_command(cmd);
 }
 
-void user_execution::cmd_g1_single_z(float z)
+void user_execution::cmd_g1_e(float e, float feedrate)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 F600 Z%4.1f"), z);
+  sprintf_P(cmd, PSTR("G1 F%5.1f E%4.1f"), feedrate, e);
   enqueue_and_echo_command(cmd);
 }
-
 
 void user_execution::cmd_g28(void)
 {
@@ -250,6 +263,12 @@ void user_execution::pause_udisk_print(void)
   {
     udisk.pause_udisk_print();
     print_job_timer.pause();
+	clear_command_queue();
+	quickstop_stepper();
+    //thermalManager.disable_all_heaters();
+    //thermalManager.zero_fan_speeds();
+    //wait_for_heatup = false;
+	udisk.set_index(udisk.udisk_block_pos);
   }
 #endif
 }

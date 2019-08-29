@@ -96,6 +96,14 @@
 #include "user_execution.h"
 #endif
 
+#if ENABLED(USB_DISK_SUPPORT)
+#include "udisk_reader.h"
+#endif
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include "../feature/pause.h"
+#endif
+
 // Delay for delivery of first block to the stepper ISR, if the queue contains 2 or
 // fewer movements. The delay is measured in milliseconds, and must be less than 250ms
 #define BLOCK_DELAY_FOR_1ST_MOVE 100
@@ -1685,6 +1693,11 @@ bool Planner::_buffer_steps(const int32_t (&target)[XYZE]
   uint8_t next_buffer_head;
   block_t * const block = get_next_free_block(next_buffer_head);
 
+  // If we are pause, do not accept queuing of movements
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  if (immediately_pause_flag) return false;
+#endif
+
   // Fill the block with the specified movement
   if (!_populate_block(block, false, target
     #if HAS_POSITION_FLOAT
@@ -1933,6 +1946,10 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
 
   #if ENABLED(SPINDLE_LASER_ENABLE)
     block->spindle_pwm = Laser.spindle_pwm;
+  #endif
+
+  #if ENABLED(USB_DISK_SUPPORT)
+    block->udisk_block_pos = udisk.udisk_queue_pos;
   #endif
 
   #if ENABLED(BARICUDA)

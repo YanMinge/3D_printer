@@ -71,6 +71,10 @@
 #include "laser.h"
 #endif
 
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include "../../feature/pause.h"
+#endif
+
 lcd_parser dwin_parser;
 const unsigned long button_addr[] =
 {0x1200,0x1202,0x1204,0x120e,0x1210,0x1211,0x1212,0x1213,0x1214,0x1215,0x1216,0x1217,0x1218,0x121A,0x121B,0X121C,0};
@@ -463,14 +467,25 @@ void lcd_parser::response_print_file(void)
       {
         enqueue_and_echo_commands_P("M4 S0");
       }
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+	  immediately_pause_flag = false;
+#endif
       LcdFile.set_current_status(stop_printing);
       UserExecution.pause_udisk_print();
+	  UserExecution.cmd_now_g28();
+	  UserExecution.cmd_user_synchronize();
       dwin_process.show_start_print_file_page(temp);
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+	  immediately_pause_flag = true;
+#endif
     }
 
     //start the print
     else if(status == stop_printing)
     {
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+      immediately_pause_flag = false;
+#endif
       LcdFile.set_current_status(on_printing);
       UserExecution.cmd_M2024();
       dwin_process.show_stop_print_file_page(temp);
@@ -537,7 +552,7 @@ void lcd_parser::response_print_move_axis(void)
   {
     pressed_flag |= 0x02;
 	pressed_time = millis();
-    UserExecution.cmd_g1_x(X_MAX_POS);
+    UserExecution.cmd_g1_x(2 * X_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN == receive_addr))
   {
@@ -549,13 +564,13 @@ void lcd_parser::response_print_move_axis(void)
   {
     pressed_flag |= 0x08;
 	pressed_time = millis();
-    UserExecution.cmd_g1_y(Y_MAX_POS);
+    UserExecution.cmd_g1_y(2 * Y_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr))
   {
     pressed_flag |= 0x10;
 	pressed_time = millis();
-    UserExecution.cmd_g1_z(-Z_MAX_POS);
+    UserExecution.cmd_g1_z(-2 * Z_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr))
   {
@@ -593,11 +608,11 @@ void lcd_parser::response_print_move_axis(void)
   {
     if(0x01 == receive_data) //add home offset
     {
-      UserExecution.cmd_g1_single_z(current_position[Z_AXIS] + 0.1);
+      UserExecution.cmd_g1_z(current_position[Z_AXIS] + 0.1);
     }
     else if(0x02 == receive_data) // mins home offset
     {
-      UserExecution.cmd_g1_single_z(current_position[Z_AXIS] - 0.1);
+      UserExecution.cmd_g1_z(current_position[Z_AXIS] - 0.1);
     }
   }
 }

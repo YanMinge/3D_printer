@@ -163,6 +163,10 @@ typedef struct block_t {
     uint16_t spindle_pwm;
 #endif
 
+#if ENABLED(USB_DISK_SUPPORT)
+    uint16_t udisk_block_pos;
+#endif
+
   uint32_t segment_time_us;
 
 } block_t;

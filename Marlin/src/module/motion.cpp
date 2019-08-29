@@ -63,6 +63,10 @@
   #include "../feature/fwretract.h"
 #endif
 
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include "../feature/pause.h"
+#endif
+
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../core/debug_out.h"
 
@@ -794,6 +798,11 @@ void clean_up_after_endstop_or_probe_move() {
         if (ELAPSED(millis(), next_idle_ms)) {
           next_idle_ms = millis() + 200UL;
           idle();
+		  #if ENABLED(ADVANCED_PAUSE_FEATURE)
+          if(immediately_pause_flag){
+            return;
+          }
+		  #endif
         }
         LOOP_XYZE(i) raw[i] += segment_distance[i];
         if (!planner.buffer_line(raw, fr_mm_s, active_extruder, cartesian_segment_mm
