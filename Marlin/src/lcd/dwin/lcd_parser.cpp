@@ -485,6 +485,8 @@ void lcd_parser::response_print_file(void)
     {
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
       immediately_pause_flag = false;
+      UserExecution.cmd_M2026(pause_print_data.udisk_pos);
+	  safe_delay(20);
 #endif
       LcdFile.set_current_status(on_printing);
       UserExecution.cmd_M2024();

@@ -242,6 +242,13 @@ void user_execution::cmd_M2024(void)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_M2026(int32_t pos)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2026 S%ld"), pos);
+  enqueue_and_echo_command(cmd);
+}
+
 void user_execution::cmd_M2032(bool val)
 {
   char cmd[32];
@@ -268,7 +275,9 @@ void user_execution::pause_udisk_print(void)
     //thermalManager.disable_all_heaters();
     //thermalManager.zero_fan_speeds();
     //wait_for_heatup = false;
-	udisk.set_index(udisk.udisk_block_pos);
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+    pause_print_data.udisk_pos = udisk.udisk_block_pos;
+#endif
   }
 #endif
 }

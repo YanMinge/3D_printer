@@ -64,6 +64,8 @@ PauseMenuResponse pause_menu_response;
 
 fil_change_settings_t fc_settings[EXTRUDERS];
 
+pause_print_data_settings_t pause_print_data;
+
 #if ENABLED(SDSUPPORT)
   #include "../sd/cardreader.h"
 #endif

@@ -36,6 +36,28 @@ typedef struct {
 
 #include "../libs/nozzle.h"
 
+typedef struct {
+  float current_position[NUM_AXIS];
+  uint16_t feedrate;
+
+#if HAS_TEMP_HOTEND
+ #if HOTENDS > 1
+  uint8_t active_hotend;
+ #endif
+  int16_t target_temperature[HOTENDS];
+#endif
+
+ #if HAS_HEATED_BED
+  int16_t target_temperature_bed;
+ #endif
+
+ #if FAN_COUNT
+  uint8_t fan_speed[FAN_COUNT];
+ #endif
+
+ uint32_t udisk_pos;
+} pause_print_data_settings_t;
+
 enum PauseMode : char {
   PAUSE_MODE_SAME,
   PAUSE_MODE_PAUSE_PRINT,
@@ -70,6 +92,8 @@ extern PauseMenuResponse pause_menu_response;
 extern fil_change_settings_t fc_settings[EXTRUDERS];
 
 extern uint8_t did_pause_print;
+
+extern pause_print_data_settings_t pause_print_data;
 
 extern bool immediately_pause_flag;
 
