@@ -342,8 +342,7 @@ bool unload_filament(const float &unload_length, const bool show_lcd/*=false*/,
   for(uint16_t i = 0; i < FILAMENT_UNLOAD_DELAY; i = i + 20){
     safe_delay(20);
   #if ENABLED(USE_DWIN_LCD)
-    if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type())
-    {
+    if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type()){
       dwin_process.send_temperature_percentage(i/UNLOAD_TIME_SHOW_INTERVAL);
     }
   #endif
@@ -361,18 +360,19 @@ bool unload_filament(const float &unload_length, const bool show_lcd/*=false*/,
     const float saved_acceleration = planner.settings.retract_acceleration;
     planner.settings.retract_acceleration = FILAMENT_CHANGE_UNLOAD_ACCEL;
   #endif
-
-   int per_count = 0;
-   for (float purge_count = unload_length, per_count = 0;purge_count < 0 && wait_for_user; per_count++ ,purge_count = purge_count + 10){
+  #if ENABLED(USE_DWIN_LCD)
+    int per_count = 0;
+  #endif
+    for (float purge_count = unload_length; purge_count < 0 && wait_for_user; purge_count = purge_count + 10){
       do_pause_e_move(-10, FILAMENT_CHANGE_UNLOAD_FEEDRATE);
   #if ENABLED(USE_DWIN_LCD)
-    if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type())
-    {
-      static int percentage_count = UNLOAD_TIME_SHOW_PERCENTAGE/(-unload_length /10);
-      int lcd_percentage = per_count * percentage_count;
-      lcd_percentage += FILAMENT_UNLOAD_DELAY/UNLOAD_TIME_SHOW_INTERVAL;
-      dwin_process.send_temperature_percentage(lcd_percentage);
-    }
+      if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type()){
+        static int percentage_count = UNLOAD_TIME_SHOW_PERCENTAGE/(-unload_length /10);
+        int lcd_percentage = per_count * percentage_count;
+        lcd_percentage += FILAMENT_UNLOAD_DELAY/UNLOAD_TIME_SHOW_INTERVAL;
+        dwin_process.send_temperature_percentage(lcd_percentage);
+      }
+      per_count++;
   #endif
       idle();
     }

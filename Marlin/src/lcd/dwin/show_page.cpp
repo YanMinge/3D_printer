@@ -582,23 +582,26 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
 #endif
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_STOP_TASK_CH);
 
+  //save current position, fan speed, temperature hotended bed,
+  pause_print_data.current_position[X_AXIS] = planner.get_axis_position_mm(X_AXIS);
+  pause_print_data.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
+  pause_print_data.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
+  pause_print_data.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
   pause_print_data.fan_speed[0] =  thermalManager.fan_speed[0];
   pause_print_data.feedrate = uint16_t(feedrate_mm_s * 60.0f);
   pause_print_data.target_temperature[0] = thermalManager.degTargetHotend(0);
   pause_print_data.target_temperature_bed = thermalManager.degTargetBed();
 
   UserExecution.pause_udisk_print();
-
-  //save current position, fan speed, temperature hotended bed,
-  pause_print_data.current_position[X_AXIS] = planner.get_axis_position_mm(X_AXIS);
-  pause_print_data.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
-  pause_print_data.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
-  pause_print_data.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
-
+  SERIAL_PRINTF("D3 X(%f),Y(%f),Z(%f),E(%f)\r\n", pause_print_data.current_position[X_AXIS], pause_print_data.current_position[Y_AXIS], pause_print_data.current_position[Z_AXIS], pause_print_data.current_position[E_AXIS]);
   //turn on fan
   UserExecution.cmd_M106(255);
   safe_delay(20);
 
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  do_pause_e_move(-6, 50);
+#endif
+  SERIAL_PRINTF("D4 X(%f),Y(%f),Z(%f),E(%f)\r\n", current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
   //go home
   SERIAL_PRINTF("before cmd_now_g28\r\n");
   UserExecution.cmd_now_g28();
@@ -630,7 +633,12 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
     UserExecution.cmd_now_M106(pause_print_data.fan_speed[0]);
     UserExecution.cmd_now_M104(pause_print_data.target_temperature[0]);
     UserExecution.cmd_now_M190(pause_print_data.target_temperature_bed);
-    UserExecution.cmd_g92_e(pause_print_data.current_position[E_AXIS]);
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+   do_pause_e_move(6, 5);
+#endif
+    // Now all extrusion positions are resumed and ready to be confirmed
+    // Set extruder to saved position
+    planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = pause_print_data.current_position[E_AXIS]));
     SERIAL_PRINTF("fan_speed(%d),target_temperature(%d),target_temperature_bed(%d)\r\n", pause_print_data.fan_speed[0],pause_print_data.target_temperature[0],pause_print_data.target_temperature_bed);
   }
 
@@ -740,7 +748,7 @@ void lcd_process::show_unload_filament_page(void)
 void lcd_process::show_cancel_stop_print_page(pfile_list_t temp)
 {
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-    immediately_pause_flag = false;
+  immediately_pause_flag = false;
 #endif
 
   print_status status;

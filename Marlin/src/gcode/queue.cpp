@@ -837,6 +837,7 @@ inline void get_serial_commands() {
 * or until the end of the file is reached. The special character '#'
 * can also interrupt buffering.
 */
+uint32_t udisk_pos_queue[BUFSIZE] = {0};
 inline void get_udisk_commands(void) {
   static bool stop_buffering = false;
   static bool udisk_comment_mode = false;
@@ -900,7 +901,9 @@ inline void get_udisk_commands(void) {
 
       command_queue[cmd_queue_index_w][udsik_count] = '\0'; // terminate string
       udsik_count = 0; // clear udisk line buffe
-      udisk.udisk_queue_pos = udisk.get_index();
+	  udisk_pos_queue[cmd_queue_index_w] = udisk.get_index();
+      udisk.udisk_queue_pos = udisk_pos_queue[cmd_queue_index_r];
+
       #if ENABLED(USE_DWIN_LCD)
       if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
       {

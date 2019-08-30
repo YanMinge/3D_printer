@@ -397,8 +397,9 @@ void disable_all_steppers() {
       SERIAL_EOL();
     #endif // HOST_ACTION_COMMANDS
 
-    if (run_runout_script)
-      enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+    if (run_runout_script){
+      //enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+    }
   }
 
 #endif // HAS_FILAMENT_SENSOR

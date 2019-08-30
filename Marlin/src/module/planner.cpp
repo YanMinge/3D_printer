@@ -1506,7 +1506,7 @@ void Planner::quick_stop() {
   #endif
 
   // Make sure to drop any attempt of queuing moves for at least 1 second
-  cleaning_buffer_counter = 1000;
+  cleaning_buffer_counter = 2500;
 
 #if ENABLED(USE_DWIN_LCD)
   if(UserExecution.lcd_immediate_execution == true){
@@ -1516,6 +1516,15 @@ void Planner::quick_stop() {
 
   // Reenable Stepper ISR
   if (was_enabled) ENABLE_STEPPER_DRIVER_INTERRUPT();
+
+#if ENABLED(USE_DWIN_LCD)
+  if (UserExecution.lcd_immediate_execution == false){
+    while(cleaning_buffer_counter){
+      //idle();
+	  watchdog_reset();
+    }
+  }
+#endif
 
   // And stop the stepper ISR
   stepper.quick_stop();
