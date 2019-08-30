@@ -436,7 +436,7 @@ void user_execution::cmd_now_g38_z(float z)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
-  cmd_now_g_m(PSTR("M107"));
+  cmd_now_g_m(cmd);
 }
 
 

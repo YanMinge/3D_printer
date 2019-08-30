@@ -49,6 +49,7 @@ enum heating_status_type : uint8_t {
    HEAT_LOAD_STATUS,
    HEAT_UNLOAD_STATUS,
    HEAT_PRINT_STATUS,
+   HEAT_PRINT_NO_FILAMENT_STATUS,
 };
 
 class filament_ui_show

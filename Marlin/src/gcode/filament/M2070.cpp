@@ -36,6 +36,7 @@
 #include "lcd_process.h"
 #include "filament_ui.h"
 
+#if 0
 void synchronize_temperature_and_motion(void)
 {
   millis_t now = 0, next_temp_ms = 0;
@@ -82,6 +83,7 @@ inline void G38_run_probe_temperature() {
   prepare_move_to_destination();
   synchronize_temperature_and_motion();
 }
+#endif
 
 /**
  * M2070 Z400
@@ -96,7 +98,7 @@ void GcodeSuite::M2070(void) {
     if (ABS(destination[i] - current_position[i]) >= G38_MINIMUM_MOVE) {
       if (!parser.seenval('F')) feedrate_mm_s = homing_feedrate((AxisEnum)i);
 
-      G38_run_probe_temperature();
+      //G38_run_probe_temperature();
     }
 
   G38_move = 0;

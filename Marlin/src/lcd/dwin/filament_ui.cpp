@@ -54,6 +54,8 @@
 #include "../../feature/power_loss_recovery.h"
 #endif
 
+filament_ui_show filament_show;
+
 filament_ui_show::filament_ui_show()
 {
   heating_status = HEAT_NULL_STATUS;

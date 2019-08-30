@@ -912,6 +912,9 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case PRINT_MACHINE_STATUS_TASK_CANCEL_CH:
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+        immediately_pause_flag = false;
+#endif
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
         filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         LcdFile.set_current_status(out_printing);

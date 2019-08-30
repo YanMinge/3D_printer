@@ -663,26 +663,6 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
 
 }
 
-
-void lcd_process::show_quit_print_page(void)
-{
-
-  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
-  planner.clear_block_buffer();
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_now_g28();
-  //dwin_parser.current_page_index = 0;
-  reset_image_send_parameters();
-  udisk.stop_udisk_print();  //stop print
-  lcd_exception_stop();      //stop steppre and heaters
-  if(IS_HEAD_LASER())
-  {
-    enqueue_and_echo_commands_P("M4 S0");
-  }
-  show_sure_block_page(PRINT_MACHINE_STATUS_TASK_CANCEL_CH);
-
-}
-
 void lcd_process::show_load_filament_page(void)
 {
   filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
@@ -759,6 +739,10 @@ void lcd_process::show_unload_filament_page(void)
 
 void lcd_process::show_cancel_stop_print_page(pfile_list_t temp)
 {
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+    immediately_pause_flag = false;
+#endif
+
   print_status status;
   status = LcdFile.get_current_status();
   if(stop_printing == status)
@@ -773,25 +757,28 @@ void lcd_process::show_cancel_stop_print_page(pfile_list_t temp)
 
 void lcd_process::show_confirm_stop_print_page(void)
 {
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  immediately_pause_flag = false;
+#endif
 
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
   dwin_process.reset_image_send_parameters();
-
+  UserExecution.pause_udisk_print();
   udisk.stop_udisk_print();  //stop print
-  lcd_exception_stop();      //stop steppre and heaters
 
   if(IS_HEAD_LASER())
   {
     enqueue_and_echo_commands_P("M4 S0");
   }
-
-  UserExecution.cmd_user_synchronize();
-  delay(1);
   LcdFile.set_current_status(out_printing);
 
   SERIAL_PRINTF("before cmd_now_g28\r\n");
   UserExecution.cmd_now_g28();
   show_sure_block_page(PRINT_MACHINE_STATUS_TASK_CANCEL_CH);
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  immediately_pause_flag = true;
+#endif
+
   //dwin_process.send_given_page_data();
   //dwin_process.simage_send_start();
   //if(udisk.job_recover_file_exists())
