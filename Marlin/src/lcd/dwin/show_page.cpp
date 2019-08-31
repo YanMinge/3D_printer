@@ -592,20 +592,17 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   pause_print_data.target_temperature[0] = thermalManager.degTargetHotend(0);
   pause_print_data.target_temperature_bed = thermalManager.degTargetBed();
 
+  //stop the print task
   UserExecution.pause_udisk_print();
-  SERIAL_PRINTF("D3 X(%f),Y(%f),Z(%f),E(%f)\r\n", pause_print_data.current_position[X_AXIS], pause_print_data.current_position[Y_AXIS], pause_print_data.current_position[Z_AXIS], pause_print_data.current_position[E_AXIS]);
+
   //turn on fan
   UserExecution.cmd_M106(255);
   safe_delay(20);
 
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
-  do_pause_e_move(-6, 50);
-#endif
-  SERIAL_PRINTF("D4 X(%f),Y(%f),Z(%f),E(%f)\r\n", current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
   //go home
-  SERIAL_PRINTF("before cmd_now_g28\r\n");
   UserExecution.cmd_now_g28();
 
+  //Update page status
   dwin_process.show_start_print_file_page(temp);
   LcdFile.set_current_status(stop_printing);
 
@@ -624,48 +621,43 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   immediately_pause_flag = false;
 #endif
 
-  //turn on the peripheral fan temperature.
   if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
   {
     dwin_process.set_lcd_temp_show_status(true);
     dwin_process.pre_percentage = 0;
     dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+
+    //turn on the peripheral fan temperature.
     UserExecution.cmd_now_M106(pause_print_data.fan_speed[0]);
     UserExecution.cmd_now_M104(pause_print_data.target_temperature[0]);
+    UserExecution.cmd_now_M140(pause_print_data.target_temperature_bed);
+    UserExecution.cmd_now_M109(pause_print_data.target_temperature[0]);
+    UserExecution.cmd_user_synchronize();
     UserExecution.cmd_now_M190(pause_print_data.target_temperature_bed);
+    UserExecution.cmd_user_synchronize();
+
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-   do_pause_e_move(6, 5);
-#endif
+    //Protective movement
+    UserExecution.cmd_now_g1_xy(pause_print_data.current_position[X_AXIS], pause_print_data.current_position[Y_AXIS], 3000);
+    UserExecution.cmd_user_synchronize();
+    UserExecution.cmd_g1_z(pause_print_data.current_position[Z_AXIS] + 10, 600);
+    UserExecution.get_remain_command();
+
+    //load filament
+    do_pause_e_move(FILAMENT_UNLOAD_RETRACT_LENGTH, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+
     // Now all extrusion positions are resumed and ready to be confirmed
     // Set extruder to saved position
     planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = pause_print_data.current_position[E_AXIS]));
-    SERIAL_PRINTF("fan_speed(%d),target_temperature(%d),target_temperature_bed(%d)\r\n", pause_print_data.fan_speed[0],pause_print_data.target_temperature[0],pause_print_data.target_temperature_bed);
-  }
 
-  //turn on the peripheral fan temperature.
-  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
-  {
-    UserExecution.cmd_now_M109(pause_print_data.target_temperature[0]);
-  }
-
-  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
-  {
-    UserExecution.cmd_user_synchronize();
-  }
-
-  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
-  {
-    UserExecution.cmd_now_g1(pause_print_data.current_position);
-  }
-
-  if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
-  {
-    //change to start print page
-    UserExecution.cmd_M2026(pause_print_data.udisk_pos);
-    safe_delay(20);
-    dwin_process.show_stop_print_file_page(temp);
-    //change to start print page
+    //Set the printed position
+ 	UserExecution.cmd_M2026(pause_print_data.udisk_pos);
+    UserExecution.cmd_g1_z(pause_print_data.current_position[Z_AXIS], 600);
+#endif
     UserExecution.cmd_M2024();
+    dwin_process.show_stop_print_file_page(temp);
+
+    //change to start print page
     LcdFile.set_current_status(on_printing);
   }
 

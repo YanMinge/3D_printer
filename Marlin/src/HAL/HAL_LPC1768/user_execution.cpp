@@ -118,7 +118,6 @@ void user_execution::cmd_now_g1_xy(float x, float y, float f)
   cmd_now_g_m(cmd);
 }
 
-
 void user_execution::cmd_g1_x(float x, float feedrate)
 {
   char cmd[32];
@@ -320,12 +319,13 @@ void user_execution::pause_udisk_print(void)
     print_job_timer.pause();
     clear_command_queue();
     quickstop_stepper();
-    thermalManager.disable_all_heaters();
-    //thermalManager.zero_fan_speeds();
-    wait_for_heatup = false;
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
     pause_print_data.udisk_pos = udisk.udisk_block_pos;
+    // Retract filament
+    do_pause_e_move(-FILAMENT_UNLOAD_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 #endif
+    thermalManager.disable_all_heaters();
+    wait_for_heatup = false;
   }
 #endif
 }

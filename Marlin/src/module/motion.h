@@ -162,7 +162,7 @@ void line_to_current_position(const float &fr_mm_s=feedrate_mm_s);
  * Move the planner to the position stored in the destination array, which is
  * used by G0/G1/G2/G3/G5 and many other functions to set a destination.
  */
-void buffer_line_to_destination(const float fr_mm_s);
+bool buffer_line_to_destination(const float fr_mm_s);
 
 #if IS_KINEMATIC
   void prepare_uninterpolated_move_to_destination(const float &fr_mm_s=0);
