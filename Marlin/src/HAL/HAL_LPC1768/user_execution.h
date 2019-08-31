@@ -89,7 +89,7 @@ public:
   void user_hardware_stop(void);
   void cmd_now_M104(uint16_t temperature);
   void cmd_M106(uint16_t speed);
-  void cmd_now_M106(uint16_t speed);
+  void cmd_now_M106(uint16_t speed, uint8_t funs = 0);
   void cmd_M109(uint16_t temperature);
   void cmd_now_M109(uint16_t temperature);
   void cmd_now_M140(uint16_t temperature);

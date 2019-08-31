@@ -157,22 +157,11 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
     info.valid_foot = info.valid_head;
 
     // Machine state
-    COPY(info.current_position, current_position);
-    info.feedrate = uint16_t(feedrate_mm_s * 60.0f);
-
-    #if HOTENDS > 1
-      info.active_hotend = active_extruder;
-    #endif
-
-    //HOTEND_LOOP() info.target_temperature[e] = thermalManager.temp_hotend[e].target;
-
-    #if HAS_HEATED_BED
-      info.target_temperature_bed = thermalManager.temp_bed.target;
-    #endif
-
-    #if FAN_COUNT
-      COPY(info.fan_speed, thermalManager.fan_speed);
-    #endif
+    //COPY(info.current_position, current_position);
+    info.current_position[X_AXIS] = planner.get_axis_position_mm(X_AXIS);
+    info.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
+    info.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
+    info.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
 
     #if HAS_LEVELING
       info.leveling = planner.leveling_active;
@@ -195,11 +184,11 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
     #endif
 
     // Elapsed print job time
-    info.print_job_elapsed = print_job_timer.duration();
+    info.print_job_elapsed = udisk.get_print_time_dynamic();
 
     // udisk file position
     memcpy(info.udisk_filename, udisk.get_file_name(), strlen(udisk.get_file_name()));
-    info.udisk_pos = udisk.get_index();
+    info.udisk_pos = udisk.udisk_block_pos;
 
     write();
 
@@ -262,9 +251,7 @@ void PrintJobRecovery::resume() {
 
   // Set Z to 0, raise Z by 2mm, and Home (XY only for Cartesian) with no raise
   // (Only do simulated homing in Marlin Dev Mode.)
-  gcode.process_subcommands_now_P(PSTR("G28\nG1 F3000 X32 Y55"));
-  gcode.process_subcommands_now_P(PSTR("M114"));
-
+  gcode.process_subcommands_now_P(PSTR("G28"));
   // Pretend that all axes are homed
   axis_homed = axis_known_position = xyz_bits;
 
@@ -331,22 +318,6 @@ void PrintJobRecovery::resume() {
     memcpy(&mixer.gradient, &info.gradient, sizeof(info.gradient));
   #endif
 
-  //// Restore Z (plus raise) and E positions with G92.0
-  //dtostrf(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, 1, 3, str_1);
-  //dtostrf(info.current_position[E_AXIS]
-  //  #if ENABLED(SAVE_EACH_CMD_MODE)
-  //    - 5 // Extra extrusion on restart
-  // #endif
-  // , 1, 3, str_2
-  //);
-  //sprintf_P(cmd, PSTR("G92.0 Z%s E%s"), str_1, str_2);
-  //gcode.process_subcommands_now(cmd);
-  //dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS] + RECOVERY_ZRAISE, Z_AXIS), 1, 3, str_1);
-  //sprintf_P(cmd, PSTR("G1 Z%s F200"), str_1);
-  //gcode.process_subcommands_now(cmd);
-  //sprintf_P(cmd, PSTR("G92.0 E%s"),str_2);
-  //gcode.process_subcommands_now(cmd);
-
   // Move back to the saved XY
   dtostrf(info.current_position[X_AXIS], 1, 3, str_1);
   dtostrf(info.current_position[Y_AXIS], 1, 3, str_2);
@@ -354,18 +325,17 @@ void PrintJobRecovery::resume() {
   gcode.process_subcommands_now(cmd);
 
   // Move back to the saved Z
-  dtostrf(NATIVE_TO_LOGICAL(info.current_position[Z_AXIS],Z_AXIS), 1, 3, str_1);
+  dtostrf(info.current_position[Z_AXIS], 1, 3, str_1);
   sprintf_P(cmd, PSTR("G1 Z%s F500"), str_1);
   gcode.process_subcommands_now(cmd);
+
+  // Now all extrusion positions are resumed and ready to be confirmed
+  // Set extruder to saved position
+  planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = info.current_position[E_AXIS]));
 
   // Restore the feedrate
   sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
   gcode.process_subcommands_now(cmd);
-
-  // Process commands from the old pending queue
-  uint8_t c = info.commands_in_queue, r = info.cmd_queue_index_r;
-  for (; c--; r = (r + 1) % BUFSIZE)
-    gcode.process_subcommands_now(info.command_queue[r]);
 
   // Resume the udisk file from the last position
   char *fn = info.udisk_filename;

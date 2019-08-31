@@ -213,10 +213,10 @@ void user_execution::cmd_M106(uint16_t speed)
   enqueue_and_echo_command(cmd);
 }
 
-void user_execution::cmd_now_M106(uint16_t speed)
+void user_execution::cmd_now_M106(uint16_t speed, uint8_t funs)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("M106 P0 S%d"),speed);
+  sprintf_P(cmd, PSTR("M106 P%d S%d"),funs, speed);
   //gcode.process_subcommands_now_P(cmd);
   cmd_now_g_m(cmd);
 }

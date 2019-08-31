@@ -162,6 +162,10 @@ void udisk_reader::usb_status_polling(void)
     }
     else
     {
+      if(IS_UDISK_PRINTING())
+      {
+        stop_udisk_print();
+      }
       f_mount(&fatFS, "/" , 0);     /* Register volume work area (never fails) */
       detected = true;
     }
@@ -721,7 +725,7 @@ uint32_t udisk_reader::get_print_time(char * const path)
 
 void udisk_reader::recovery_print_time_dynamic(uint32_t time)
 {
-  print_time_dynamic = print_time_dynamic - time;
+  print_time_dynamic = print_time_dynamic;
 }
 
 

@@ -587,10 +587,22 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   pause_print_data.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
   pause_print_data.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
   pause_print_data.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
-  pause_print_data.fan_speed[0] =  thermalManager.fan_speed[0];
+
+#if FAN_COUNT
+  COPY(pause_print_data.fan_speed, thermalManager.fan_speed);
+#endif
   pause_print_data.feedrate = uint16_t(feedrate_mm_s * 60.0f);
-  pause_print_data.target_temperature[0] = thermalManager.degTargetHotend(0);
-  pause_print_data.target_temperature_bed = thermalManager.degTargetBed();
+
+#if HAS_TEMP_HOTEND
+#if HOTENDS > 1
+  pause_print_data.active_hotend = active_extruder;
+#endif
+  HOTEND_LOOP() pause_print_data.target_temperature[e] = thermalManager.temp_hotend[e].target;
+#endif
+
+#if HAS_HEATED_BED
+  pause_print_data.target_temperature_bed = thermalManager.temp_bed.target;
+#endif
 
   //stop the print task
   UserExecution.pause_udisk_print();
@@ -628,13 +640,37 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
     dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
 
     //turn on the peripheral fan temperature.
+#if FAN_COUNT
     UserExecution.cmd_now_M106(pause_print_data.fan_speed[0]);
-    UserExecution.cmd_now_M104(pause_print_data.target_temperature[0]);
+    // Restore print cooling fan speeds
+    FANS_LOOP(i)
+    {
+      uint8_t f = pause_print_data.fan_speed[i];
+      if (f)
+      {
+        UserExecution.cmd_now_M106(f, i);
+      }
+    }
+#endif
+
+#if HOTENDS > 1
+#error "Temporarily only supports a single extrusion head"
+#else
+#if HAS_TEMP_HOTEND
+    UserExecution.cmd_now_M104(pause_print_data.target_temperature[HOTEND_INDEX]);
+#endif
+#if HAS_HEATED_BED
     UserExecution.cmd_now_M140(pause_print_data.target_temperature_bed);
-    UserExecution.cmd_now_M109(pause_print_data.target_temperature[0]);
+#endif
+#if HAS_TEMP_HOTEND
+    UserExecution.cmd_now_M109(pause_print_data.target_temperature[HOTEND_INDEX]);
     UserExecution.cmd_user_synchronize();
+#endif
+#if HAS_HEATED_BED
     UserExecution.cmd_now_M190(pause_print_data.target_temperature_bed);
     UserExecution.cmd_user_synchronize();
+#endif
+#endif
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
     //Protective movement

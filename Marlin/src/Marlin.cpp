@@ -683,15 +683,23 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
 void power_loss_detect(void){
   static bool power_loss_status = true;
   bool power_status = READ(POWER_LOSS_PIN);
-  if(power_status == POWER_LOSS_STATE && power_loss_status)
-  {
-    recovery.info.target_temperature[HOTEND_INDEX] = thermalManager.temp_hotend[HOTEND_INDEX].target;
-    COPY(recovery.info.current_position, current_position);
+  if(power_status == POWER_LOSS_STATE && power_loss_status){
 
-    // Commands in the queue
-    recovery.info.commands_in_queue = commands_in_queue;
-    recovery.info.cmd_queue_index_r = cmd_queue_index_r;
-    COPY(recovery.info.command_queue, command_queue);
+    //Some parameters need to be saved in advance
+    recovery.info.feedrate = uint16_t(feedrate_mm_s * 60.0f);
+    #if HOTENDS > 1
+    recovery.info.active_hotend = active_extruder;
+    #endif
+
+    HOTEND_LOOP() recovery.info.target_temperature[e] = thermalManager.temp_hotend[e].target;
+
+    #if HAS_HEATED_BED
+    recovery.info.target_temperature_bed = thermalManager.temp_bed.target;
+    #endif
+
+    #if FAN_COUNT
+    COPY(recovery.info.fan_speed, thermalManager.fan_speed);
+    #endif
 
     clear_command_queue();
     thermalManager.disable_all_heaters();
