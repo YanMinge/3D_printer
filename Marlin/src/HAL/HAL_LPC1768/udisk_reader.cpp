@@ -159,13 +159,13 @@ void udisk_reader::usb_status_polling(void)
       f_unmount("/");
       set_disk_status(STA_NOINIT);
       detected = false;
-    }
-    else
-    {
-      if(IS_UDISK_PRINTING())
+      if(is_file_open())
       {
         stop_udisk_print();
       }
+    }
+    else
+    {
       f_mount(&fatFS, "/" , 0);     /* Register volume work area (never fails) */
       detected = true;
     }
@@ -410,16 +410,16 @@ void udisk_reader::open_file(char * const path, const bool read)
     }
     else
     {
-      if(strlen(abs_file_name) <= FILE_NAME_LEN * 4)
+      if(strlen(abs_file_name) <= FILE_NAME_LEN * (FILE_DIRECTORY_DEPTH + 1))
       {
         opened_file_name = new char[strlen(path)];
         strcpy(opened_file_name, path);
       }
       else
       {
-        opened_file_name = new char[FILE_NAME_LEN * 4];
-        memcpy(opened_file_name, path, FILE_NAME_LEN * 4);
-        opened_file_name[FILE_NAME_LEN * 4] = '\0';
+        opened_file_name = new char[FILE_NAME_LEN * (FILE_DIRECTORY_DEPTH + 1)];
+        memcpy(opened_file_name, path, FILE_NAME_LEN * (FILE_DIRECTORY_DEPTH + 1));
+        opened_file_name[FILE_NAME_LEN * (FILE_DIRECTORY_DEPTH + 1)] = '\0';
       }
       is_file_opened = true;
       file_size = file_obj.obj.objsize;
@@ -725,7 +725,7 @@ uint32_t udisk_reader::get_print_time(char * const path)
 
 void udisk_reader::recovery_print_time_dynamic(uint32_t time)
 {
-  print_time_dynamic = print_time_dynamic;
+  print_time_dynamic = time;
 }
 
 

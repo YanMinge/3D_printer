@@ -70,17 +70,9 @@ void filament_ui_show::show_file_print_page(void)
     temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
     if(udisk.job_recover_file_exists())
     {
-      //if(progress_status.load_return_status)
-      //{
-       // dwin_process.show_start_print_file_page(dwin_process.current_file);
-      //  LcdFile.set_current_status(out_printing);
-      //}
-     // else
-      {
-        dwin_process.show_stop_print_file_page(temp);
-        LcdFile.set_current_status(on_printing);
-        enqueue_and_echo_commands_P(PSTR("M1000"));
-      }
+      dwin_process.show_stop_print_file_page(temp);
+      LcdFile.set_current_status(on_printing);
+      enqueue_and_echo_commands_P(PSTR("M1000"));
     }
     else
     {
