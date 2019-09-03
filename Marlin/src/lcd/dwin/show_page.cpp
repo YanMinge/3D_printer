@@ -657,7 +657,6 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   if(MaterialCheck.is_filamen_runout())
   {
     //go home
-    SERIAL_PRINTF("before cmd_now_g28\r\n");
     UserExecution.cmd_now_g28();
 
     show_start_print_file_page(temp);

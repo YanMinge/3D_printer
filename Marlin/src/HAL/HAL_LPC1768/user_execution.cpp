@@ -167,7 +167,6 @@ void user_execution::cmd_now_M206(float height)
 {
   char cmd[32];
   sprintf_P(cmd, PSTR("M206 Z%0.1f"), height);
-  SERIAL_PRINTF("show_save_calibration_data_page Z%0.1f\r\n",height);
   cmd_now_g_m(cmd);
 }
 
