@@ -647,7 +647,7 @@ void lcd_process::send_print_time(uint32_t time)
   memset(str, ' ', sizeof(str));
   if(udisk.get_opened_file_type() != TYPE_MAKEBLOCK_GM)
   {
-    sprintf_P(str,"%04.1f%%  ", (udisk.get_index() * 100.0)/udisk.get_opened_file_size());
+    sprintf_P(str,"%04.1f%%  ", (udisk.get_index() * 100.0) / udisk.get_opened_file_size());
     lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
   }
   else
