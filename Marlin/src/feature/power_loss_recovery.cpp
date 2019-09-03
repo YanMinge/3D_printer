@@ -298,7 +298,6 @@ void PrintJobRecovery::resume() {
       gcode.process_subcommands_now(cmd);
     }
 #if ENABLED(USE_DWIN_LCD)
-
     dwin_process.temperature_progress_update(60);
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;

@@ -43,6 +43,7 @@
 
 #if ENABLED(USB_DISK_SUPPORT)
   #include "udisk_reader.h"
+  #include "../module/printcounter.h"
 #endif //USB_DISK_SUPPORT
 
 #if ENABLED(NEWPANEL)
@@ -556,8 +557,7 @@ inline void get_serial_commands() {
               #endif
             ;
 #if ENABLED(NEWPANEL)
-  if(IS_UDISK_PRINTING())
-  {
+  if(IS_UDISK_PRINTING() || (print_job_timer.isPaused())){
     return;
   }
 #endif
