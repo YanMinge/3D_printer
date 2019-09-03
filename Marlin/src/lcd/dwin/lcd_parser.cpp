@@ -422,6 +422,11 @@ void lcd_parser::response_select_file(void)
     dwin_process.send_print_time(udisk.get_print_time(temp->file_name));
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH);
     dwin_process.limage_send_start();
+    while(dwin_process.get_limage_status())
+    {
+      idle();
+    }
+    dwin_process.lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
   else if(temp->file_type == TYPE_DEFAULT_FILE)
   {
@@ -489,14 +494,16 @@ void lcd_parser::response_print_file(void)
   // return print file.
   else if(0x02 == receive_data)
   {
-    dwin_process.reset_image_send_parameters();
     if(on_printing == status || stop_printing == status)
     {
+      dwin_process.reset_image_send_parameters();
       dwin_process.show_confirm_cancel_page(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
       return;
     }
     else if(out_printing == status)
     {
+      if(dwin_process.get_limage_status())return;
+      dwin_process.reset_image_send_parameters();
       dwin_process.send_given_page_data();
       udisk.stop_udisk_print();  //stop print
       lcd_exception_stop();      //stop steppre and heaters
@@ -824,6 +831,26 @@ void lcd_parser::response_print_machine_status()
           dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
           filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         }
+        else if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
+        {
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+          immediately_pause_flag = false;
+#endif
+          if(!MaterialCheck.is_filamen_runout()) //no filament
+          {
+            dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_MATERIAL_RUN_OUT_CH);
+          }
+          else
+          {
+            temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+            dwin_process.show_start_print_file_page(temp);
+            LcdFile.set_current_status(out_printing);
+          }
+        }
+        else if(HEAT_PRINT_NO_FILAMENT_STATUS == filament_show.get_heating_status_type())
+        {
+
+        }
         break;
 
       case PRINT_MACHINE_STATUS_UNKNOW_ERROR_CH:
@@ -833,9 +860,9 @@ void lcd_parser::response_print_machine_status()
 
       //cancel print the recovery file,goto home page
       case PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH:
-        dwin_process.show_start_up_page();
         udisk.remove_job_recovery_file();
         dwin_process.delete_current_file();
+        dwin_process.show_start_up_page();
         break;
 
       //cancel laser_focus set,goto to set page
@@ -848,19 +875,28 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case PRINT_MACHINE_STATUS_PREPARE_PRINT_CH:  //stop print file prepare heating
+        if(dwin_process.get_limage_status())return;
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
         filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         UserExecution.user_stop();
         lcd_exception_stop();
+        UserExecution.cmd_quick_stop(true);
         if(stop_printing == LcdFile.get_current_status())
         {
           dwin_process.show_start_print_file_page(temp);
         }
         else if(out_printing == LcdFile.get_current_status())
         {
-          filament_show.set_print_after_heat_status(false);
-          dwin_process.show_start_print_file_page(temp);
-          UserExecution.cmd_now_M2524();
+          if(!udisk.job_recover_file_exists())
+          {
+            filament_show.set_print_after_heat_status(false);
+            dwin_process.show_start_print_file_page(temp);
+            UserExecution.cmd_now_M2524();
+          }
+          else
+          {
+            dwin_process.show_start_print_file_page(temp);
+          }
         }
         break;
 
@@ -943,7 +979,7 @@ void lcd_parser::response_print_machine_status()
 
       //confirm print the recovery file, goto the machine print page
       case PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH:
-        dwin_process.show_machine_recovery_print_page();
+        dwin_process.show_prepare_print_page(temp);
         break;
 
       //confirm laser_focus set,goto to fucus_prepare page
@@ -1036,6 +1072,13 @@ void lcd_parser::refresh_current_path(void)
   current_path = new char[2];
   current_path[0] = '/';
   current_path[1] = '\0';
+}
+
+void lcd_parser::malloc_current_path(uint16_t len)
+{
+  delete [] current_path;
+  current_path = new char[len + 1];
+  current_path[len] = '\0';
 }
 
 #endif // USE_MATERIAL_MOTION_CHECK

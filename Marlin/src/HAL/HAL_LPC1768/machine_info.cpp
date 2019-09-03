@@ -62,6 +62,7 @@
 #if ENABLED(USE_DWIN_LCD)
 #include "lcd_process.h"
 #include "filament_ui.h"
+#include "lcd_parser.h"
 #endif //USE_DWIN_LCD
 
 #if ENABLED(USB_DISK_SUPPORT)
@@ -380,6 +381,13 @@ void machine_info::lcd_material_info_update(void)
           UserExecution.user_stop();
           lcd_exception_stop();
           dwin_process.set_lcd_temp_show_status(false);
+        }
+
+        if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type() && PRINT_MACHINE_STATUS_PREPARE_PRINT_CH == dwin_process.get_machine_status())
+        {
+          //pfile_list_t temp = NULL;
+          //temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+          //dwin_process.show_pause_print_page(temp);
         }
       }
     }

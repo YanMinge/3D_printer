@@ -77,9 +77,7 @@ void filament_ui_show::show_file_print_page(void)
       //}
      // else
       {
-        dwin_process.show_stop_print_file_page(temp);
-        LcdFile.set_current_status(on_printing);
-        enqueue_and_echo_commands_P(PSTR("M1000"));
+        //dwin_process.show_stop_print_file_page(temp);
       }
     }
     else

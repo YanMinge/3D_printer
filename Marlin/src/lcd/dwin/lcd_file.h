@@ -89,6 +89,7 @@ public:
   int file_list_len(void);
   pfile_list_t file_list_index(int index);
   void list_test(void);
+  bool set_current_page_via_filename(char * file_name);
 
   inline int get_page_count(){     return file_page_num;}
   inline int get_last_page_file_num(){return last_page_file_count;}

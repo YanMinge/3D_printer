@@ -148,10 +148,14 @@ void lcd_process::send_first_page_data(void)
       file_info.last_page_file = PAGE_FILE_NUM;
     }
     send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page,file_info.last_page_file);
+    SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);  //avoid the picture show same time
+    safe_delay(IMAGE_SHOW_DELAY);
     SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
   }
   else if((file_info.page_count == 0) && (file_info.current_page == 0))
   {
+    SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
+    safe_delay(IMAGE_SHOW_DELAY);
     SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
   }
   LcdFile.set_current_page(1);
@@ -216,6 +220,8 @@ void lcd_process::send_given_page_data(void)
     {
       if(0 == file_info.last_page_file) file_info.last_page_file = PAGE_FILE_NUM;
       send_page(PRINT_FILE_TEXT_BASE_ADDR,file_info.current_page - 1,file_info.last_page_file);
+      SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
+      safe_delay(IMAGE_SHOW_DELAY);
       SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
     }
     else if(file_info.page_count >= 2)
@@ -225,6 +231,8 @@ void lcd_process::send_given_page_data(void)
     }
     else if(file_info.page_count == 0)
     {
+      SEND_PAGE(PRINT, _FILE_LIST_FIRST_PAGE, PAGE_BASE, LASER);
+      safe_delay(IMAGE_SHOW_DELAY);
       SEND_PAGE(PRINT, _FILE_LIST_ONLY_ONE_PAGE, PAGE_BASE, LASER);
     }
   }
@@ -342,15 +350,17 @@ void lcd_process::show_machine_continue_print_page(void)
   machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
 }
 
-void lcd_process::show_machine_recovery_print_page(void)
+void lcd_process::show_recovery_print_check_page(void)
 {
   dwin_process.reset_image_send_parameters();
   LcdFile.set_current_status(out_printing);
+  pfile_list_t temp = NULL;
 
 #if ENABLED(POWER_LOSS_RECOVERY)
   if(udisk.job_recover_file_exists())
   {
-    malloc_current_file();
+    dwin_parser.malloc_current_path(strlen_P(recovery.info.file_path));
+    strcpy_P(dwin_parser.current_path, recovery.info.file_path);
     int16_t value = udisk.ls(LS_GET_FILE_NAME, dwin_parser.current_path, ".gcode");
     if(USB_NOT_DETECTED == value || value)
     {
@@ -359,29 +369,37 @@ void lcd_process::show_machine_recovery_print_page(void)
     }
     dwin_parser.set_file_read_status(true);
     dwin_parser.set_file_list_open_status(true);
-    LcdFile.set_file_page_info();
-    LcdFile.set_current_page(1);
 
-    strcpy(current_file->file_name,recovery.info.udisk_filename);
-    if(udisk.check_gm_file(current_file->file_name))
+    if(!LcdFile.set_current_page_via_filename(recovery.info.udisk_filename))
     {
-      current_file->file_type = TYPE_MAKEBLOCK_GM;
+      //error read failed
+      SERIAL_PRINTF("set_via filaed\r\n");
+      return;
+    }
+
+    LcdFile.set_file_page_info();
+    get_file_info();
+    file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + file_info.select_file_num;
+    dwin_parser.set_current_page_index(file_info.current_index);
+    temp = LcdFile.file_list_index(file_info.current_index);
+    if(udisk.check_gm_file(temp->file_name))
+    {
+      temp->file_type = TYPE_MAKEBLOCK_GM;
       dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
-      dwin_process.lcd_send_data(current_file->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
-      CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH);
+      dwin_process.lcd_send_data(temp->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
       dwin_process.limage_send_start();
     }
     else
     {
-      current_file->file_type = TYPE_DEFAULT_FILE;
+      temp->file_type = TYPE_DEFAULT_FILE;
       dwin_process.lcd_send_data(TYPE_DEFAULT_FILE,PRINT_FILE_LIMAGE_ICON_ADDR);
       dwin_process.lcd_text_clear(PRINT_FILE_PRINT_TEXT_ADDR, FILE_NAME_LCD_LEN);
-      dwin_process.lcd_send_data(current_file->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
-      CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_START_PAGE_, EN, CH);
+      dwin_process.lcd_send_data(temp->file_name,PRINT_FILE_PRINT_TEXT_ADDR);
     }
   }
 #endif
 }
+
 void lcd_process::show_machine_status_page(machine_status_type print_status, \
                                                     machine_status_type laser_status, int page_en, int page_ch)
 {
@@ -503,6 +521,10 @@ void lcd_process::show_calibration_page(void)
   UserExecution.cmd_now_g28();
   UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
   UserExecution.cmd_now_M109(200);
+  UserExecution.cmd_g92_e(0);
+  safe_delay(20);
+  UserExecution.cmd_g1_e(-2.0, 3000);
+  safe_delay(20);
   UserExecution.cmd_now_g38_z(2.5);
   UserExecution.cmd_user_synchronize();
   change_lcd_page(PRINT_CALIBRATION_PAGE_EN, PRINT_CALIBRATION_PAGE_CH);
@@ -516,6 +538,7 @@ void lcd_process::show_bed_leveling_page(void)
   UserExecution.cmd_now_g28();
   UserExecution.cmd_now_M109(200);
   UserExecution.cmd_now_g29();
+  UserExecution.cmd_now_M500();
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_M104(0);
   UserExecution.cmd_now_g28();
@@ -528,9 +551,12 @@ void lcd_process::show_save_calibration_data_page(void)
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_SAVE_OFFSET_CH);
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_M206(-current_position[Z_AXIS]);
-  UserExecution.cmd_now_g28();
-  UserExecution.cmd_now_M420(true); //turn on bed leveling
   UserExecution.cmd_now_M500();
+  UserExecution.cmd_now_M420(true); //turn on bed leveling
+  UserExecution.cmd_g1_e(0.0, 3000);
+  safe_delay(20);
+  UserExecution.cmd_now_M104(0);
+  UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
   show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
   SERIAL_PRINTF("show_save_calibration_data_page \r\n");
@@ -555,24 +581,41 @@ void lcd_process::show_xyz_prepare_home_page(void)
   show_sure_block_page(PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH);
 }
 
+void lcd_process::show_check_no_filament_page(void)
+{
+  if(!MaterialCheck.is_filamen_runout())
+  {
+    show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+    filament_show.set_heating_status_type(HEAT_PRINT_NO_FILAMENT_STATUS);
+  }
+}
+
 void lcd_process::show_prepare_print_page(pfile_list_t temp)
 {
-  dwin_process.set_lcd_temp_show_status(true);
-  filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
-  filament_show.set_print_after_heat_status(true);
-  UserExecution.user_start();
-  show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);  //change to prepare_print_page
-
   //progress = 0;percentage = 0;
   pre_percentage = 0;
   send_temperature_percentage(pre_percentage);
+  filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
 
-  UserExecution.cmd_M2023(temp->file_name);  //open file and start read file
-  UserExecution.cmd_M2024();                 //start print
+  if(udisk.job_recover_file_exists())
+  {
+    SERIAL_PRINTF("dwin_parser.current_path(%s)\r\n", dwin_parser.current_path);
+    show_recovery_print_check_page();
+    UserExecution.cmd_M1000(false);
+    show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);
+  }
+  else
+  {
+    show_check_no_filament_page();
+    dwin_process.set_lcd_temp_show_status(true);
+    filament_show.set_print_after_heat_status(true);
+    UserExecution.user_start();
+    show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);  //change to prepare_print_page
+
+    UserExecution.cmd_M2023(temp->file_name);  //open file and start read file
+    UserExecution.cmd_M2024();                 //start print
+  }
 }
-//SERIAL_PRINTF("pause_position_x[%f],pause_position_y[%f],pause_position_z[%f],pause_position_e[%f]\r\n",(destination[X_AXIS]),(destination[Y_AXIS]),(destination[Z_AXIS]),(destination[E_AXIS]));
-//SERIAL_PRINTF("pause_position_x[%f],pause_position_y[%f],pause_position_z[%f],pause_position_e[%f]\r\n",(LOGICAL_X_POSITION(current_position[X_AXIS])),(LOGICAL_X_POSITION(current_position[Y_AXIS])),(LOGICAL_X_POSITION(current_position[Z_AXIS])),(current_position[E_AXIS]));
-//SERIAL_PRINTF("pause_position_x[%f],pause_position_y[%f],pause_position_z[%f],pause_position_e[%f]\r\n",planner.get_axis_position_mm(X_AXIS),planner.get_axis_position_mm(Y_AXIS),planner.get_axis_position_mm(Z_AXIS),planner.get_axis_position_mm(E_AXIS));
 
 void lcd_process::show_pause_print_page(pfile_list_t temp)
 {
@@ -611,12 +654,20 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   UserExecution.cmd_M106(255);
   safe_delay(20);
 
-  //go home
-  UserExecution.cmd_now_g28();
+  if(MaterialCheck.is_filamen_runout())
+  {
+    //go home
+    SERIAL_PRINTF("before cmd_now_g28\r\n");
+    UserExecution.cmd_now_g28();
 
-  //Update page status
-  dwin_process.show_start_print_file_page(temp);
-  LcdFile.set_current_status(stop_printing);
+    show_start_print_file_page(temp);
+    LcdFile.set_current_status(stop_printing);
+
+  }
+  else
+  {
+    show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+  }
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   immediately_pause_flag = true;

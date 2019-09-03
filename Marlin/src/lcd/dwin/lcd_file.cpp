@@ -51,6 +51,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
 #include "lcd_file.h"
+#include "lcd_process.h"
 
 lcd_file LcdFile;
 
@@ -205,5 +206,31 @@ void lcd_file::set_file_page_info(void)
   }
 }
 
+bool lcd_file::set_current_page_via_filename(char * file_name)
+{
+  int i = 0;
+  pfile_list_t t;
+  t = file_list;
+
+  SERIAL_PRINTF("t->next_file->file_name(%s)\r\n", t->next_file->file_name);
+
+  while((t->next_file != NULL) && (strcmp(t->next_file->file_name, file_name) != 0))
+  {
+    ++i;
+    t = t->next_file;
+    SERIAL_PRINTF("t->next_file->file_name(%d)(%s)\r\n",i, t->next_file->file_name);
+  }
+  if(strcmp(t->next_file->file_name, file_name) != 0)
+  {
+    return false;
+  }
+  else
+  {
+    set_current_page(i / PAGE_FILE_NUM + 1);
+    dwin_process.set_select_file_num(i % PAGE_FILE_NUM + 1);
+    SERIAL_PRINTF("current_page = %d,set_select_file_num(%d)\r\n", current_page,(i % PAGE_FILE_NUM + 1));
+    return true;
+  }
+}
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

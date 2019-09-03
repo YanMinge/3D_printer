@@ -568,12 +568,10 @@ void lcd_process::set_limage_count(void)
   if(image_status.limage_set_status)
   {
     int32_t file_size;
-    if(!udisk.job_recover_file_exists())
-    {
-      get_file_info();
-      file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.select_file_num);
-      current_file = LcdFile.file_list_index(file_info.current_index);
-    }
+
+    get_file_info();
+    file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + (file_info.select_file_num);
+    current_file = LcdFile.file_list_index(file_info.current_index);
 
     lcd_send_data(TYPE_LOAD,PRINT_FILE_LIMAGE_ICON_ADDR);
     if(TYPE_MAKEBLOCK_GM == current_file->file_type)
@@ -625,7 +623,7 @@ void lcd_process::send_limage(void)
       get_image_data(SEND_NUM(file_info.image_last_count_len));
       lcd_send_image(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
       lcd_send_data(TYPE_NULL,PRINT_FILE_LIMAGE_ICON_ADDR);
-      lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
+      //lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
 
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;

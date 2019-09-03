@@ -76,11 +76,13 @@ public:
   bool last_path_fresh(void);
 
   inline int get_current_page_index(void){ return current_page_index;}
+  inline void set_current_page_index(int value){ current_page_index = value;}
   inline void set_file_read_status(bool status){ file_read_status = status;}
   inline void set_file_list_open_status(bool status){ file_list_open_status = status;}
   inline bool get_file_list_open_status(void){ return file_list_open_status;}
 
   void refresh_current_path(void);
+  void malloc_current_path(uint16_t len);
   char * current_path;
   uint32_t firmware_size;
   uint32_t firmware_crc;

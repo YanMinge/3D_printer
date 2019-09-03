@@ -460,5 +460,31 @@ void user_execution::cmd_now_M2524(void)
   cmd_now_g_m(PSTR("M2524"));
 }
 
+void user_execution::cmd_M1000(bool s)
+{
+  if(s)
+  {
+    enqueue_and_echo_command(PSTR("M1000 S"));
+  }
+  else
+  {
+    enqueue_and_echo_command(PSTR("M1000"));
+  }
+}
+
+void user_execution::cmd_quick_stop(bool stop_status)
+{
+  if(stop_status)
+  {
+    lcd_immediate_execution = true;
+    quickstop_stepper();
+    lcd_immediate_execution = false;
+  }
+  else
+  {
+    quickstop_stepper();
+  }
+}
+
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768

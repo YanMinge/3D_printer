@@ -124,6 +124,8 @@ public:
   void cmd_now_M500(void);
   void cmd_now_M502(void);
   void cmd_now_M2524(void);
+  void cmd_M1000(bool s);
+  void cmd_quick_stop(bool stop_status);
   bool lcd_immediate_execution;
 };
 

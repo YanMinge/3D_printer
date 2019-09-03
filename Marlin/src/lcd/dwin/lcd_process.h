@@ -137,7 +137,7 @@ public:
   void show_machine_set_page(void);
   void show_machine_status(uint8_t ch_type);
   void show_machine_continue_print_page();
-  void show_machine_recovery_print_page(void);
+  void show_recovery_print_check_page(void);
   void show_machine_status_page(machine_status_type print_status, machine_status_type laser_status, \
                                          int page_en, int page_ch);
   void show_machine_status_page(machine_status_type status, int page_en, int page_ch);
@@ -155,6 +155,7 @@ public:
   void show_save_calibration_data_page(void);
   void show_restore_factory_page(void);
   void show_xyz_prepare_home_page(void);
+  void show_check_no_filament_page(void);
   void show_prepare_print_page(pfile_list_t temp);
   void show_pause_print_page(pfile_list_t temp);
   void show_prepare_from_pause_page(pfile_list_t temp);

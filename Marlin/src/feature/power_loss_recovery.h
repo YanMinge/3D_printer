@@ -83,6 +83,7 @@ typedef struct {
 
   // udisk Filename and position
   char udisk_filename[FILE_NAME_LEN * 4];
+  char file_path[(FILE_DIRECTORY_DEPTH + 1) * FILE_NAME_LEN];
   uint32_t udisk_pos;
 
   // Job elapsed time
