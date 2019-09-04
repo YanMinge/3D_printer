@@ -514,9 +514,8 @@ void udisk_reader::printing_has_finished()
 {
   planner.synchronize();
   stop_udisk_print();
-
 #if ENABLED(POWER_LOSS_RECOVERY)
-	remove_job_recovery_file();
+  remove_job_recovery_file();
 #endif
 
 #if ENABLED(UDISK_FINISHED_STEPPERRELEASE) && defined(UDISK_FINISHED_RELEASECOMMAND)

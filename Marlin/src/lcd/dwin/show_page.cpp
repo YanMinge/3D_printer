@@ -683,7 +683,7 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   immediately_pause_flag = false;
 #endif
 
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
   dwin_process.set_lcd_temp_show_status(true);
   dwin_process.pre_percentage = 0;
   dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
@@ -701,7 +701,7 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
     }
   }
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 #endif
 
 #if HOTENDS > 1
@@ -714,18 +714,18 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   UserExecution.cmd_now_M140(pause_print_data.target_temperature_bed);
 #endif
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 
 #if HAS_TEMP_HOTEND
   UserExecution.cmd_now_M109(pause_print_data.target_temperature[HOTEND_INDEX]);
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 #endif
 
 #if HAS_HEATED_BED
   UserExecution.cmd_now_M190(pause_print_data.target_temperature_bed);
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 #endif
 #endif
 
@@ -733,16 +733,16 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   //Protective movement
   UserExecution.cmd_now_g1_xy(pause_print_data.current_position[X_AXIS], pause_print_data.current_position[Y_AXIS], 3000);
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 
   UserExecution.cmd_g1_z(pause_print_data.current_position[Z_AXIS] + 10, 600);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 
   //load filament
   do_pause_e_move(FILAMENT_UNLOAD_RETRACT_LENGTH, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 
   // Now all extrusion positions are resumed and ready to be confirmed
   // Set extruder to saved position
@@ -753,7 +753,7 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   UserExecution.cmd_g1_z(pause_print_data.current_position[Z_AXIS], 600);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type())return;
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
 
   dwin_process.show_stop_print_file_page(temp);
   //change to start print page
@@ -771,7 +771,7 @@ void lcd_process::show_load_filament_page(void)
     dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
     return;
   }
-  if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() ) //heating page before loading filament
+  if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type()) //heating page before loading filament
   {
     dwin_process.set_lcd_temp_show_status(true);
     dwin_process.pre_percentage = 0;
