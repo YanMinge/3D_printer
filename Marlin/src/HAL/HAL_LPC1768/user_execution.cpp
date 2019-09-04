@@ -369,19 +369,15 @@ void user_execution::get_next_command(void)
 
 void user_execution::get_remain_command(void)
 {
-  planner.synchronize();
   while(commands_in_queue)
   {
     //get_available_commands();
     advance_command_queue();
-    idle();
   }
-  planner.synchronize();
 }
 
 void user_execution::cmd_now_g_m(const char * cmd)
 {
-  get_remain_command();
   enqueue_and_echo_command(cmd);
   get_remain_command();
 }

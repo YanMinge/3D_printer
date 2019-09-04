@@ -623,7 +623,10 @@ void lcd_process::send_limage(void)
       get_image_data(SEND_NUM(file_info.image_last_count_len));
       lcd_send_image(SEND_NUM(file_info.image_last_count_len),file_info.image_current_send_count);
       lcd_send_data(TYPE_NULL,PRINT_FILE_LIMAGE_ICON_ADDR);
-      //lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
+      if(!udisk.job_recover_file_exists())
+      {
+        lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
+      }
 
       file_info.image_current_send_count = 0;
       file_info.image_send_count = 0;

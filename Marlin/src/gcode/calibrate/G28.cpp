@@ -63,6 +63,10 @@
 #endif
 #endif
 
+#if ENABLED(NEWPANEL)
+  #include "filament_ui.h"
+#endif
+
 #if ENABLED(QUICK_HOME)
 
   static void quick_home_xy() {
@@ -232,6 +236,9 @@ void GcodeSuite::G28(const bool always_home_all) {
 
   // Wait for planner moves to finish!
   planner.synchronize();
+#if ENABLED(USE_DWIN_LCD)
+  if(filament_show.g28_return_status) return;
+#endif
 
   // Disable the leveling matrix before homing
   #if HAS_LEVELING
@@ -288,7 +295,9 @@ void GcodeSuite::G28(const bool always_home_all) {
     #if Z_HOME_DIR > 0  // If homing away from BED do Z first
 
       if (home_all || homeZ) homeaxis(Z_AXIS);
-
+#if ENABLED(USE_DWIN_LCD)
+      if(filament_show.g28_return_status) return;
+#endif
     #endif
 
     const float z_homing_height = (
@@ -306,11 +315,16 @@ void GcodeSuite::G28(const bool always_home_all) {
         do_blocking_move_to_z(destination[Z_AXIS]);
       }
     }
+#if ENABLED(USE_DWIN_LCD)
+     if(filament_show.g28_return_status) return;
+#endif
 
     #if ENABLED(QUICK_HOME)
 
       if (home_all || (homeX && homeY)) quick_home_xy();
-
+#if ENABLED(USE_DWIN_LCD)
+      if(filament_show.g28_return_status) return;
+#endif
     #endif
 
     // Home Y (before X)
@@ -352,13 +366,18 @@ void GcodeSuite::G28(const bool always_home_all) {
       #else
 
         homeaxis(X_AXIS);
-
+#if ENABLED(USE_DWIN_LCD)
+        if(filament_show.g28_return_status) return;
+#endif
       #endif
     }
 
     // Home Y (after X)
     #if DISABLED(HOME_Y_BEFORE_X)
       if (home_all || homeY) homeaxis(Y_AXIS);
+#if ENABLED(USE_DWIN_LCD)
+      if(filament_show.g28_return_status) return;
+#endif
     #endif
 
     // Home Z last if homing towards the bed
@@ -459,5 +478,9 @@ void GcodeSuite::G28(const bool always_home_all) {
       const uint8_t cv = L6470::chain[j];
       L6470.set_param(cv, L6470_ABS_POS, stepper.position((AxisEnum)L6470.axis_xref[cv]));
     }
+  #endif
+
+  #if ENABLED(USE_DWIN_LCD)
+    filament_show.show_file_print_page();
   #endif
 }

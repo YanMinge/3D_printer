@@ -67,6 +67,10 @@
 #include "../feature/pause.h"
 #endif
 
+#if ENABLED(NEWPANEL)
+  #include "filament_ui.h"
+#endif
+
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../core/debug_out.h"
 
@@ -1427,6 +1431,10 @@ void homeaxis(const AxisEnum axis) {
     ) * axis_home_dir
   );
 
+#if ENABLED(USE_DWIN_LCD)
+  if(filament_show.g28_return_status) return;
+#endif
+
   #if HOMING_Z_WITH_PROBE && ENABLED(BLTOUCH)
     // BLTOUCH needs to be stowed after trigger to rearm itself
     if (axis == Z_AXIS) bltouch.stow();
@@ -1449,6 +1457,9 @@ void homeaxis(const AxisEnum axis) {
         , axis == Z_AXIS ? MMM_TO_MMS(Z_PROBE_SPEED_FAST) : 0.0
       #endif
     );
+#if ENABLED(USE_DWIN_LCD)
+    if(filament_show.g28_return_status) return;
+#endif
 
     // Slow move towards endstop until triggered
     if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Home 2 Slow:");
@@ -1459,6 +1470,10 @@ void homeaxis(const AxisEnum axis) {
     #endif
 
     do_homing_move(axis, 2 * bump, get_homing_bump_feedrate(axis));
+
+#if ENABLED(USE_DWIN_LCD)
+    if(filament_show.g28_return_status) return;
+#endif
 
     #if HOMING_Z_WITH_PROBE && ENABLED(BLTOUCH)
       // BLTOUCH needs to be stowed after trigger to rearm itself

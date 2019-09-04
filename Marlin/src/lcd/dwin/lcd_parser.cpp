@@ -422,11 +422,6 @@ void lcd_parser::response_select_file(void)
     dwin_process.send_print_time(udisk.get_print_time(temp->file_name));
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH);
     dwin_process.limage_send_start();
-    while(dwin_process.get_limage_status())
-    {
-      idle();
-    }
-    dwin_process.lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
   else if(temp->file_type == TYPE_DEFAULT_FILE)
   {
@@ -503,13 +498,14 @@ void lcd_parser::response_print_file(void)
     else if(out_printing == status)
     {
       if(dwin_process.get_limage_status())return;
+      filament_show.g28_return_status = false;
       dwin_process.reset_image_send_parameters();
       dwin_process.send_given_page_data();
-      udisk.stop_udisk_print();  //stop print
-      lcd_exception_stop();      //stop steppre and heaters
       dwin_process.simage_send_start();
       if(udisk.job_recover_file_exists())
       {
+        udisk.stop_udisk_print();  //stop print from print_status
+        lcd_exception_stop();      //stop steppre,fan,heaters, clear command queue, print_job_time,
         udisk.remove_job_recovery_file();
         dwin_process.delete_current_file();
       }
@@ -880,21 +876,24 @@ void lcd_parser::response_print_machine_status()
         filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         UserExecution.user_stop();
         lcd_exception_stop();
-        UserExecution.cmd_quick_stop(true);
         if(stop_printing == LcdFile.get_current_status())
         {
+          UserExecution.cmd_quick_stop(true);
           dwin_process.show_start_print_file_page(temp);
         }
         else if(out_printing == LcdFile.get_current_status())
         {
           if(!udisk.job_recover_file_exists())
           {
+            filament_show.g28_return_status = true;
             filament_show.set_print_after_heat_status(false);
-            dwin_process.show_start_print_file_page(temp);
             UserExecution.cmd_now_M2524();
+            dwin_process.show_start_print_file_page(temp);
+            UserExecution.cmd_quick_stop(true);
           }
           else
           {
+            UserExecution.cmd_quick_stop(true);
             dwin_process.show_start_print_file_page(temp);
           }
         }

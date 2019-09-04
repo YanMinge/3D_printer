@@ -64,6 +64,7 @@ public:
   void set_print_after_heat_status(bool status){print_after_heat_status = status;}
   bool get_print_after_heat_status(void){return print_after_heat_status;}
 
+  bool g28_return_status;
 private:
   heating_status_type heating_status;
   bool print_after_heat_status;

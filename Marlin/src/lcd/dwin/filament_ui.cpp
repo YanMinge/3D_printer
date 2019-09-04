@@ -60,25 +60,17 @@ filament_ui_show::filament_ui_show()
 {
   heating_status = HEAT_NULL_STATUS;
   print_after_heat_status = false;
+  g28_return_status = false;
 }
 
 void filament_ui_show::show_file_print_page(void)
 {
-  if(get_print_after_heat_status())
+  if(get_print_after_heat_status() && (HEAT_PRINT_STATUS == filament_show.get_heating_status_type()))
   {
     pfile_list_t temp = NULL;
     temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
-    if(udisk.job_recover_file_exists())
-    {
-      dwin_process.show_stop_print_file_page(temp);
-      LcdFile.set_current_status(on_printing);
-      enqueue_and_echo_commands_P(PSTR("M1000"));
-    }
-    else
-    {
-      dwin_process.show_stop_print_file_page(temp);
-      LcdFile.set_current_status(on_printing);
-    }
+    dwin_process.show_stop_print_file_page(temp);
+    LcdFile.set_current_status(on_printing);
     set_print_after_heat_status(false);
     //set_heating_status_type(HEAT_NULL_STATUS);
   }

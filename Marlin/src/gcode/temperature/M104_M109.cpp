@@ -163,7 +163,4 @@ void GcodeSuite::M109() {
   if (set_temp)
     (void)thermalManager.wait_for_hotend(target_extruder, no_wait_for_cooling);
 
-  #if ENABLED(NEWPANEL)
-    filament_show.show_file_print_page();
-  #endif
 }
