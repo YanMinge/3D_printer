@@ -684,6 +684,11 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
 #endif
 
   if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+
+  //go home
+  UserExecution.cmd_now_g28();
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+	  
   dwin_process.set_lcd_temp_show_status(true);
   dwin_process.pre_percentage = 0;
   dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
