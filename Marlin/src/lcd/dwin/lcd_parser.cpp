@@ -871,6 +871,7 @@ void lcd_parser::response_print_machine_status()
       case PRINT_MACHINE_STATUS_LEVELING_OK_CH:
       case PRINT_MACHINE_STATUS_CALIBRATION_OK_CH:
       case PRINT_MACHINE_STATUS_RESTORE_FACOTORY_CH:
+      case PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH:
         dwin_process.show_machine_set_page();
         break;
 
@@ -945,10 +946,6 @@ void lcd_parser::response_print_machine_status()
 
       case PRINT_MACHINE_STATUS_PREPARE_CALIBRATION_CH:
         dwin_process.show_save_calibration_data_page();
-        break;
-
-      case PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH:
-        dwin_process.change_lcd_page(PRINT_XYZ_MOVE_PAGE_EN,PRINT_XYZ_MOVE_PAGE_CH);
         break;
 
       case PRINT_MACHINE_STATUS_TASK_CANCEL_CH:
