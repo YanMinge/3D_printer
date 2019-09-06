@@ -250,12 +250,7 @@ uint16_t udisk_reader::ls_dive(const char *path, const char * const match/*=NULL
         }
         else
         {
-          char * file_path = new char[strlen(path) + strlen(fno.fname) + 1];
-          strcpy(file_path, path);
-          file_path[strlen(path)] = '/';
-          strcpy(file_path + strlen(path) + 1, fno.fname);
           file_list_array[file_count].ftype = TYPE_DEFAULT_FILE;
-          delete[] file_path;
         }
 
         if(strlen(fno.fname) < FILE_NAME_LEN)

@@ -292,6 +292,7 @@ void lcd_parser::response_return_button(void)
   else
   {
     file_list_open_status = false;
+    LcdFile.directory_stack_init();
     dwin_process.show_start_up_page();
   }
 }
@@ -491,6 +492,9 @@ void lcd_parser::response_print_file(void)
   {
     if(on_printing == status || stop_printing == status)
     {
+      #if ENABLED(ADVANCED_PAUSE_FEATURE)
+        immediately_pause_flag = false;
+      #endif
       dwin_process.reset_image_send_parameters();
       dwin_process.show_confirm_cancel_page(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
       return;

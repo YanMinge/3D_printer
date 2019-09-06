@@ -379,6 +379,7 @@ void lcd_process::show_recovery_print_check_page(void)
 
     LcdFile.set_file_page_info();
     get_file_info();
+    LcdFile.file_list_len();
     file_info.current_index = PAGE_FILE_NUM*(file_info.current_page - 1) + file_info.select_file_num;
     dwin_parser.set_current_page_index(file_info.current_index);
     temp = LcdFile.file_list_index(file_info.current_index);
@@ -523,9 +524,16 @@ void lcd_process::show_calibration_page(void)
   UserExecution.cmd_now_M109(200);
   UserExecution.cmd_g92_e(0);
   safe_delay(20);
-  UserExecution.cmd_g1_e(-2.0, 3000);
+  UserExecution.cmd_g1_e(40, 300);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_g92_e(0);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_g1_e(-2.0, 300);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
   safe_delay(20);
-  UserExecution.cmd_now_g38_z(2.5);
+  UserExecution.cmd_now_g38_z(6.5);
   UserExecution.cmd_user_synchronize();
   change_lcd_page(PRINT_CALIBRATION_PAGE_EN, PRINT_CALIBRATION_PAGE_CH);
 }
@@ -602,8 +610,10 @@ void lcd_process::show_prepare_print_page(pfile_list_t temp)
   {
     SERIAL_PRINTF("dwin_parser.current_path(%s)\r\n", dwin_parser.current_path);
     show_recovery_print_check_page();
-    UserExecution.cmd_M1000(false);
     show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);
+    UserExecution.cmd_M1000(false);
+    UserExecution.get_remain_command();
+    UserExecution.cmd_user_synchronize();
   }
   else
   {

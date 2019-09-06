@@ -123,7 +123,11 @@ public:
   }
   void directory_stack_pop(void)
   {
-    if(directory_stack_is_empty()) return;
+    if(directory_stack_is_empty())
+    {
+      current_page = 1;
+      return;
+    }
     current_page = page_directory.page_num[page_directory.top];
     page_directory.top --;
   }

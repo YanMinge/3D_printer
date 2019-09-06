@@ -253,34 +253,35 @@ void PrintJobRecovery::resume() {
 
   #define RECOVERY_ZRAISE 2
 
-#if ENABLED(USE_DWIN_LCD)
+  #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(10);
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;
     }
-#endif
+  #endif
 
   #if HAS_LEVELING
     // Make sure leveling is off before any G92 and G28
     gcode.process_subcommands_now_P(PSTR("M420 S0 Z0"));
   #endif
 
-#if ENABLED(USE_DWIN_LCD)
+  #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(10);
-#endif
+  #endif
 
   // Set Z to 0, raise Z by 2mm, and Home (XY only for Cartesian) with no raise
   // (Only do simulated homing in Marlin Dev Mode.)
   gcode.process_subcommands_now_P(PSTR("G28"));
+
+  #if ENABLED(USE_DWIN_LCD)
+    dwin_process.temperature_progress_update(30);
+    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+      return;
+    }
+  #endif
+
   // Pretend that all axes are homed
   axis_homed = axis_known_position = xyz_bits;
-
-#if ENABLED(USE_DWIN_LCD)
-  dwin_process.temperature_progress_update(30);
-  if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
-    return;
-  }
-#endif
 
   char cmd[44], str_1[16], str_2[16];
 
@@ -297,12 +298,13 @@ void PrintJobRecovery::resume() {
       sprintf_P(cmd, PSTR("M190 S%i"), bt);
       gcode.process_subcommands_now(cmd);
     }
-#if ENABLED(USE_DWIN_LCD)
+
+  #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(60);
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;
     }
-#endif
+  #endif
   #endif
 
   // Restore all hotend temperatures
@@ -318,12 +320,12 @@ void PrintJobRecovery::resume() {
     }
   }
 
-#if ENABLED(USE_DWIN_LCD)
+  #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(90);
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;
     }
-#endif
+  #endif
 
   // Restore print cooling fan speeds
   FANS_LOOP(i) {
@@ -377,22 +379,22 @@ void PrintJobRecovery::resume() {
   sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
   gcode.process_subcommands_now(cmd);
 
-#if ENABLED(USE_DWIN_LCD)
-  UserExecution.cmd_user_synchronize();
-  dwin_process.temperature_progress_update(95);
-  if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
-    return;
-  }
-#endif
+  #if ENABLED(USE_DWIN_LCD)
+    UserExecution.cmd_user_synchronize();
+    dwin_process.temperature_progress_update(95);
+    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+      return;
+    }
+  #endif
 
-#if ENABLED(USE_DWIN_LCD)
+  #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(99);
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;
     }
     dwin_process.show_start_print_file_page(dwin_process.current_file);
     LcdFile.set_current_status(on_printing);
-#endif
+  #endif
 
   // Resume the udisk file from the last position
   char *fn = info.udisk_filename;
