@@ -770,9 +770,9 @@ void lcd_parser::response_print_set(void)
   {
     dwin_process.show_calibration_page();
   }
-  else if(0x11 == receive_data) //restore the factory setting
+  else if(0x11 == receive_data) //restore the factory setting hint page
   {
-    dwin_process.show_restore_factory_page();
+    dwin_process.show_confirm_cancel_page(PRINT_MACHINE_STATUS_RESTORE_FACTORY_HINT_CH);
   }
 }
 
@@ -961,6 +961,10 @@ void lcd_parser::response_print_machine_status()
         dwin_process.show_start_print_file_page(temp);
         break;
 
+      case PRINT_MACHINE_STATUS_RESTORE_FACTORY_HINT_CH:  //cancel restore factory mode
+        dwin_process.show_machine_set_page();
+        break;
+
       default:
         break;
     }
@@ -999,6 +1003,10 @@ void lcd_parser::response_print_machine_status()
           udisk.remove_job_recovery_file();
           dwin_process.delete_current_file();
         }
+        break;
+
+      case PRINT_MACHINE_STATUS_RESTORE_FACTORY_HINT_CH:  //confirm restore factory mode
+        dwin_process.show_restore_factory_page();
         break;
 
       default:

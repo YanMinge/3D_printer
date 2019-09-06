@@ -576,7 +576,7 @@ void lcd_process::show_restore_factory_page(void)
   UserExecution.cmd_now_M502();
   UserExecution.cmd_now_M500();
   UserExecution.cmd_user_synchronize();
-  delay(1000);
+  safe_delay(1000);
   show_sure_block_page(PRINT_MACHINE_STATUS_RESTORE_FACOTORY_CH);
 }
 

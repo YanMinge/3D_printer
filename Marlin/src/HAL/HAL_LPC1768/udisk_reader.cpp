@@ -910,6 +910,11 @@ bool udisk_reader::is_firmware_same(void)
   //check crc;
   file_crc32 = caculate_file_crc32(&file_obj);
   firmware_flash_crc = persistentStore.caculate_flash_crc32(dwin_parser.firmware_size);
+  rc= f_close(&file_obj);
+  if (rc)
+  {
+    DEBUGPRINTF("f_close error(%d)\r\n", rc);
+  }
   if(firmware_flash_crc == file_crc32)
     return true;
   else
