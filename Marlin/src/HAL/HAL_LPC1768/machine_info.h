@@ -38,10 +38,11 @@
  *    11.  uint8_t* machine_info::get_uuid(void);
  *    12.  head_t   machine_info::get_head_type(void);
  *    13.  bool     machine_info::get_usb_cable_report_status(void);
- *    14.  void     machine_info::machine_information_update(void);
- *    15.  void     machine_info::lcd_print_information_update(void);
- *    16.  void     machine_info::lcd_usb_status_update(void);
- *    17.  void     machine_info::lcd_material_info_update(void);
+ *    14.  void     machine_info::usb_cable_status_update(void);
+ *    15.  void     machine_info::machine_head_type_update(void);
+ *    16.  void     machine_info::lcd_print_information_update(void);
+ *    17.  void     machine_info::lcd_usb_status_update(void);
+ *    18.  void     machine_info::lcd_material_info_update(void);
  *
  * \par History:
  * <pre>
@@ -63,7 +64,7 @@
 
 #if ENABLED(FACTORY_MACHINE_INFO)
 
-#define MACHINE_INFORMATION_UPDATE_PERIOD    50
+#define MACHINE_INFORMATION_UPDATE_PERIOD    100
 #define MATERIAL_INFORMATION_UPDATE_PERIOD   1000
 #define LCD_PRINT_TIME_UPDATE_PERIOD         1000
 
@@ -88,7 +89,8 @@ public:
   uint8_t* get_uuid(void);
   head_t get_head_type(void);
   bool get_usb_cable_status(void);
-  void machine_information_update(void);
+  void usb_cable_status_update(void);
+  void machine_head_type_update(void);
 #if ENABLED(USE_DWIN_LCD)
   void lcd_print_information_update(void);
   void lcd_usb_status_update(void);

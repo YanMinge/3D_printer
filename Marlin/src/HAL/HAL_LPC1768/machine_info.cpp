@@ -38,10 +38,11 @@
  *    11.  uint8_t* machine_info::get_uuid(void);
  *    12.  head_t   machine_info::get_head_type(void);
  *    13.  bool     machine_info::get_usb_cable_report_status(void);
- *    14.  void     machine_info::machine_information_update(void);
- *    15.  void     machine_info::lcd_print_information_update(void);
- *    16.  void     machine_info::lcd_usb_status_update(void);
- *    17.  void     machine_info::lcd_material_info_update(void);
+ *    14.  void     machine_info::usb_cable_status_update(void);
+ *    15.  void     machine_info::machine_head_type_update(void);
+ *    16.  void     machine_info::lcd_print_information_update(void);
+ *    17.  void     machine_info::lcd_usb_status_update(void);
+ *    18.  void     machine_info::lcd_material_info_update(void);
  *
  * \par History:
  * <pre>
@@ -242,15 +243,23 @@ bool machine_info::get_usb_cable_status(void)
   return usb_cable_connect;
 }
 
-void machine_info::machine_information_update(void)
+void machine_info::usb_cable_status_update(void)
 {
-  static long previous_info_update_time = 0;
-  if(millis() - previous_info_update_time > MACHINE_INFORMATION_UPDATE_PERIOD)
+  static long previous_cable_status_update_time = 0;
+  if(millis() - previous_cable_status_update_time > MACHINE_INFORMATION_UPDATE_PERIOD)
   {
     //usb cable access detection
     bool status = READ(USB_CABLE_DETECTION_PIN);
     usb_cable_connect = !status;
+	previous_cable_status_update_time = millis();
+  }
+}
 
+void machine_info::machine_head_type_update(void)
+{
+  static long previous_info_update_time = 0;
+  if(millis() - previous_info_update_time > MACHINE_INFORMATION_UPDATE_PERIOD)
+  {
     //head type detection
     int16_t temp = thermalManager.temp_hotend[HOTEND_INDEX].single;
     if(temp > 1000)
@@ -324,22 +333,16 @@ void machine_info::lcd_usb_status_update(void)
   {
     if(usb_cable_status == true)
     {
-#if PIN_EXISTS(LED)
-      OUT_WRITE(LED_PIN, true);
       dwin_process.lcd_send_data(PC_CABLE_INSERT, PRINT_STATUS_BAR_PC_ICON_ADDR);
-#endif
     }
     else
     {
-#if PIN_EXISTS(LED)
-      OUT_WRITE(LED_PIN, false);
       dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_PC_ICON_ADDR);
       if(dwin_process.is_computer_print())
       {
         dwin_process.show_start_up_page();
         dwin_process.set_computer_print_status(false);
       }
-#endif
     }
     //Lcd status bar update
     pre_usb_cable_status = usb_cable_status;

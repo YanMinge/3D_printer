@@ -683,6 +683,24 @@ void Endstops::update() {
 	  planner.endstop_triggered(Z_AXIS);
       G38_did_trigger = true;
     }
+
+    if (G38_move && (stepper.axis_is_moving(X_AXIS)) && (stepper.motor_direction(X_AXIS_HEAD)) && (TEST_ENDSTOP(_ENDSTOP(X, MIN)))) {
+      _ENDSTOP_HIT(X, MIN);
+	  planner.endstop_triggered(X_AXIS);
+      G38_did_trigger = true;
+    }
+
+    if (G38_move && (stepper.axis_is_moving(Y_AXIS)) && (stepper.motor_direction(Y_AXIS_HEAD)) && (TEST_ENDSTOP(_ENDSTOP(Y, MIN)))) {
+      _ENDSTOP_HIT(Y, MIN);
+      planner.endstop_triggered(Y_AXIS);
+      G38_did_trigger = true;
+    }
+
+    if (G38_move && (stepper.axis_is_moving(Z_AXIS)) && (stepper.motor_direction(Z_AXIS_HEAD)) && (TEST_ENDSTOP(_ENDSTOP(Z, MAX)))) {
+      _ENDSTOP_HIT(Z, MAX);
+      planner.endstop_triggered(Z_AXIS);
+      G38_did_trigger = true;
+    }
   #endif
 
   // Now, we must signal, after validation, if an endstop limit is pressed or not

@@ -118,7 +118,6 @@ public:
   void cmd_g38_x(float x);
   void cmd_g38_y(float y);
   void cmd_g38_z(float z);
-  void cmd_g38_z_single(float z);
   void cmd_now_g38_z(float z);
   void cmd_user_synchronize(void);
   void cmd_now_M500(void);

@@ -541,37 +541,37 @@ void lcd_parser::response_print_move_axis(void)
   {
     pressed_flag |= 0x01;
 	pressed_time = millis();
-    UserExecution.cmd_g38_x(-X_MAX_POS);
+    UserExecution.cmd_g38_x(-2 * X_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN == receive_addr))
   {
     pressed_flag |= 0x02;
 	pressed_time = millis();
-    UserExecution.cmd_g1_x(2 * X_MAX_POS);
+    UserExecution.cmd_g1_x(X_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Y_AXIS_MOVE_MIN_BTN == receive_addr))
   {
     pressed_flag |= 0x04;
 	pressed_time = millis();
-    UserExecution.cmd_g38_y(-Y_MAX_POS);
+    UserExecution.cmd_g38_y(-2 * Y_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr))
   {
     pressed_flag |= 0x08;
 	pressed_time = millis();
-    UserExecution.cmd_g1_y(2 * Y_MAX_POS);
+    UserExecution.cmd_g1_y(Y_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Z_AXIS_MOVE_MIN_BTN == receive_addr))
   {
     pressed_flag |= 0x10;
 	pressed_time = millis();
-    UserExecution.cmd_g1_z(-2 * Z_MAX_POS);
+    UserExecution.cmd_g1_z(Z_MIN_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Z_AXIS_MOVE_ADD_BTN == receive_addr))
   {
     pressed_flag |= 0x20;
 	pressed_time = millis();
-    UserExecution.cmd_g38_z(Z_MAX_POS);
+    UserExecution.cmd_g38_z(2 * Z_MAX_POS);
   }
   else if(!(pressed_flag & 0x40) && (PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr))
   {
