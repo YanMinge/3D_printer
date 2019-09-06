@@ -800,6 +800,7 @@ void idle(
   dwin_parser.lcd_update();
   MachineInfo.lcd_print_information_update();
   MachineInfo.lcd_material_info_update();
+  MachineInfo.lcd_usb_status_update();
 #endif //USE_DWIN_LCD
 
 #if PIN_EXISTS(POWER_LOSS)
@@ -1208,7 +1209,7 @@ void setup() {
 #if ENABLED(FACTORY_MACHINE_INFO)
   UserExecution.cmd_M2032(false);
   UserExecution.cmd_M2034(true);
-  MachineInfo.machine_information_update();
+  MachineInfo.machine_head_type_update();
   MachineInfo.send_uuid_string();
   MachineInfo.send_version_string();
   MachineInfo.send_work_time();
@@ -1269,7 +1270,6 @@ void loop() {
     idle();
 
 #if ENABLED(USB_DISK_SUPPORT)
-    MachineInfo.lcd_usb_status_update();
     if (udisk.abort_udisk_printing) {
       clear_command_queue();
       quickstop_stepper();
@@ -1284,7 +1284,7 @@ void loop() {
 #endif //USB_DISK_SUPPORT
 
 #if ENABLED(FACTORY_MACHINE_INFO)
-	MachineInfo.machine_information_update();
+    MachineInfo.machine_head_type_update();
 #endif
   }
 }

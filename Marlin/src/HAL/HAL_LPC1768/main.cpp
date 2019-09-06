@@ -44,6 +44,10 @@ void SysTick_Callback() {
   MaterialCheck.material_extrusion_update();
 #endif
 
+#if ENABLED(FACTORY_MACHINE_INFO)
+  MachineInfo.usb_cable_status_update();
+#endif
+
   disk_timerproc();
 }
 
