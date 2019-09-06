@@ -401,36 +401,28 @@ void user_execution::cmd_M104_M2070(void)
 void user_execution::cmd_g38_x(float x)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F3000 X%4.1f"), 2*x);
+  sprintf_P(cmd, PSTR("G38.2 F3000 X%4.1f"), x);
   enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g38_y(float y)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F3000 Y%4.1f"), 2*y);
+  sprintf_P(cmd, PSTR("G38.2 F3000 Y%4.1f"), y);
   enqueue_and_echo_command(cmd);
 }
 
 void user_execution::cmd_g38_z(float z)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
+  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), z);
   enqueue_and_echo_command(cmd);
-}
-
-void user_execution::cmd_g38_z_single(float z)
-{
-  char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.2f"), z);
-  //gcode.process_subcommands_now_P(cmd);
-  cmd_now_g_m(cmd);
 }
 
 void user_execution::cmd_now_g38_z(float z)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), 2*z);
+  sprintf_P(cmd, PSTR("G38.2 F600 Z%4.1f"), z);
   cmd_now_g_m(cmd);
 }
 

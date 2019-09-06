@@ -70,8 +70,19 @@ inline bool G38_run_probe() {
   G38_single_probe(move_value);
 
   if (G38_did_trigger) {
-
     G38_pass_fail = true;
+    if(parser.seen('X')){
+      current_position[X_AXIS] = 0.0;
+    }
+    if(parser.seen('Y')){
+      current_position[Y_AXIS] = 0.0;
+    }
+    if(parser.seen('Z')){
+      current_position[Z_AXIS] = 0.0;
+    }
+
+    set_destination_from_current();
+    sync_plan_position();
 
     #if MULTIPLE_PROBING > 1
       // Move away by the retract distance
