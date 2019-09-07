@@ -689,6 +689,9 @@ void lcd_parser::response_set_buzzer(void)
 
   dwin_process.show_machine_set_page();
   UserExecution.cmd_M500();
+  UserExecution.cmd_M300(200, 500);
+  UserExecution.cmd_M300(300, 500);
+  UserExecution.get_remain_command();
 }
 
 void lcd_parser::response_print_set(void)
