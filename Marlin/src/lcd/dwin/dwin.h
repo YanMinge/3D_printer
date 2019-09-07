@@ -326,13 +326,12 @@ typedef struct
 #define LASER_BEEP_OFF_SET_PAGE_CH                  57
 #define LASER_BEEP_ON_SET_PAGE_CH                   58
 #define LASER_LINE_CHOICE_PAGE_CH                   60
-#define LASER_PREPARE_PAGE_CH                       61
+#define LASER_PREPARE_HEAT_PAGE_CH                  61
 #define LASER_EXCEPTION_SURE_PAGE_CH                62
 #define LASER_EXCEPTION_SURE_RETURN_PAGE_CH         63
 #define LASER_INFO_PAGE_CH                          64
 #define LASER_PREPARE_BLOCK_PAGE_CH                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_CH           67
-#define LASER_PREPARE_HEAT_PAGE_CH                  100
 #define LASER_EXCEPTION_COMPLETE_HINT_PAGE_CH       1000
 
 //laser page english
@@ -345,13 +344,12 @@ typedef struct
 #define LASER_BEEP_OFF_SET_PAGE_EN                  57
 #define LASER_BEEP_ON_SET_PAGE_EN                   58
 #define LASER_LINE_CHOICE_PAGE_EN                   60
-#define LASER_PREPARE_PAGE_EN                       61
+#define LASER_PREPARE_HEAT_PAGE_EN                  61
 #define LASER_EXCEPTION_SURE_PAGE_EN                62
 #define LASER_EXCEPTION_SURE_RETURN_PAGE_EN         63
 #define LASER_INFO_PAGE_EN                          64
 #define LASER_PREPARE_BLOCK_PAGE_EN                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_EN           67
-#define LASER_PREPARE_HEAT_PAGE_EN                  100
 #define LASER_EXCEPTION_COMPLETE_HINT_PAGE_EN       1000
 
 //print icon_addr

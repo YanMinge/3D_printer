@@ -68,7 +68,7 @@
 #endif
 
 #if ENABLED(NEWPANEL)
-  #include "filament_ui.h"
+  #include "lcd_parser.h"
 #endif
 
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
@@ -1432,7 +1432,7 @@ void homeaxis(const AxisEnum axis) {
   );
 
 #if ENABLED(USE_DWIN_LCD)
-  if(filament_show.g28_return_status) return;
+  if(dwin_parser.lcd_stop_status) return;
 #endif
 
   #if HOMING_Z_WITH_PROBE && ENABLED(BLTOUCH)
@@ -1458,7 +1458,7 @@ void homeaxis(const AxisEnum axis) {
       #endif
     );
 #if ENABLED(USE_DWIN_LCD)
-    if(filament_show.g28_return_status) return;
+    if(dwin_parser.lcd_stop_status) return;
 #endif
 
     // Slow move towards endstop until triggered
@@ -1472,7 +1472,7 @@ void homeaxis(const AxisEnum axis) {
     do_homing_move(axis, 2 * bump, get_homing_bump_feedrate(axis));
 
 #if ENABLED(USE_DWIN_LCD)
-    if(filament_show.g28_return_status) return;
+    if(dwin_parser.lcd_stop_status) return;
 #endif
 
     #if HOMING_Z_WITH_PROBE && ENABLED(BLTOUCH)

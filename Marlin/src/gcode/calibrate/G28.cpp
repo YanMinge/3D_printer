@@ -65,6 +65,7 @@
 
 #if ENABLED(NEWPANEL)
   #include "filament_ui.h"
+  #include "lcd_parser.h"
 #endif
 
 #if ENABLED(QUICK_HOME)
@@ -237,7 +238,7 @@ void GcodeSuite::G28(const bool always_home_all) {
   // Wait for planner moves to finish!
   planner.synchronize();
 #if ENABLED(USE_DWIN_LCD)
-  if(filament_show.g28_return_status) return;
+  if(dwin_parser.lcd_stop_status) return;
 #endif
 
   // Disable the leveling matrix before homing
@@ -296,7 +297,7 @@ void GcodeSuite::G28(const bool always_home_all) {
 
       if (home_all || homeZ) homeaxis(Z_AXIS);
 #if ENABLED(USE_DWIN_LCD)
-      if(filament_show.g28_return_status) return;
+      if(dwin_parser.lcd_stop_status) return;
 #endif
     #endif
 
@@ -316,14 +317,14 @@ void GcodeSuite::G28(const bool always_home_all) {
       }
     }
 #if ENABLED(USE_DWIN_LCD)
-     if(filament_show.g28_return_status) return;
+     if(dwin_parser.lcd_stop_status) return;
 #endif
 
     #if ENABLED(QUICK_HOME)
 
       if (home_all || (homeX && homeY)) quick_home_xy();
 #if ENABLED(USE_DWIN_LCD)
-      if(filament_show.g28_return_status) return;
+      if(dwin_parser.lcd_stop_status) return;
 #endif
     #endif
 
@@ -335,6 +336,10 @@ void GcodeSuite::G28(const bool always_home_all) {
           || homeX
         #endif
       ) homeaxis(Y_AXIS);
+
+#if ENABLED(USE_DWIN_LCD)
+      if(dwin_parser.lcd_stop_status) return;
+#endif
 
     #endif
 
@@ -367,7 +372,7 @@ void GcodeSuite::G28(const bool always_home_all) {
 
         homeaxis(X_AXIS);
 #if ENABLED(USE_DWIN_LCD)
-        if(filament_show.g28_return_status) return;
+        if(dwin_parser.lcd_stop_status) return;
 #endif
       #endif
     }
@@ -376,7 +381,7 @@ void GcodeSuite::G28(const bool always_home_all) {
     #if DISABLED(HOME_Y_BEFORE_X)
       if (home_all || homeY) homeaxis(Y_AXIS);
 #if ENABLED(USE_DWIN_LCD)
-      if(filament_show.g28_return_status) return;
+      if(dwin_parser.lcd_stop_status) return;
 #endif
     #endif
 

@@ -603,7 +603,7 @@ void lcd_process::show_prepare_print_page(pfile_list_t temp)
   //progress = 0;percentage = 0;
   pre_percentage = 0;
   send_temperature_percentage(pre_percentage);
-  filament_show.g28_return_status = false;
+  dwin_parser.lcd_stop_status = false;
   filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
 
   if(udisk.job_recover_file_exists())

@@ -136,7 +136,7 @@ void user_execution::cmd_g1_y(float y, float feedrate)
 void user_execution::cmd_g1_z(float z, float feedrate)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G1 F%5.1f Z%4.1f"), feedrate, z);
+  sprintf_P(cmd, PSTR("G1 F%5.1f Z%4.2f"), feedrate, z);
   enqueue_and_echo_command(cmd);
 }
 
@@ -479,6 +479,34 @@ void user_execution::cmd_M2050(language_type lan)
   char cmd[32];
   sprintf_P(cmd, PSTR("M2050 L%d"), lan);
   enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_g92_z(float z)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G92 Z%4.1f"), z);
+  enqueue_and_echo_command(cmd);
+}
+
+void user_execution::cmd_now_M3(uint16_t power)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M3 S%d"), power);
+  cmd_now_g_m(cmd);
+}
+
+void user_execution::cmd_now_g0_xy(float x, float y, float f)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G0 X%4.1f Y%4.1f F%4.1f"), x, y, f);
+  cmd_now_g_m(cmd);
+}
+
+void user_execution::cmd_now_g0_z(float z, float feedrate)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G0 F%5.1f Z%4.2f"), feedrate, z);
+  cmd_now_g_m(cmd);
 }
 
 #endif // USE_DWIN_LCD

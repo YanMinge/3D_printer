@@ -90,6 +90,7 @@ lcd_parser::lcd_parser(void)
   current_path[1] = '\0';
 
   file_list_open_status = false;
+  lcd_stop_status = false;
 }
 
 void lcd_parser::lcd_update(void)
@@ -502,7 +503,7 @@ void lcd_parser::response_print_file(void)
     else if(out_printing == status)
     {
       if(dwin_process.get_limage_status())return;
-      filament_show.g28_return_status = false;
+      lcd_stop_status = false;
       dwin_process.reset_image_send_parameters();
       dwin_process.send_given_page_data();
       dwin_process.simage_send_start();
@@ -716,7 +717,7 @@ void lcd_parser::response_print_set(void)
   {
     response_set_buzzer();
   }
-  else if(0x05 == receive_data) //enter into print_set_page
+  else if(0x05 == receive_data) //return from laser focus choice to  print_set_page
   {
     dwin_process.show_machine_set_page();
   }
@@ -728,8 +729,7 @@ void lcd_parser::response_print_set(void)
   else if(0x07 <= receive_data && receive_data <= 0X0B) //enter into laser_focus confirm set page
   {
     Laser.laser_focus += (receive_data - 9);
-    dwin_process.show_machine_status_page(LASER_MACHINE_STATUS_FOCUS_FINISHED_CH,\
-                      LASER_EXCEPTION_SURE_PAGE_EN,LASER_EXCEPTION_SURE_PAGE_CH);
+    dwin_process.show_sure_block_page(LASER_MACHINE_STATUS_FOCUS_FINISHED_CH);
   }
   else if(0x0C == receive_data)  //enter into machine_info_page
   {
@@ -844,6 +844,7 @@ void lcd_parser::response_print_machine_status()
 
       //cancel laser_focus set,goto to set page
       case LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH:
+        dwin_parser.lcd_stop_status = false;
       case LASER_MACHINE_STATUS_FOCUS_FINISHED_CH:
       case PRINT_MACHINE_STATUS_LEVELING_OK_CH:
       case PRINT_MACHINE_STATUS_CALIBRATION_OK_CH:
@@ -867,7 +868,7 @@ void lcd_parser::response_print_machine_status()
         {
           if(!udisk.job_recover_file_exists())
           {
-            filament_show.g28_return_status = true;
+            lcd_stop_status = true;
             filament_show.set_print_after_heat_status(false);
             UserExecution.cmd_now_M2524();
             dwin_process.show_start_print_file_page(temp);
@@ -902,9 +903,13 @@ void lcd_parser::response_print_machine_status()
 
       case LASER_MACHINE_STATUS_PREPARE_FOCUS_CH:
         UserExecution.user_stop();
-        UserExecution.cmd_M410();
-        Laser.synchronize_status = false;
-        dwin_process.set_machine_status(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH);
+        UserExecution.cmd_quick_stop(true);
+        lcd_exception_stop();
+        UserExecution.cmd_now_M3(0);
+        dwin_parser.lcd_stop_status = true;
+        dwin_process.show_machine_status_page(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH,\
+        LASER_EXCEPTION_SURE_RETURN_PAGE_EN,LASER_EXCEPTION_SURE_RETURN_PAGE_CH);
+        break;
 
       case LASER_MACHINE_STATUS_ENGRAVE_FINISHED_EN:
         file_list_open_status = false;

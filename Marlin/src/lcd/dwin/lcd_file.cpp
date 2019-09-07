@@ -73,11 +73,11 @@ void lcd_file::file_list_init(void)
 {
   pfile_list_t m;
   m =(pfile_list_t) new char[sizeof(file_list_t)];
-  memset(m,0,sizeof(file_list_t));
   if(NULL == m)
   {
     return;
   }
+  memset(m,0,sizeof(file_list_t));
   file_list = m;
   return;
 }

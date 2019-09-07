@@ -60,7 +60,6 @@ filament_ui_show::filament_ui_show()
 {
   heating_status = HEAT_NULL_STATUS;
   print_after_heat_status = false;
-  g28_return_status = false;
 }
 
 void filament_ui_show::show_file_print_page(void)

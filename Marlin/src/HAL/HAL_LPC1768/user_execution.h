@@ -128,6 +128,11 @@ public:
   void cmd_M1000(bool s);
   void cmd_quick_stop(bool stop_status);
   void cmd_M2050(language_type lan);
+  void cmd_g92_z(float z);
+  void cmd_now_M3(uint16_t power);
+  void cmd_now_g0_xy(float x, float y, float f);
+  void cmd_now_g0_z(float z, float feedrate);
+
   bool lcd_immediate_execution;
 };
 

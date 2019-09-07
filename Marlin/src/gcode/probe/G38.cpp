@@ -31,11 +31,18 @@
 #include "../../module/stepper.h"
 #include "../../module/probe.h"
 
+#if ENABLED(NEWPANEL)
+  #include "lcd_parser.h"
+#endif
+
 inline void G38_single_probe(const uint8_t move_value) {
   endstops.enable(true);
   G38_move = move_value;
   prepare_move_to_destination();
   planner.synchronize();
+  #if ENABLED(USE_DWIN_LCD)
+    if(dwin_parser.lcd_stop_status)return;
+  #endif
   G38_move = 0;
   endstops.hit_on_purpose();
   set_current_from_steppers_for_axis(ALL_AXES);
@@ -56,6 +63,10 @@ inline bool G38_run_probe() {
   #endif
 
   planner.synchronize();  // wait until the machine is idle
+
+  #if ENABLED(USE_DWIN_LCD)
+    if(dwin_parser.lcd_stop_status)return false;
+  #endif
 
   // Move flag value
   #if ENABLED(G38_PROBE_AWAY)
@@ -78,7 +89,7 @@ inline bool G38_run_probe() {
       current_position[Y_AXIS] = 0.0;
     }
     if(parser.seen('Z')){
-      current_position[Z_AXIS] = 0.0;
+      //current_position[Z_AXIS] = 0.0;
     }
 
     set_destination_from_current();

@@ -61,6 +61,7 @@
 #include "dwin.h"
 #include "lcd_file.h"
 #include "lcd_process.h"
+#include "lcd_parser.h"
 #endif
 
 #include "user_execution.h"
@@ -123,6 +124,7 @@ void laser_class::reset(void)
   set_laser_frequency(1000);
   set_laser_power(0);
   set_laser_ocr(0);
+  spindle_pwm = 0;
 }
 
 void laser_class::update_laser_power(void)
@@ -177,116 +179,95 @@ void laser_class::laser_walking_border(void)
 
 void laser_class::show_laser_prepare_focus_page(void)
 {
-  char cmd[40];
-  synchronize_status = true;
-  dwin_process.show_machine_status_page(machine_status_type(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH),LASER_PREPARE_PAGE_EN,LASER_PREPARE_PAGE_CH);
-  dwin_process.set_machine_status(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH);
+  dwin_process.pre_percentage = 0;
+  dwin_process.send_temperature_percentage(0);
+  dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH);
+  dwin_parser.lcd_stop_status = false;
+  dwin_process.send_temperature_percentage(5);
 
-  sprintf_P(cmd, PSTR("G38.2 Z%f F900"), current_position[Z_AXIS] + 20);
-  process_synchronize_subcommands_now(cmd);
-  if (!TEST(axis_known_position, X_AXIS) || !TEST(axis_known_position, Y_AXIS))
-  {
-    process_synchronize_subcommands_now(PSTR("G28 X Y"));
-  }
-  process_synchronize_subcommands_now(PSTR("G1 X120 Y100 F3000"));
-  SERIAL_PRINTF("current_position = %f\r\n", current_position[Z_AXIS]);
-  process_synchronize_subcommands_now(PSTR("G38.2 Z-20 F900"));
-  SERIAL_PRINTF("current_position = %f\r\n", current_position[Z_AXIS]);
-  process_synchronize_subcommands_now(PSTR("G92 Z0"));
-  SERIAL_PRINTF("current_position = %f\r\n", current_position[Z_AXIS]);
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), laser_focus - 2);
-  process_synchronize_subcommands_now(cmd);
-  process_synchronize_subcommands_now(PSTR("M114"));
+  if(dwin_parser.lcd_stop_status)return;
+  UserExecution.cmd_now_g28();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(20);
+
+  UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2, 3000);
+  UserExecution.cmd_g38_z(-20);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(40);
+
+  UserExecution.cmd_g92_z(0);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
 
   //line1 and num1
-  process_synchronize_subcommands_now(PSTR("G1 X80 Y150 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X80 Y130"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-
-  process_synchronize_subcommands_now(PSTR("G1 X80 Y100"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X80 Y80"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
+  UserExecution.cmd_now_M3(1000);
+  UserExecution.cmd_now_g0_z(laser_focus - 2, 600);
+  UserExecution.cmd_now_g0_xy(80, 150, 1000);
+  UserExecution.cmd_now_g1_xy(80, 130, 1000);
+  UserExecution.cmd_now_g0_xy(80, 100, 1000);
+  UserExecution.cmd_now_g1_xy(80, 80, 1000);
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(60);
 
   //line2 and num2
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), laser_focus - 1);
-  process_synchronize_subcommands_now(cmd);
-  process_synchronize_subcommands_now(PSTR("G1 X95 Y150 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X95 Y130 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-
-  process_synchronize_subcommands_now(PSTR("G1 X90 Y100"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X100 Y100"));
-  process_synchronize_subcommands_now(PSTR("G1 X90 Y80"));
-  process_synchronize_subcommands_now(PSTR("G1 X100 Y80"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
+  UserExecution.cmd_now_g0_z(laser_focus - 1, 600);
+  UserExecution.cmd_now_g0_xy(95, 150, 1000);
+  UserExecution.cmd_now_g1_xy(95, 130, 1000);
+  UserExecution.cmd_now_g0_xy(90, 100, 1000);
+  UserExecution.cmd_now_g1_xy(100, 100, 1000);
+  UserExecution.cmd_now_g1_xy(90, 80, 1000);
+  UserExecution.cmd_now_g1_xy(100, 80, 1000);
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(70);
 
   //line3 and num3
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), laser_focus);
-  process_synchronize_subcommands_now(cmd);
-  process_synchronize_subcommands_now(PSTR("G1 X110 Y150 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X110 Y130 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-
-  process_synchronize_subcommands_now(PSTR("G1 X105 Y100"));
-  process_synchronize_subcommands_now(PSTR("M3 F100 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X115 Y100"));
-  process_synchronize_subcommands_now(PSTR("G1 X115 Y80"));
-  process_synchronize_subcommands_now(PSTR("G1 X105 Y80"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-  process_synchronize_subcommands_now(PSTR("G1 X105 Y90"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X115 Y90"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
+  UserExecution.cmd_now_g0_z(laser_focus, 600);
+  UserExecution.cmd_now_g0_xy(110, 150, 1000);
+  UserExecution.cmd_now_g1_xy(110, 130, 1000);
+  UserExecution.cmd_now_g0_xy(105, 100, 1000);
+  UserExecution.cmd_now_g1_xy(115, 100, 1000);
+  UserExecution.cmd_now_g1_xy(115, 80, 1000);
+  UserExecution.cmd_now_g1_xy(105, 80, 1000);
+  UserExecution.cmd_now_g0_xy(105, 90, 1000);
+  UserExecution.cmd_now_g1_xy(115, 90, 1000);
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(80);
 
   //line4 and num4
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), laser_focus + 1);
-  process_synchronize_subcommands_now(cmd);
-  process_synchronize_subcommands_now(PSTR("G1 X125 Y150 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X125 Y130 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-
-  process_synchronize_subcommands_now(PSTR("G1 X120 Y100"));
-  process_synchronize_subcommands_now(PSTR("M3 F100 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X120 Y93"));
-  process_synchronize_subcommands_now(PSTR("G1 X130 Y93"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-  process_synchronize_subcommands_now(PSTR("G1 X125 Y100"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X125 Y80"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
+  UserExecution.cmd_now_g0_z(laser_focus + 1, 600);
+  UserExecution.cmd_now_g0_xy(125, 150, 1000);
+  UserExecution.cmd_now_g1_xy(125, 130, 1000);
+  UserExecution.cmd_now_g0_xy(120, 100, 1000);
+  UserExecution.cmd_now_g1_xy(120, 93, 1000);
+  UserExecution.cmd_now_g1_xy(130, 93, 1000);
+  UserExecution.cmd_now_g0_xy(125, 100, 1000);
+  UserExecution.cmd_now_g1_xy(125, 80, 1000);
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(90);
 
   //line5 and num5
-  sprintf_P(cmd, PSTR("G1 Z%f F900"), laser_focus + 2);
-  process_synchronize_subcommands_now(cmd);
-  process_synchronize_subcommands_now(PSTR("G1 X140 Y150 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X140 Y130 F3000"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
+  UserExecution.cmd_now_g0_z(laser_focus + 2, 600);
+  UserExecution.cmd_now_g0_xy(140, 150, 1000);
+  UserExecution.cmd_now_g1_xy(140, 130, 1000);
+  UserExecution.cmd_now_g0_xy(150, 100, 1000);
+  UserExecution.cmd_now_g1_xy(140, 100, 1000);
+  UserExecution.cmd_now_g1_xy(140, 90, 1000);
+  UserExecution.cmd_now_g1_xy(150, 90, 1000);
+  UserExecution.cmd_now_g1_xy(150, 80, 1000);
+  UserExecution.cmd_now_g1_xy(140, 80, 1000);
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_M3(0);
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(100);
 
-  process_synchronize_subcommands_now(PSTR("G1 X150 Y100"));
-  process_synchronize_subcommands_now(PSTR("M3 S1000"));
-  process_synchronize_subcommands_now(PSTR("G1 X140 Y100"));
-  process_synchronize_subcommands_now(PSTR("G1 X140 Y90"));
-  process_synchronize_subcommands_now(PSTR("G1 X150 Y90"));
-  process_synchronize_subcommands_now(PSTR("G1 X150 Y80"));
-  process_synchronize_subcommands_now(PSTR("G1 X140 Y80"));
-  process_synchronize_subcommands_now(PSTR("M3 S0"));
-
-  if(synchronize_status)
-  {
-    dwin_process.change_lcd_page(LASER_LINE_CHOICE_PAGE_EN,LASER_LINE_CHOICE_PAGE_CH);
-  }
-  else
-  {
-    dwin_process.show_machine_status_page(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH,\
-        LASER_EXCEPTION_SURE_RETURN_PAGE_EN,LASER_EXCEPTION_SURE_RETURN_PAGE_CH);
-  }
+  dwin_process.change_lcd_page(LASER_LINE_CHOICE_PAGE_EN,LASER_LINE_CHOICE_PAGE_CH);
 }
 
 void laser_class::laser_before_print(void)
