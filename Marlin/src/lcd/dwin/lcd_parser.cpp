@@ -627,35 +627,9 @@ void lcd_parser::response_cancel_set_language(void)
 
 void lcd_parser::response_set_language_ch(void)
 {
-  dwin_process.set_language_type(LAN_CHINESE);
-  if(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD == dwin_process.get_machine_status())
-  {
-    dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
-    MachineInfo.set_exception_status(true);
-  }
-  else if(PRINT_MACHINE_STATUS_NO_SET_LANGUAGE == dwin_process.get_machine_status())
-  {
-    if(HEAD_PRINT == MachineInfo.get_head_type())
-    {
-      dwin_process.lcd_send_data(PAGE_BASE + PRINT_HOME_PAGE_CH, PAGE_ADDR);
-    }
-    else
-    {
-      dwin_process.lcd_send_data(PAGE_BASE + LASER_HOME_PAGE_CH, PAGE_ADDR);
-    }
-  }
-  else
-  {
-    if(HEAD_PRINT == MachineInfo.get_head_type())
-    {
-      dwin_process.show_print_set_page();
-    }
-    else
-    {
-      dwin_process.show_laser_set_page();
-    }
-    return;
-  }
+  UserExecution.cmd_M2050(LAN_CHINESE);
+  UserExecution.get_remain_command();
+  dwin_process.show_start_up_page();
   dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
   UserExecution.cmd_M500();
 }
@@ -936,7 +910,7 @@ void lcd_parser::response_print_machine_status()
 
       case PRINT_MACHINE_STATUS_SAME_FIRMWARE_FILE_CH:
       case PRINT_MACHINE_STATUS_NO_FIRMWARE_FILE_CH:
-        dwin_process.change_lcd_page(PRINT_INFO_PAGE_EN,PRINT_INFO_PAGE_CH);
+        CHANGE_PAGE(PRINT, LASER, _INFO_PAGE_, EN, CH);
         break;
 
       case PRINT_MACHINE_STATUS_NO_UPDATE_FILE_CH:

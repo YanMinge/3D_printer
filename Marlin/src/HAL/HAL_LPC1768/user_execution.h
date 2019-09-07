@@ -63,6 +63,8 @@
 #include "../../inc/MarlinConfig.h"
 
 #if ENABLED(USE_DWIN_LCD)
+#include "dwin.h"
+
 class user_execution
 {
 public:
@@ -125,6 +127,7 @@ public:
   void cmd_now_M2524(void);
   void cmd_M1000(bool s);
   void cmd_quick_stop(bool stop_status);
+  void cmd_M2050(language_type lan);
   bool lcd_immediate_execution;
 };
 

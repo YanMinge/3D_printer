@@ -65,6 +65,7 @@
 #include "../../module/temperature.h"
 
 #include "lcd_process.h"
+#include "dwin.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -471,6 +472,13 @@ void user_execution::cmd_quick_stop(bool stop_status)
   {
     quickstop_stepper();
   }
+}
+
+void user_execution::cmd_M2050(language_type lan)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("M2050 L%d"), lan);
+  enqueue_and_echo_command(cmd);
 }
 
 #endif // USE_DWIN_LCD
