@@ -118,6 +118,9 @@
 #endif
 
 #define USB_CABLE_DETECTION_PIN     P1_30
+#if ENABLED(I2C_EEPROM)
+#define EEPROM_WP_PIN               P1_04    
+#endif
 
 //
 // Connector J7

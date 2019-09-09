@@ -84,6 +84,10 @@ static void eeprom_init(void) {
 
 void eeprom_write_byte(uint8_t *pos, unsigned char value) {
   unsigned eeprom_address = (unsigned) pos;
+#if PIN_EXISTS(EEPROM_WP)
+  SET_MODE(EEPROM_WP_PIN, OUTPUT);
+  WRITE(EEPROM_WP_PIN, LOW);
+#endif
 
   eeprom_init();
 
@@ -96,6 +100,10 @@ void eeprom_write_byte(uint8_t *pos, unsigned char value) {
   // wait for write cycle to complete
   // this could be done more efficiently with "acknowledge polling"
   delay(5);
+#if PIN_EXISTS(EEPROM_WP)
+  SET_MODE(EEPROM_WP_PIN, OUTPUT);
+  WRITE(EEPROM_WP_PIN, HIGH);
+#endif
 }
 
 // WARNING: address is a page address, 6-bit end will wrap around

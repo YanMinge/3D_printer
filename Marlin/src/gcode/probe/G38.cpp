@@ -83,13 +83,13 @@ inline bool G38_run_probe() {
   if (G38_did_trigger) {
     G38_pass_fail = true;
     if(parser.seen('X')){
-      current_position[X_AXIS] = 0.0;
+      current_position[X_AXIS] = X_MIN_POS;
     }
     if(parser.seen('Y')){
-      current_position[Y_AXIS] = 0.0;
+      current_position[Y_AXIS] = Y_MIN_POS;
     }
-    if(parser.seen('Z')){
-      //current_position[Z_AXIS] = 0.0;
+    if(parser.seen('Z') && (destination[Z_AXIS] -  current_position[Z_AXIS]) > 0){
+      current_position[Z_AXIS] = Z_MAX_POS;
     }
 
     set_destination_from_current();
