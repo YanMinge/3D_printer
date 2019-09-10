@@ -77,6 +77,11 @@ void HAL_init() {
     }
   #endif
 
+  #if PIN_EXISTS(HEATER_0_ENABLE)
+    SET_MODE(HEATER_0_ENABLE_PIN, OUTPUT);
+    SET_MODE(HEATER_CHECK_PIN, INPUT);
+    WRITE(HEATER_0_ENABLE_PIN, LOW);
+  #endif
   //debug_frmwrk_init();
   //_DBG("\n\nDebug running\n");
   // Initialise the SD card chip select pins as soon as possible

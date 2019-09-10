@@ -532,6 +532,7 @@ void udisk_reader::printing_has_finished()
   }
   else if(IS_HEAD_LASER())
   {
+    Laser.reset();
     dwin_process.set_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
     dwin_process.show_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
     dwin_process.change_lcd_page(LASER_EXCEPTION_SURE_PAGE_EN, LASER_EXCEPTION_SURE_PAGE_CH);

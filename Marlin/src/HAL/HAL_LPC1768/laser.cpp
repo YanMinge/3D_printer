@@ -123,8 +123,8 @@ void laser_class::reset(void)
 {
   set_laser_frequency(1000);
   set_laser_power(0);
-  set_laser_ocr(0);
   spindle_pwm = 0;
+  set_laser_ocr(0);
 }
 
 void laser_class::update_laser_power(void)

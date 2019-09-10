@@ -158,12 +158,12 @@ void eeprom_update_block (const void *__src, void *__dst, size_t __n);
 // ADC API
 //
 
-#define ADC_MEDIAN_FILTER_SIZE (23) // Higher values increase step delay (phase shift),
+#define ADC_MEDIAN_FILTER_SIZE (0) // Higher values increase step delay (phase shift),
                                     // (ADC_MEDIAN_FILTER_SIZE + 1) / 2 sample step delay (12 samples @ 500Hz: 24ms phase shift)
                                     // Memory usage per ADC channel (bytes): (6 * ADC_MEDIAN_FILTER_SIZE) + 16
                                     // 8 * ((6 * 23) + 16 ) = 1232 Bytes for 8 channels
 
-#define ADC_LOWPASS_K_VALUE    (6)  // Higher values increase rise time
+#define ADC_LOWPASS_K_VALUE    (0)  // Higher values increase rise time
                                     // Rise time sample delays for 100% signal convergence on full range step
                                     // (1 : 13, 2 : 32, 3 : 67, 4 : 139, 5 : 281, 6 : 565, 7 : 1135, 8 : 2273)
                                     // K = 6, 565 samples, 500Hz sample rate, 1.13s convergence on full range step
