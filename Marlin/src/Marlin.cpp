@@ -807,9 +807,9 @@ void idle(
     MachineInfo.machine_head_type_update();
   #endif
 
-#if PIN_EXISTS(POWER_LOSS)
-  power_loss_detect();
-#endif
+  #if PIN_EXISTS(POWER_LOSS)
+    power_loss_detect();
+  #endif
 }
 
 /**
