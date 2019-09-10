@@ -78,6 +78,8 @@ public:
   void laser_walking_border(void);
   void show_laser_prepare_focus_page(void);
   void laser_before_print(void);
+  void show_laser_prepare_engrave_first_page(void);
+  void show_laser_prepare_engrave_second_page(void);
   laser_border_xy_position_t laser_border_xy_position;
   float laser_focus;
   bool synchronize_status;

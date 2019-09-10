@@ -800,6 +800,7 @@ void idle(
   dwin_parser.lcd_update();
   MachineInfo.lcd_print_information_update();
   MachineInfo.lcd_material_info_update();
+  dwin_parser.machine_exceptional_error_process();
   MachineInfo.lcd_usb_status_update();
 #endif //USE_DWIN_LCD
 

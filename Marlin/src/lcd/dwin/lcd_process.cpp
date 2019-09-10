@@ -666,7 +666,7 @@ void lcd_process::send_temperature_percentage(uint16_t percentage)
 {
   char str[8];
   char str1[4] = {0x25,0xff,0xff,0x0};
-  if(pre_percentage < percentage)
+  if(pre_percentage <= percentage)
   {
     itoa(percentage,str,10);
     strcat(str,str1);

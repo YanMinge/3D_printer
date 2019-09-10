@@ -298,5 +298,45 @@ void laser_class::laser_before_print(void)
   planner.synchronize();
 }
 
+void laser_class::show_laser_prepare_engrave_first_page(void)
+{
+  #define TRIGGERED(S) (READ(S##_PIN) != S##_ENDSTOP_INVERTING)
+  #define IS_XYZ_HOME  (TRIGGERED(X_MIN) && TRIGGERED(Y_MIN) && TRIGGERED(Z_MAX))
+
+  dwin_parser.lcd_stop_status = false;
+  if(IS_XYZ_HOME)  //xyz is at home position
+  {
+    dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+    if(dwin_parser.lcd_stop_status)return;
+    LcdFile.set_current_status(prepare_printing);
+  }
+  else
+  {
+    dwin_process.pre_percentage = 0;
+    dwin_process.send_temperature_percentage(0);
+    dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH);
+    dwin_process.send_temperature_percentage(30);
+
+    UserExecution.cmd_now_g28();
+    if(dwin_parser.lcd_stop_status)return;
+    dwin_process.send_temperature_percentage(99);
+    dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+
+    if(dwin_parser.lcd_stop_status)return;
+    LcdFile.set_current_status(prepare_printing);
+  }
+}
+
+void laser_class::show_laser_prepare_engrave_second_page(void)
+{
+  dwin_process.pre_percentage = 0;
+  dwin_process.send_temperature_percentage(0);
+  dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH);
+  dwin_parser.lcd_stop_status = false;
+  dwin_process.send_temperature_percentage(30);
+
+
+}
+
 #endif // SPINDLE_LASER_ENABLE
 #endif // TARGET_LPC1768

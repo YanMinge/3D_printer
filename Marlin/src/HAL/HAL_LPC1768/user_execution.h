@@ -132,6 +132,7 @@ public:
   void cmd_now_M3(uint16_t power);
   void cmd_now_g0_xy(float x, float y, float f);
   void cmd_now_g0_z(float z, float feedrate);
+  void stop_udisk_print(void);
 
   bool lcd_immediate_execution;
 };

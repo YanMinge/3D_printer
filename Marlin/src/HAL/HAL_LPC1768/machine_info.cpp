@@ -63,6 +63,7 @@
 #if ENABLED(USE_DWIN_LCD)
 #include "lcd_process.h"
 #include "filament_ui.h"
+#include "lcd_parser.h"
 #endif //USE_DWIN_LCD
 
 #if ENABLED(USB_DISK_SUPPORT)
@@ -360,29 +361,27 @@ void machine_info::lcd_material_info_update(void)
     bool filamen_runout_status = MaterialCheck.is_filamen_runout();
     if(filamen_runout_status != pre_filamen_runout_status)
     {
-      SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
-      pre_filamen_runout_status = filamen_runout_status;
-      if(filamen_runout_status)
+      static uint8_t count = 0;
+      static millis_t check_times = 0;
+      if(!count)
       {
-        dwin_process.lcd_send_data(FILAMENT_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
-        if(PRINT_MACHINE_STATUS_NO_FILAMENT_CH == dwin_process.get_machine_status() && \
-          HEAT_LOAD_STATUS == filament_show.get_heating_status_type())  // change from no filament page to prepare load heat page
-        {
-          dwin_process.show_load_filament_page();
-        }
+        ++count;
+        check_times = millis();
       }
-      else
+      if(count &&(millis() - check_times) > MATERIAL_CHECK_TIME_PERIOD)
       {
-        dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
-        if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
-         (PRINT_MACHINE_STATUS_PREPARE_LOAD_CH == dwin_process.get_machine_status() || \
-          PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()))
+        SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
+        pre_filamen_runout_status = filamen_runout_status;
+        count = 0;
+        if(filamen_runout_status)
         {
-          dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-          filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
-          UserExecution.user_stop();
-          lcd_exception_stop();
-          dwin_process.set_lcd_temp_show_status(false);
+          dwin_process.lcd_send_data(FILAMENT_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
+          dwin_parser.machine_error_status = ERROR_FILAMENT_INSERT;
+        }
+        else
+        {
+          dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
+          dwin_parser.machine_error_status = ERROR_FILAMENT_NO_INSERT;
         }
       }
     }

@@ -66,6 +66,7 @@
 
 #include "lcd_process.h"
 #include "dwin.h"
+#include "material_check.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -167,7 +168,7 @@ void user_execution::cmd_now_M420(bool onoff)
 void user_execution::cmd_now_M206(float height)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("M206 Z%0.1f"), height);
+  sprintf_P(cmd, PSTR("M206 Z%0.2f"), height);
   cmd_now_g_m(cmd);
 }
 
@@ -324,7 +325,6 @@ void user_execution::pause_udisk_print(void)
     // Retract filament
     do_pause_e_move(-FILAMENT_UNLOAD_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 #endif
-    thermalManager.disable_all_heaters();
     wait_for_heatup = false;
   }
 #endif
@@ -507,6 +507,21 @@ void user_execution::cmd_now_g0_z(float z, float feedrate)
   char cmd[32];
   sprintf_P(cmd, PSTR("G0 F%5.1f Z%4.2f"), feedrate, z);
   cmd_now_g_m(cmd);
+}
+
+void user_execution::stop_udisk_print(void)
+{
+#if ENABLED(USB_DISK_SUPPORT)
+  if(IS_UDISK_PRINTING())
+  {
+    udisk.stop_udisk_print();
+    print_job_timer.stop();
+    clear_command_queue();
+    quickstop_stepper();
+  }
+  thermalManager.disable_all_heaters();
+  thermalManager.zero_fan_speeds();
+#endif
 }
 
 #endif // USE_DWIN_LCD

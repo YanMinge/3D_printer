@@ -45,6 +45,12 @@
 #include "dwin.h"
 #include "lcd_process.h"
 
+enum machine_error_type : uint8_t {
+  ERROR_NULL = 0,
+  ERROR_FILAMENT_NO_INSERT,
+  ERROR_FILAMENT_INSERT,
+};
+
 class lcd_parser
 {
 public:
@@ -83,10 +89,13 @@ public:
 
   void refresh_current_path(void);
   void malloc_current_path(uint16_t len);
+  void machine_exceptional_error_process(void);
   char * current_path;
   uint32_t firmware_size;
   uint32_t firmware_crc;
   bool lcd_stop_status;
+  bool print_filament_status;   //accord to the status, change to different page when call show_confirm_cancel_page().
+  machine_error_type machine_error_status;
 private:
   lcd_cmd_type type;
   unsigned short receive_data;

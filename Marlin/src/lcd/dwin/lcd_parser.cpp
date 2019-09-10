@@ -91,6 +91,8 @@ lcd_parser::lcd_parser(void)
 
   file_list_open_status = false;
   lcd_stop_status = false;
+  machine_error_status = ERROR_NULL;
+  print_filament_status = false;
 }
 
 void lcd_parser::lcd_update(void)
@@ -457,7 +459,14 @@ void lcd_parser::response_print_file(void)
         }
         else if(IS_HEAD_LASER())
         {
-          dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+          Laser.show_laser_prepare_engrave_first_page();
+        }
+        break;
+
+      case prepare_printing:
+        if(IS_HEAD_LASER())
+        {
+          //
         }
         break;
 
@@ -517,14 +526,12 @@ void lcd_parser::response_print_file(void)
       return;
     }
   }
-  // return laser print file
-  else if(0x03 == receive_data)
+  else if(0x03 == receive_data)   //return from laser axis adjust page return button
   {
     dwin_process.show_start_print_file_page(temp);
     LcdFile.set_current_status(out_printing);
   }
-  // laser print start from walking frame
-  else if(0x04 == receive_data)
+  else if(0x04 == receive_data)   // laser print start from walking frame
   {
     dwin_process.show_stop_print_file_page(temp);
     LcdFile.set_current_status(on_printing);
@@ -777,11 +784,26 @@ void lcd_parser::response_print_machine_status()
   {
     switch(dwin_process.get_machine_status())
     {
-      case PRINT_MACHINE_STATUS_NO_USB_DISK_CH:case PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH:
+      case PRINT_MACHINE_STATUS_NO_USB_DISK_CH:
       case PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH:
         CHANGE_PAGE(PRINT, LASER, _HOME_PAGE_, EN, CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
         lcd_exception_stop();
+        break;
+
+      case PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH:
+        if(print_filament_status)
+        {
+          print_filament_status = false;
+          temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+          dwin_process.show_start_print_file_page(temp);
+        }
+        else
+        {
+          CHANGE_PAGE(PRINT, LASER, _HOME_PAGE_, EN, CH);
+          dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+          lcd_exception_stop();
+        }
         break;
 
       case PRINT_MACHINE_STATUS_PRINT_SUCCESS_CH:
@@ -797,6 +819,11 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:   //cancel stop print file, engrave file
+        if(print_filament_status)
+        {
+          dwin_process.show_sure_no_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+          return;
+        }
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
         dwin_process.show_cancel_stop_print_page(temp);
         break;
@@ -813,15 +840,15 @@ void lcd_parser::response_print_machine_status()
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
           immediately_pause_flag = false;
 #endif
-          if(!MaterialCheck.is_filamen_runout()) //no filament
+          temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+          if(prepare_printing == LcdFile.get_current_status())
           {
-            dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_MATERIAL_RUN_OUT_CH);
-          }
-          else
-          {
-            temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
             dwin_process.show_start_print_file_page(temp);
             LcdFile.set_current_status(out_printing);
+          }
+          else if(stop_printing == LcdFile.get_current_status())
+          {
+            dwin_process.show_print_load_filament_page();
           }
         }
         else if(HEAT_PRINT_NO_FILAMENT_STATUS == filament_show.get_heating_status_type())
@@ -864,8 +891,9 @@ void lcd_parser::response_print_machine_status()
           UserExecution.cmd_quick_stop(true);
           dwin_process.show_start_print_file_page(temp);
         }
-        else if(out_printing == LcdFile.get_current_status())
+        else if(prepare_printing == LcdFile.get_current_status())
         {
+          LcdFile.set_current_status(out_printing);
           if(!udisk.job_recover_file_exists())
           {
             lcd_stop_status = true;
@@ -944,6 +972,31 @@ void lcd_parser::response_print_machine_status()
         dwin_process.show_machine_set_page();
         break;
 
+      case LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH:
+        print_status mstatus;
+        mstatus = LcdFile.get_current_status();
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        if(out_printing == mstatus)
+        {
+          dwin_parser.lcd_stop_status = true;
+          dwin_process.show_start_print_file_page(temp);
+          UserExecution.user_stop();
+          UserExecution.cmd_quick_stop(true);
+          lcd_exception_stop();
+        }
+        else if(prepare_printing == mstatus)
+        {
+
+        }
+        break;
+
+      case PIRNT_MACHINE_STATUS_PRINT_LOAD_FILAMENT_CH:
+        UserExecution.user_stop();
+        clear_command_queue();
+        disable_all_steppers();
+        UserExecution.cmd_quick_stop(true);
+        break;
+
       default:
         break;
     }
@@ -960,7 +1013,8 @@ void lcd_parser::response_print_machine_status()
         lcd_exception_stop();
         break;
 
-      case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:  //confirm stop print file
+      case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:          //confirm stop print file
+        print_filament_status = false;
         dwin_process.show_confirm_stop_print_page();
         break;
 
@@ -1072,6 +1126,67 @@ void lcd_parser::malloc_current_path(uint16_t len)
   current_path[len] = '\0';
 }
 
+void lcd_parser::machine_exceptional_error_process(void)
+{
+  static bool is_error_processing = false;
+  pfile_list_t temp = NULL;
+
+  switch (machine_error_status)
+  {
+    case ERROR_FILAMENT_NO_INSERT:
+      machine_error_status = ERROR_NULL;
+      if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
+        (PRINT_MACHINE_STATUS_PREPARE_LOAD_CH == dwin_process.get_machine_status() || \
+         PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()))
+      {
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+        filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
+        UserExecution.user_stop();
+        lcd_exception_stop();
+        dwin_process.set_lcd_temp_show_status(false);
+      }
+
+      // change to pause print page when no filament
+      else if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type() && (on_printing == LcdFile.get_current_status()))
+      {
+        if(is_error_processing)return;
+        is_error_processing = true;
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        print_filament_status = true;
+        dwin_process.show_pause_print_page(temp);
+        dwin_process.show_sure_no_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+        is_error_processing = false;
+      }
+      break;
+
+    case ERROR_FILAMENT_INSERT:
+      machine_error_status = ERROR_NULL;
+      // change from no filament page to prepare load heat page
+      if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type())
+      {
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        dwin_process.show_load_filament_page();
+      }
+      // change to prepare page when filament inserted
+      else if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type() && (prepare_printing == LcdFile.get_current_status()))
+      {
+        if(is_error_processing)return;
+        is_error_processing = true;
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        dwin_process.show_prepare_print_page(temp);
+        is_error_processing = false;
+      }
+      break;
+
+    case ERROR_NULL:
+      break;
+
+    default:
+      break;
+
+  }
+}
 #endif // USE_MATERIAL_MOTION_CHECK
 #endif // BEEPER
 #endif // USB_DISK_SUPPORT

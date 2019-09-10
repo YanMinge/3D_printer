@@ -145,8 +145,9 @@ public:
   void show_stop_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
   void show_sure_block_page(machine_status_type ch_type);
+  void show_sure_no_block_page(machine_status_type ch_type);
   void show_confirm_cancel_page(machine_status_type ch_type);
-  void show_complete_hint_page(machine_status_type ch_type);
+  void show_complete_hint_page(machine_status_type ch_type,bool show_status);
   void show_prepare_block_page(machine_status_type ch_type);
   void show_prepare_no_block_page(machine_status_type ch_type);
   void show_firmware_upate_page(void);
@@ -155,7 +156,6 @@ public:
   void show_save_calibration_data_page(void);
   void show_restore_factory_page(void);
   void show_xyz_prepare_home_page(void);
-  void show_check_no_filament_page(void);
   void show_prepare_print_page(pfile_list_t temp);
   void show_pause_print_page(pfile_list_t temp);
   void show_prepare_from_pause_page(pfile_list_t temp);
@@ -163,6 +163,7 @@ public:
   void show_unload_filament_page(void);
   void show_cancel_stop_print_page(pfile_list_t temp);
   void show_confirm_stop_print_page(void);
+  void show_print_load_filament_page(void);
   pfile_list_t current_file; /*the file_struct which now the file is selected*/
   uint16_t pre_percentage;
 private:
