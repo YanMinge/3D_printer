@@ -796,17 +796,21 @@ void idle(
     mmu2.mmuLoop();
   #endif
 
-#if ENABLED(USE_DWIN_LCD)
-  dwin_parser.lcd_update();
-  MachineInfo.lcd_print_information_update();
-  MachineInfo.lcd_material_info_update();
-  dwin_parser.machine_exceptional_error_process();
-  MachineInfo.lcd_usb_status_update();
-#endif //USE_DWIN_LCD
+  #if ENABLED(USE_DWIN_LCD)
+    dwin_parser.lcd_update();
+    MachineInfo.lcd_print_information_update();
+    MachineInfo.lcd_material_info_update();
+    dwin_parser.machine_exceptional_error_process();
+    MachineInfo.lcd_usb_status_update();
+  #endif //USE_DWIN_LCD
 
-#if PIN_EXISTS(POWER_LOSS)
-  power_loss_detect();
-#endif
+  #if ENABLED(FACTORY_MACHINE_INFO)
+    MachineInfo.machine_head_type_update();
+  #endif
+
+  #if PIN_EXISTS(POWER_LOSS)
+    power_loss_detect();
+  #endif
 }
 
 /**
@@ -1203,33 +1207,33 @@ void setup() {
     mmu2.init();
   #endif
 
-#if ENABLED(USB_DISK_SUPPORT)
-  udisk.init();
-#endif
+  #if ENABLED(USB_DISK_SUPPORT)
+    udisk.init();
+  #endif
 
-#if ENABLED(FACTORY_MACHINE_INFO)
-  UserExecution.cmd_M2032(false);
-  UserExecution.cmd_M2034(true);
-  MachineInfo.machine_head_type_update();
-  MachineInfo.send_uuid_string();
-  MachineInfo.send_version_string();
-  MachineInfo.send_work_time();
-  MachineInfo.send_print_work_time();
-#endif
+  #if ENABLED(FACTORY_MACHINE_INFO)
+    UserExecution.cmd_M2032(false);
+    UserExecution.cmd_M2034(true);
+    MachineInfo.machine_head_type_update();
+    MachineInfo.send_uuid_string();
+    MachineInfo.send_version_string();
+    MachineInfo.send_work_time();
+    MachineInfo.send_print_work_time();
+  #endif
 
-#if ENABLED(USE_DWIN_LCD)
-  LcdFile.file_list_init();
-#endif //USE_DWIN_LCD
+  #if ENABLED(USE_DWIN_LCD)
+    LcdFile.file_list_init();
+  #endif //USE_DWIN_LCD
 
-#if PIN_EXISTS(POWER_LOSS)
-  SET_INPUT(POWER_LOSS_PIN);
-#endif
+  #if PIN_EXISTS(POWER_LOSS)
+    SET_INPUT(POWER_LOSS_PIN);
+  #endif
 
-#if ENABLED(SPINDLE_LASER_ENABLE)
-  if(IS_HEAD_LASER()){
-    Laser.reset();
-  }
-#endif
+  #if ENABLED(SPINDLE_LASER_ENABLE)
+    if(IS_HEAD_LASER()){
+      Laser.reset();
+    }
+  #endif
 }
 
 /**
@@ -1270,22 +1274,18 @@ void loop() {
     endstops.event_handler();
     idle();
 
-#if ENABLED(USB_DISK_SUPPORT)
-    if (udisk.abort_udisk_printing) {
-      clear_command_queue();
-      quickstop_stepper();
-      print_job_timer.stop();
-      thermalManager.disable_all_heaters();
-      thermalManager.zero_fan_speeds();
-      wait_for_heatup = false;
-      #if ENABLED(POWER_LOSS_RECOVERY)
-        udisk.remove_job_recovery_file();
-      #endif
-    }
-#endif //USB_DISK_SUPPORT
-
-#if ENABLED(FACTORY_MACHINE_INFO)
-    MachineInfo.machine_head_type_update();
-#endif
+    #if ENABLED(USB_DISK_SUPPORT)
+      if (udisk.abort_udisk_printing) {
+        clear_command_queue();
+        quickstop_stepper();
+        print_job_timer.stop();
+        thermalManager.disable_all_heaters();
+        thermalManager.zero_fan_speeds();
+        wait_for_heatup = false;
+        #if ENABLED(POWER_LOSS_RECOVERY)
+          udisk.remove_job_recovery_file();
+        #endif
+      }
+    #endif //USB_DISK_SUPPORT
   }
 }

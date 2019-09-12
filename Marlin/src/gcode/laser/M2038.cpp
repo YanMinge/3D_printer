@@ -41,7 +41,7 @@
  */
 void GcodeSuite::M2038()
 {
-  Laser.laser_before_print();
+  //
 }
 
 #endif // SPINDLE_LASER_ENABLE

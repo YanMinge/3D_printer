@@ -40,6 +40,26 @@
   #include "lcd_process.h"
 #endif
 
+bool check_heater_status(void){
+#if PIN_EXISTS(HEATER_0_ENABLE)
+  WRITE(HEATER_0_ENABLE_PIN, LOW);
+  WRITE(HEATER_0_PIN, (LOW) ^ HEATER_0_INVERTING);
+  delayMicroseconds(100);
+  if(!READ(HEATER_CHECK_PIN)){
+    return false;
+  }
+  WRITE(HEATER_0_ENABLE_PIN, HIGH);
+  WRITE(HEATER_0_PIN, (LOW) ^ HEATER_0_INVERTING);
+  delayMicroseconds(100);
+  if(READ(HEATER_CHECK_PIN)){
+    WRITE(HEATER_0_ENABLE_PIN, LOW);
+    return false;
+  }
+  WRITE(HEATER_0_ENABLE_PIN, HIGH);
+#endif
+  return true;
+}
+
 /**
  * M104: Set hot end temperature
  */
@@ -52,6 +72,13 @@ void GcodeSuite::M104() {
   #else
     const int8_t target_extruder = get_target_extruder_from_command();
     if (target_extruder < 0) return;
+  #endif
+
+  #if PIN_EXISTS(HEATER_0_ENABLE)
+    if(check_heater_status() == false){
+      SERIAL_ECHOLNPGM("Hardware damage detected in the extruder");
+      return;
+    }
   #endif
 
   if (parser.seenval('S')) {
@@ -111,6 +138,13 @@ void GcodeSuite::M109() {
   #else
     const int8_t target_extruder = get_target_extruder_from_command();
     if (target_extruder < 0) return;
+  #endif
+
+  #if PIN_EXISTS(HEATER_0_ENABLE)
+    if(check_heater_status() == false){
+      SERIAL_ECHOLNPGM("Hardware damage detected in the extruder");
+      return;
+    }
   #endif
 
   const bool no_wait_for_cooling = parser.seenval('S'),

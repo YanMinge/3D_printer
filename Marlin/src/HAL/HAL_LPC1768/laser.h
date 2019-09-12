@@ -52,6 +52,10 @@
 #include "../../inc/MarlinConfigPre.h"
 #include "../../inc/MarlinConfig.h"
 
+#if ENABLED(USE_DWIN_LCD)
+  #include "lcd_file.h"
+#endif
+
 #if ENABLED(SPINDLE_LASER_ENABLE)
 
 typedef struct{
@@ -77,9 +81,11 @@ public:
   void process_synchronize_subcommands_now(PGM_P pgcode);
   void laser_walking_border(void);
   void show_laser_prepare_focus_page(void);
-  void laser_before_print(void);
   void show_laser_prepare_engrave_first_page(void);
-  void show_laser_prepare_engrave_second_page(void);
+  bool is_laser_size_out_range(void);
+  void show_laser_prepare_engrave_second_page(pfile_list_t temp);
+  void show_laser_prepare_from_pause_page(pfile_list_t temp);
+  void show_laser_pause_engrave_page(pfile_list_t temp);
   laser_border_xy_position_t laser_border_xy_position;
   float laser_focus;
   bool synchronize_status;

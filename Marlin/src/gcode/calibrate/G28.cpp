@@ -218,7 +218,7 @@ void GcodeSuite::G28(const bool always_home_all) {
 
 #if ENABLED(SPINDLE_LASER_ENABLE)
     if(IS_HEAD_LASER()){
-      Laser.reset();
+      Laser.spindle_pwm = 0;
     }
 #endif
 

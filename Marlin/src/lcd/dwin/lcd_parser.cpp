@@ -466,30 +466,35 @@ void lcd_parser::response_print_file(void)
       case prepare_printing:
         if(IS_HEAD_LASER())
         {
-          //
+          //first check the length and width
+          if(Laser.is_laser_size_out_range())
+          {
+            dwin_process.show_confirm_cancel_page(LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH);
+            return;
+          }
+          Laser.show_laser_prepare_engrave_second_page(temp);
         }
         break;
 
       case on_printing:
-        if(IS_HEAD_LASER())
+        if(IS_HEAD_PRINT())
         {
-          enqueue_and_echo_commands_P("M4 S0");
           dwin_process.show_pause_print_page(temp);
         }
-        else if(IS_HEAD_PRINT())
+        else if(IS_HEAD_LASER())
         {
-          dwin_process.show_pause_print_page(temp);
+          Laser.show_laser_pause_engrave_page(temp);
         }
         break;
 
       case stop_printing:
-        if(IS_HEAD_LASER())
-        {
-          enqueue_and_echo_commands_P("M4 S800");
-        }
-        else if(IS_HEAD_PRINT())
+        if(IS_HEAD_PRINT())
         {
           dwin_process.show_prepare_from_pause_page(temp);
+        }
+        else if(IS_HEAD_LASER())
+        {
+          Laser.show_laser_prepare_from_pause_page(temp);
         }
         break;
 
@@ -505,6 +510,7 @@ void lcd_parser::response_print_file(void)
       #if ENABLED(ADVANCED_PAUSE_FEATURE)
         immediately_pause_flag = false;
       #endif
+      dwin_parser.lcd_stop_status = false;
       dwin_process.reset_image_send_parameters();
       dwin_process.show_confirm_cancel_page(PRINT_MACHINE_STATUS_CANCEL_PRINT_CH);
       return;
@@ -528,15 +534,12 @@ void lcd_parser::response_print_file(void)
   }
   else if(0x03 == receive_data)   //return from laser axis adjust page return button
   {
+    #if ENABLED(ADVANCED_PAUSE_FEATURE)
+     immediately_pause_flag = false;
+    #endif
+    dwin_parser.lcd_stop_status = false;
     dwin_process.show_start_print_file_page(temp);
     LcdFile.set_current_status(out_printing);
-  }
-  else if(0x04 == receive_data)   // laser print start from walking frame
-  {
-    dwin_process.show_stop_print_file_page(temp);
-    LcdFile.set_current_status(on_printing);
-    UserExecution.cmd_M2023(temp->file_name);
-    UserExecution.cmd_M2024();
   }
   else return;
 }
@@ -545,6 +548,7 @@ void lcd_parser::response_print_move_axis(void)
 {
   static uint8_t pressed_flag = 0x00;
   static unsigned long pressed_time;
+  dwin_parser.lcd_stop_status = false;
   if((pressed_flag == 0) && (PRINT_SET_PAGE_X_AXIS_MOVE_MIN_BTN == receive_addr))
   {
     pressed_flag |= 0x01;
@@ -591,6 +595,13 @@ void lcd_parser::response_print_move_axis(void)
     clear_command_queue();
     UserExecution.cmd_M410();
     pressed_flag = 0x00;
+
+    //when in the laser prepare printing page, move the button, need set the current position zero
+    if(IS_HEAD_LASER() && prepare_printing == LcdFile.get_current_status())
+    {
+      UserExecution.cmd_g92_xy(0,0);
+      UserExecution.get_remain_command();
+    }
   }
   else if(PRINT_SET_PAGE_HOME_MOVE_BTN == receive_addr)
   {
@@ -604,7 +615,13 @@ void lcd_parser::response_print_move_axis(void)
     }
     else if(0x01 == receive_data)
     {
+      if(Laser.is_laser_size_out_range())
+      {
+        dwin_process.show_confirm_cancel_page(LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH);
+        return;
+      }
       Laser.laser_walking_border();
+      dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
     }
   }
   else if(HOME_OFFSET_BTN == receive_addr)
@@ -962,6 +979,7 @@ void lcd_parser::response_print_machine_status()
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
         immediately_pause_flag = false;
 #endif
+        dwin_parser.lcd_stop_status = false;
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
         filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         LcdFile.set_current_status(out_printing);
@@ -972,7 +990,7 @@ void lcd_parser::response_print_machine_status()
         dwin_process.show_machine_set_page();
         break;
 
-      case LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH:
+      case LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH:        //stop engrave file from prepare
         print_status mstatus;
         mstatus = LcdFile.get_current_status();
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
@@ -986,7 +1004,19 @@ void lcd_parser::response_print_machine_status()
         }
         else if(prepare_printing == mstatus)
         {
-
+	      UserExecution.user_stop();
+          UserExecution.cmd_quick_stop(true);
+          lcd_exception_stop();
+          dwin_parser.lcd_stop_status = true;
+          dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+        }
+        else if(stop_printing == mstatus)
+        { 
+		  UserExecution.user_stop();
+          UserExecution.cmd_quick_stop(true);
+          lcd_exception_stop();
+          dwin_parser.lcd_stop_status = true;
+          dwin_process.show_start_print_file_page(temp);
         }
         break;
 
@@ -995,6 +1025,16 @@ void lcd_parser::response_print_machine_status()
         clear_command_queue();
         disable_all_steppers();
         UserExecution.cmd_quick_stop(true);
+        break;
+
+      case LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH:
+        dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+        break;
+
+      case LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH:
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        dwin_process.show_start_print_file_page(temp);
+        LcdFile.set_current_status(out_printing);
         break;
 
       default:
@@ -1040,6 +1080,11 @@ void lcd_parser::response_print_machine_status()
 
       case PRINT_MACHINE_STATUS_RESTORE_FACTORY_HINT_CH:  //confirm restore factory mode
         dwin_process.show_restore_factory_page();
+        break;
+
+      case LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH:
+        Laser.laser_walking_border();
+        dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
         break;
 
       default:
@@ -1135,6 +1180,7 @@ void lcd_parser::machine_exceptional_error_process(void)
   {
     case ERROR_FILAMENT_NO_INSERT:
       machine_error_status = ERROR_NULL;
+      if(!IS_HEAD_PRINT())return;
       if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
         (PRINT_MACHINE_STATUS_PREPARE_LOAD_CH == dwin_process.get_machine_status() || \
          PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()))
@@ -1161,6 +1207,7 @@ void lcd_parser::machine_exceptional_error_process(void)
       break;
 
     case ERROR_FILAMENT_INSERT:
+      if(!IS_HEAD_PRINT())return;
       machine_error_status = ERROR_NULL;
       // change from no filament page to prepare load heat page
       if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type())

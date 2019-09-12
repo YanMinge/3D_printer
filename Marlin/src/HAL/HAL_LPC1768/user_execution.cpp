@@ -63,6 +63,7 @@
 #include "../../module/motion.h"
 #include "../../module/planner.h"
 #include "../../module/temperature.h"
+#include "machine_info.h"
 
 #include "lcd_process.h"
 #include "dwin.h"
@@ -323,7 +324,15 @@ void user_execution::pause_udisk_print(void)
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
     pause_print_data.udisk_pos = udisk.udisk_block_pos;
     // Retract filament
-    do_pause_e_move(-FILAMENT_UNLOAD_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
+    if(IS_HEAD_PRINT())
+    {
+      do_pause_e_move(-FILAMENT_UNLOAD_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
+    }
+    else if(IS_HEAD_LASER())
+    {
+      //turn off laser
+      cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) + 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 300);
+    }
 #endif
     wait_for_heatup = false;
   }
@@ -522,6 +531,13 @@ void user_execution::stop_udisk_print(void)
   thermalManager.disable_all_heaters();
   thermalManager.zero_fan_speeds();
 #endif
+}
+
+void user_execution::cmd_g92_xy(float x, float y)
+{
+  char cmd[32];
+  sprintf_P(cmd, PSTR("G92 X%4.1f Y%4.1f"), x, y);
+  enqueue_and_echo_command(cmd);
 }
 
 #endif // USE_DWIN_LCD

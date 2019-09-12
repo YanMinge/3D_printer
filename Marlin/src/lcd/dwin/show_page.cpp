@@ -338,16 +338,7 @@ void lcd_process::show_machine_status(uint8_t ch_type)
 
 void lcd_process::show_machine_continue_print_page(void)
 {
-  if(HEAD_PRINT == MachineInfo.get_head_type())
-  {
-    show_machine_status(PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH);
-  }
-  else
-  {
-    return;
-  }
-  change_lcd_page(PRINT_CONFIRM_CANCEL_HINT_PAGE_EN,PRINT_CONFIRM_CANCEL_HINT_PAGE_CH);
-  machine_status = PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH;
+  show_confirm_cancel_page(PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH);
 }
 
 void lcd_process::show_recovery_print_check_page(void)
@@ -893,6 +884,7 @@ void lcd_process::show_confirm_stop_print_page(void)
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   immediately_pause_flag = false;
 #endif
+  dwin_parser.lcd_stop_status = false;
 
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
   dwin_process.reset_image_send_parameters();
@@ -900,7 +892,7 @@ void lcd_process::show_confirm_stop_print_page(void)
 
   if(IS_HEAD_LASER())
   {
-    enqueue_and_echo_commands_P("M4 S0");
+    UserExecution.cmd_now_M3(0);
   }
   LcdFile.set_current_status(out_printing);
 
@@ -908,14 +900,8 @@ void lcd_process::show_confirm_stop_print_page(void)
   show_sure_block_page(PRINT_MACHINE_STATUS_TASK_CANCEL_CH);
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   immediately_pause_flag = true;
+  dwin_parser.lcd_stop_status = true;
 #endif
-
-  //dwin_process.send_given_page_data();
-  //dwin_process.simage_send_start();
-  //if(udisk.job_recover_file_exists())
-  //{
-  //  udisk.remove_job_recovery_file();
-  //  dwin_process.delete_current_file();
 }
 
 void lcd_process::show_print_load_filament_page(void)

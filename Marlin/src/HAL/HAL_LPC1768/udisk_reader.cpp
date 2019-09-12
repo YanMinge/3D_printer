@@ -78,6 +78,7 @@
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
 #include "machine_info.h"
+#include "user_execution.h"
 
 #if ENABLED(POWER_LOSS_RECOVERY)
 #include "../../feature/power_loss_recovery.h"
@@ -508,6 +509,11 @@ void udisk_reader::stop_udisk_print(void)
 void udisk_reader::printing_has_finished()
 {
   planner.synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  UserExecution.get_remain_command();
+  if(dwin_parser.lcd_stop_status)return;
+  planner.synchronize();
+  if(dwin_parser.lcd_stop_status)return;
   stop_udisk_print();
 #if ENABLED(POWER_LOSS_RECOVERY)
   remove_job_recovery_file();
@@ -522,7 +528,7 @@ void udisk_reader::printing_has_finished()
   {
     enqueue_and_echo_commands_P(PSTR("M31"));
   }
-
+  if(dwin_parser.lcd_stop_status)return;
 #if ENABLED(NEWPANEL)
   if(IS_HEAD_PRINT())
   {
@@ -532,6 +538,7 @@ void udisk_reader::printing_has_finished()
   }
   else if(IS_HEAD_LASER())
   {
+    Laser.reset();
     dwin_process.set_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
     dwin_process.show_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
     dwin_process.change_lcd_page(LASER_EXCEPTION_SURE_PAGE_EN, LASER_EXCEPTION_SURE_PAGE_CH);
