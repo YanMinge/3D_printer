@@ -157,15 +157,6 @@ void laser_class::set_current_position_zero(void)
   dwin_process.lcd_receive_data_clear();
 }
 
-void laser_class::process_synchronize_subcommands_now(PGM_P pgcode)
-{
-  planner.synchronize();
-  if(synchronize_status)
-  {
-    gcode.process_subcommands_now_P(pgcode);
-  }
-}
-
 void laser_class::laser_walking_border(void)
 {
   dwin_process.show_prepare_block_page(LASER_MACHINE_STATUS_PREPARE_WALKING_BORDER_CH);

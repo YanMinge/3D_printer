@@ -78,7 +78,6 @@ public:
   void reset(void);
   void update_laser_power(void);
   void set_current_position_zero(void);
-  void process_synchronize_subcommands_now(PGM_P pgcode);
   void laser_walking_border(void);
   void show_laser_prepare_focus_page(void);
   void show_laser_prepare_engrave_first_page(void);
