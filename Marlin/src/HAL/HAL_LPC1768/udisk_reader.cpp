@@ -509,13 +509,22 @@ void udisk_reader::stop_udisk_print(void)
 
 void udisk_reader::printing_has_finished()
 {
+  #define TRIGGERED(S) (READ(S##_PIN) != S##_ENDSTOP_INVERTING)
+  #define IS_XYZ_HOME  (TRIGGERED(X_MIN) && TRIGGERED(Y_MIN) && TRIGGERED(Z_MAX))
+
+  stop_udisk_print();
   planner.synchronize();
   if(dwin_parser.lcd_stop_status)return;
   UserExecution.get_remain_command();
   if(dwin_parser.lcd_stop_status)return;
   planner.synchronize();
   if(dwin_parser.lcd_stop_status)return;
-  stop_udisk_print();
+  if(!IS_XYZ_HOME)
+  {
+    UserExecution.cmd_now_g28();
+    planner.synchronize();
+  }
+  if(dwin_parser.lcd_stop_status)return;
 #if ENABLED(POWER_LOSS_RECOVERY)
   remove_job_recovery_file();
 #endif
