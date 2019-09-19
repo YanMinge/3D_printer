@@ -292,6 +292,7 @@ void laser_class::show_laser_prepare_engrave_first_page(void)
   dwin_process.send_temperature_percentage(80);
 
   UserExecution.cmd_g92_z(0);
+  UserExecution.cmd_g92_xy(0, 0);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
   if(dwin_parser.lcd_stop_status)return;
