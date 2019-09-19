@@ -543,6 +543,9 @@ void udisk_reader::printing_has_finished()
     dwin_process.show_machine_status(LASER_MACHINE_STATUS_ENGRAVE_FINISHED_CH);
     dwin_process.change_lcd_page(LASER_EXCEPTION_SURE_PAGE_EN, LASER_EXCEPTION_SURE_PAGE_CH);
   }
+    UserExecution.cmd_M300(BUZZER_FRE_ONE,BUZZER_TIM_ONE);
+    UserExecution.cmd_M300(BUZZER_FRE_TWO,BUZZER_TIM_TWO);
+    UserExecution.get_remain_command();
 #endif
 }
 

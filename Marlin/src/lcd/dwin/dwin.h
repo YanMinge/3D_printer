@@ -39,6 +39,11 @@
 #ifndef _DWIN_H_
 #define _DWIN_H_
 
+#define BUZZER_FRE_ONE              500
+#define BUZZER_FRE_TWO              800
+#define BUZZER_TIM_ONE              500
+#define BUZZER_TIM_TWO              500
+
 #define IMAGE_SHOW_DELAY            300   //delay ms before show image
 #define FILE_DIRECTORY_DEPTH        5
 #define UNLOAD_TIME_SHOW_INTERVAL   200 //200MS
@@ -369,6 +374,7 @@ typedef struct
 #define PRINT_RETURN_ICON_ADDR                      0X100D
 #define PRINT_STATUS_BAR_FILAMENT_ICON_ADDR         0X100E
 #define PRINT_STATUS_ALL_BAR_STATUS_ADDR            0X100F
+#define PRINT_STATUS_ALL_BAR_NO_STATUS_ADDR         0X1010
 
 //print text addr
 #define PRINT_TEMP_HOTEND_ADDR                      0X1040

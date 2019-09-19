@@ -140,7 +140,7 @@ void laser_class::update_laser_power(void)
     set_laser_ocr(0);
     //delay_for_power_down();
   }
-  else 
+  else
   {
     set_laser_ocr(laser_power);
     //delay_for_power_up();
@@ -151,8 +151,8 @@ void laser_class::set_current_position_zero(void)
 {
   UserExecution.cmd_g92_xy(0,0);
   UserExecution.get_remain_command();
-  UserExecution.cmd_now_M3(100);
-  safe_delay(1000);
+  UserExecution.cmd_now_M3(2);
+  safe_delay(500);
   UserExecution.cmd_now_M3(0);
   dwin_process.lcd_receive_data_clear();
 }
@@ -160,13 +160,14 @@ void laser_class::set_current_position_zero(void)
 void laser_class::laser_walking_border(void)
 {
   dwin_process.show_prepare_block_page(LASER_MACHINE_STATUS_PREPARE_WALKING_BORDER_CH);
-  UserExecution.cmd_now_g0_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.buttom_right_y_position, 1000);
-  UserExecution.cmd_now_M3(100);
-  UserExecution.cmd_now_g1_xy(laser_border_xy_position.buttom_right_x_position,laser_border_xy_position.buttom_right_y_position, 1000);
-  UserExecution.cmd_now_g1_xy(laser_border_xy_position.buttom_right_x_position,laser_border_xy_position.upper_left_y_position, 1000);
-  UserExecution.cmd_now_g1_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.upper_left_y_position, 1000);
-  UserExecution.cmd_now_g1_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.buttom_right_y_position, 1000);
+  UserExecution.cmd_now_g0_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.upper_left_y_position, 3000);
+  UserExecution.cmd_now_M3(2);
+  UserExecution.cmd_now_g1_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.buttom_right_y_position, 3000);
+  UserExecution.cmd_now_g1_xy(laser_border_xy_position.buttom_right_x_position,laser_border_xy_position.buttom_right_y_position, 3000);
+  UserExecution.cmd_now_g1_xy(laser_border_xy_position.buttom_right_x_position,laser_border_xy_position.upper_left_y_position, 3000);
+  UserExecution.cmd_now_g1_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.upper_left_y_position, 3000);
   UserExecution.cmd_now_M3(0);
+  UserExecution.cmd_now_g0_xy(laser_border_xy_position.upper_left_x_position + 0.01,laser_border_xy_position.upper_left_y_position, 3000);
   planner.synchronize();
 }
 
@@ -269,27 +270,40 @@ void laser_class::show_laser_prepare_engrave_first_page(void)
   #define IS_XYZ_HOME  (TRIGGERED(X_MIN) && TRIGGERED(Y_MIN) && TRIGGERED(Z_MAX))
 
   dwin_parser.lcd_stop_status = false;
-  if(IS_XYZ_HOME)  //xyz is at home position
-  {
-    dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
-    if(dwin_parser.lcd_stop_status)return;
-    LcdFile.set_current_status(prepare_printing);
-  }
-  else
-  {
-    dwin_process.pre_percentage = 0;
-    dwin_process.send_temperature_percentage(0);
-    dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH);
-    dwin_process.send_temperature_percentage(30);
 
-    UserExecution.cmd_now_g28();
-    if(dwin_parser.lcd_stop_status)return;
-    dwin_process.send_temperature_percentage(99);
-    dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+  dwin_process.pre_percentage = 0;
+  dwin_process.send_temperature_percentage(0);
+  dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH);
+  dwin_process.send_temperature_percentage(10);
 
-    if(dwin_parser.lcd_stop_status)return;
-    LcdFile.set_current_status(prepare_printing);
-  }
+  UserExecution.cmd_now_g28();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(30);
+
+  UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(40);
+
+  UserExecution.cmd_g38_z(-20);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(80);
+
+  UserExecution.cmd_g92_z(0);
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+
+  UserExecution.cmd_now_g0_z(laser_focus, 600);
+  UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.send_temperature_percentage(90);
+
+  if(dwin_parser.lcd_stop_status)return;
+  dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+  LcdFile.set_current_status(prepare_printing);
 }
 
 bool laser_class::is_laser_size_out_range(void)
@@ -311,37 +325,23 @@ bool laser_class::is_laser_size_out_range(void)
 
 void laser_class::show_laser_prepare_engrave_second_page(pfile_list_t temp)
 {
-  float center_x;
-  float center_y;
-  center_x = (laser_border_xy_position.buttom_right_x_position + laser_border_xy_position.upper_left_x_position)/2;
-  center_y = (laser_border_xy_position.upper_left_y_position + laser_border_xy_position.buttom_right_y_position)/2;
-
   //if ckeck ok,show prepare_print page
   dwin_process.pre_percentage = 0;
   dwin_process.send_temperature_percentage(0);
   dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH);
+  filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
   dwin_parser.lcd_stop_status = false;
 
-  UserExecution.cmd_now_g1_xy(center_x, center_y,3000);
-  UserExecution.cmd_user_synchronize();
-  if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(20);
-
-  UserExecution.cmd_g38_z(-20);
-  UserExecution.get_remain_command();
-  UserExecution.cmd_user_synchronize();
-  if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(80);
-
-  UserExecution.cmd_g92_z(0);
-  UserExecution.get_remain_command();
-  UserExecution.cmd_user_synchronize();
-  if(dwin_parser.lcd_stop_status)return;
-
-  UserExecution.cmd_now_g0_z(laser_focus, 600);
-  UserExecution.cmd_user_synchronize();
-  if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(90);
+  //check if have recover_file
+  if(udisk.job_recover_file_exists())
+  {
+    dwin_process.show_recovery_print_check_page();
+    dwin_process.show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_PRINT_CH);
+    UserExecution.cmd_M1000(false);
+    UserExecution.get_remain_command();
+    UserExecution.cmd_user_synchronize();
+    return;
+  }
 
   //prepare_over, change to print_process page
   dwin_process.show_stop_print_file_page(temp);
@@ -370,6 +370,10 @@ void laser_class::show_laser_prepare_from_pause_page(pfile_list_t temp)
   if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
   dwin_process.send_temperature_percentage(20);
 
+  //turn off fan
+  UserExecution.cmd_now_M106(pause_print_data.fan_speed[0], 0);
+  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  dwin_process.send_temperature_percentage(30);
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   //Set the printed position
@@ -394,8 +398,17 @@ void laser_class::show_laser_pause_engrave_page(pfile_list_t temp)
 #endif
   dwin_process.show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_STOP_TASK_CH);
 
+#if FAN_COUNT
+  COPY(pause_print_data.fan_speed, thermalManager.fan_speed);
+#endif
+
   //stop the print task
+  UserExecution.lcd_immediate_execution = true;
   UserExecution.pause_udisk_print();
+  UserExecution.lcd_immediate_execution = false;
+
+  //turn off fan
+  UserExecution.cmd_now_M106(0, 0);
 
   //if filament is not over ,go to start page, else go to no filament page
   dwin_process.show_start_print_file_page(temp);

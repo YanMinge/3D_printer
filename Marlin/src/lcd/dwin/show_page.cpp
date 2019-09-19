@@ -344,7 +344,7 @@ void lcd_process::show_machine_continue_print_page(void)
 void lcd_process::show_recovery_print_check_page(void)
 {
   dwin_process.reset_image_send_parameters();
-  LcdFile.set_current_status(out_printing);
+  LcdFile.set_current_status(prepare_printing);
   pfile_list_t temp = NULL;
 
 #if ENABLED(POWER_LOSS_RECOVERY)
@@ -352,7 +352,15 @@ void lcd_process::show_recovery_print_check_page(void)
   {
     dwin_parser.malloc_current_path(strlen_P(recovery.info.file_path));
     strcpy_P(dwin_parser.current_path, recovery.info.file_path);
-    int16_t value = udisk.ls(LS_GET_FILE_NAME, dwin_parser.current_path, ".gcode");
+    int16_t value = 0;
+    if(IS_HEAD_LASER())
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, dwin_parser.current_path, ".lbx");
+    }
+    else if(IS_HEAD_PRINT())
+    {
+      value = udisk.ls(LS_GET_FILE_NAME, dwin_parser.current_path, ".gcode");
+    }
     if(USB_NOT_DETECTED == value || value)
     {
       dwin_process.show_usb_pull_out_page();
@@ -603,10 +611,13 @@ void lcd_process::show_prepare_print_page(pfile_list_t temp)
   dwin_parser.lcd_stop_status = false;
   filament_show.set_heating_status_type(HEAT_PRINT_STATUS);
   LcdFile.set_current_status(prepare_printing);
-  if(MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout())
+  if(IS_HEAD_PRINT())
   {
-    dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-    return;
+    if(MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout())
+    {
+      dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+      return;
+    }
   }
 
   if(udisk.job_recover_file_exists())
@@ -888,7 +899,9 @@ void lcd_process::show_confirm_stop_print_page(void)
 
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
   dwin_process.reset_image_send_parameters();
+  UserExecution.lcd_immediate_execution = true;
   UserExecution.stop_udisk_print();
+  UserExecution.lcd_immediate_execution = false;
 
   if(IS_HEAD_LASER())
   {

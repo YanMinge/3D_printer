@@ -42,8 +42,13 @@ typedef struct {
 
   // Machine state
   float current_position[NUM_AXIS];
+  float position_shift[XYZ];
 
   uint16_t feedrate;
+
+  #if ENABLED(SPINDLE_LASER_PWM)
+    uint16_t laser_power;
+  #endif
 
   #if HOTENDS > 1
     uint8_t active_hotend;

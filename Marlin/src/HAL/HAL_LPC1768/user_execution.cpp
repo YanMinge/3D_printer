@@ -332,6 +332,7 @@ void user_execution::pause_udisk_print(void)
     {
       //turn off laser
       cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) + 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 300);
+      cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) - 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 300);
     }
 #endif
     wait_for_heatup = false;
@@ -507,7 +508,7 @@ void user_execution::cmd_now_M3(uint16_t power)
 void user_execution::cmd_now_g0_xy(float x, float y, float f)
 {
   char cmd[32];
-  sprintf_P(cmd, PSTR("G0 X%4.1f Y%4.1f F%4.1f"), x, y, f);
+  sprintf_P(cmd, PSTR("G0 X%4.2f Y%4.2f F%4.2f"), x, y, f);
   cmd_now_g_m(cmd);
 }
 

@@ -122,6 +122,12 @@
        *          playing the tones in the queue.
        */
       static void tick();
+
+      /**
+       * @brief clear the tone in the queue and stop buzzer imediately
+       *
+       */
+       static void clear();
   };
 
   // Provide a buzzer instance

@@ -138,4 +138,8 @@ class CircularQueue {
     uint8_t count() {
       return this->buffer.count;
     }
+
+    void clear_queue(){
+      this->buffer.count = this->buffer.head = this->buffer.tail = 0;
+    }
 };

@@ -97,4 +97,9 @@ void Buzzer::tick() {
   else if (ELAPSED(now, state.endtime)) reset();
 }
 
+void Buzzer:: clear(){
+  reset();
+  buffer.clear_queue();
+}
+
 #endif // !LCD_USE_I2C_BUZZER && BEEPER

@@ -58,6 +58,7 @@ job_recovery_info_t PrintJobRecovery::info;
   #include "filament_ui.h"
   #include "user_execution.h"
   #include "lcd_parser.h"
+  #include "machine_info.h"
 #endif
 
 PrintJobRecovery recovery;
@@ -170,6 +171,14 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
     info.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
     info.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
     info.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
+
+    //get position_shift data
+    COPY(info.position_shift, position_shift);
+
+    //get laser power
+    #if ENABLED(SPINDLE_LASER_PWM)
+      info.laser_power = Laser.get_laser_power();
+    #endif
 
     #if HAS_LEVELING
       info.leveling = planner.leveling_active;
@@ -285,48 +294,6 @@ void PrintJobRecovery::resume() {
 
   char cmd[44], str_1[16], str_2[16];
 
-  // Select the previously active tool (with no_move)
-  #if EXTRUDERS > 1
-    sprintf_P(cmd, PSTR("T%i S"), info.active_hotend);
-    gcode.process_subcommands_now(cmd);
-  #endif
-
-  #if HAS_HEATED_BED
-    const int16_t bt = info.target_temperature_bed;
-    if (bt) {
-      // Restore the bed temperature
-      sprintf_P(cmd, PSTR("M190 S%i"), bt);
-      gcode.process_subcommands_now(cmd);
-    }
-
-  #if ENABLED(USE_DWIN_LCD)
-    dwin_process.temperature_progress_update(60);
-    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
-      return;
-    }
-  #endif
-  #endif
-
-  // Restore all hotend temperatures
-  HOTEND_LOOP() {
-    const int16_t et = info.target_temperature[e];
-    if (et) {
-      #if HOTENDS > 1
-        sprintf_P(cmd, PSTR("T%i"), e);
-        gcode.process_subcommands_now(cmd);
-      #endif
-      sprintf_P(cmd, PSTR("M109 S%i"), et);
-      gcode.process_subcommands_now(cmd);
-    }
-  }
-
-  #if ENABLED(USE_DWIN_LCD)
-    dwin_process.temperature_progress_update(90);
-    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
-      return;
-    }
-  #endif
-
   // Restore print cooling fan speeds
   FANS_LOOP(i) {
     uint8_t f = info.fan_speed[i];
@@ -336,16 +303,6 @@ void PrintJobRecovery::resume() {
     }
   }
 
-  // Restore retract and hop state
-  #if ENABLED(FWRETRACT)
-    for (uint8_t e = 0; e < EXTRUDERS; e++) {
-      if (info.retract[e] != 0.0)
-        fwretract.current_retract[e] = info.retract[e];
-        fwretract.retracted[e] = true;
-    }
-    fwretract.current_hop = info.retract_hop;
-  #endif
-
   #if HAS_LEVELING
     // Restore leveling state before 'G92 Z' to ensure
     // the Z stepper count corresponds to the native Z.
@@ -354,30 +311,126 @@ void PrintJobRecovery::resume() {
       sprintf_P(cmd, PSTR("M420 S%i Z%s"), int(info.leveling), str_1);
       gcode.process_subcommands_now(cmd);
     }
+    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+      return;
+    }
   #endif
 
-  #if ENABLED(GRADIENT_MIX)
-    memcpy(&mixer.gradient, &info.gradient, sizeof(info.gradient));
-  #endif
+  if(IS_HEAD_PRINT())
+  {
+    // Select the previously active tool (with no_move)
+    #if EXTRUDERS > 1
+      sprintf_P(cmd, PSTR("T%i S"), info.active_hotend);
+      gcode.process_subcommands_now(cmd);
+    #endif
 
-  // Move back to the saved XY
-  dtostrf(info.current_position[X_AXIS], 1, 3, str_1);
-  dtostrf(info.current_position[Y_AXIS], 1, 3, str_2);
-  sprintf_P(cmd, PSTR("G1 X%s Y%s F3000"), str_1, str_2);
-  gcode.process_subcommands_now(cmd);
+    #if HAS_HEATED_BED
+      const int16_t bt = info.target_temperature_bed;
+      if (bt) {
+        // Restore the bed temperature
+        sprintf_P(cmd, PSTR("M190 S%i"), bt);
+        gcode.process_subcommands_now(cmd);
+      }
 
-  // Move back to the saved Z
-  dtostrf(info.current_position[Z_AXIS], 1, 3, str_1);
-  sprintf_P(cmd, PSTR("G1 Z%s F500"), str_1);
-  gcode.process_subcommands_now(cmd);
+    #if ENABLED(USE_DWIN_LCD)
+      dwin_process.temperature_progress_update(60);
+      if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+        return;
+      }
+    #endif
+    #endif
 
-  // Now all extrusion positions are resumed and ready to be confirmed
-  // Set extruder to saved position
-  planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = info.current_position[E_AXIS]));
+    // Restore all hotend temperatures
+    HOTEND_LOOP() {
+      const int16_t et = info.target_temperature[e];
+      if (et) {
+        #if HOTENDS > 1
+          sprintf_P(cmd, PSTR("T%i"), e);
+          gcode.process_subcommands_now(cmd);
+        #endif
+        sprintf_P(cmd, PSTR("M109 S%i"), et);
+        gcode.process_subcommands_now(cmd);
+      }
+    }
 
-  // Restore the feedrate
-  sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
-  gcode.process_subcommands_now(cmd);
+    #if ENABLED(USE_DWIN_LCD)
+      dwin_process.temperature_progress_update(90);
+      if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+        return;
+      }
+    #endif
+
+    // Restore retract and hop state
+    #if ENABLED(FWRETRACT)
+      for (uint8_t e = 0; e < EXTRUDERS; e++) {
+        if (info.retract[e] != 0.0)
+          fwretract.current_retract[e] = info.retract[e];
+          fwretract.retracted[e] = true;
+      }
+      fwretract.current_hop = info.retract_hop;
+    #endif
+
+    #if ENABLED(GRADIENT_MIX)
+      memcpy(&mixer.gradient, &info.gradient, sizeof(info.gradient));
+    #endif
+
+    // Move back to the saved XY
+    dtostrf(info.current_position[X_AXIS], 1, 3, str_1);
+    dtostrf(info.current_position[Y_AXIS], 1, 3, str_2);
+    sprintf_P(cmd, PSTR("G1 X%s Y%s F3000"), str_1, str_2);
+    gcode.process_subcommands_now(cmd);
+
+    // Move back to the saved Z
+    dtostrf(info.current_position[Z_AXIS], 1, 3, str_1);
+    sprintf_P(cmd, PSTR("G1 Z%s F500"), str_1);
+    gcode.process_subcommands_now(cmd);
+
+    // Now all extrusion positions are resumed and ready to be confirmed
+    // Set extruder to saved position
+    planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = info.current_position[E_AXIS]));
+
+    // Restore the feedrate
+    sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
+    gcode.process_subcommands_now(cmd);
+  }
+  else if(IS_HEAD_LASER())
+  {
+    //move to postion_shift
+    dtostrf(-info.position_shift[X_AXIS], 1, 3, str_1);
+    dtostrf(-info.position_shift[Y_AXIS], 1, 3, str_2);
+    sprintf_P(cmd, PSTR("G1 X%s Y%s F3000"), str_1, str_2);
+    gcode.process_subcommands_now(cmd);
+
+    //set current xy position to zero
+    gcode.process_subcommands_now_P(PSTR("G92 X0 Y0"));
+
+    //deploy the board
+    gcode.process_subcommands_now_P(PSTR("G38.2 Z-20 F600"));
+    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+      return;
+    }
+
+    //set current z positon zero
+    gcode.process_subcommands_now_P(PSTR("G92 Z0"));
+
+    //go to the focus height
+    dtostrf(Laser.laser_focus, 1, 3, str_1);
+    sprintf_P(cmd, PSTR("G1 Z%s F600"), str_1);
+    gcode.process_subcommands_now(cmd);
+
+    //go to power_loss break point
+    dtostrf(LOGICAL_X_POSITION(info.current_position[X_AXIS]), 1, 3, str_1);
+    dtostrf(LOGICAL_Y_POSITION(info.current_position[Y_AXIS]), 1, 3, str_2);
+    sprintf_P(cmd, PSTR("G0 X%s Y%s F3000"), str_1, str_2);
+    gcode.process_subcommands_now_P(cmd);
+    UserExecution.cmd_user_synchronize();
+
+    //turn on laser_power
+    dtostrf(info.laser_power, 1, 3, str_1);
+    sprintf_P(cmd, PSTR("M3 S%s"), str_1);
+    gcode.process_subcommands_now(cmd);
+
+  }
 
   #if ENABLED(USE_DWIN_LCD)
     UserExecution.cmd_user_synchronize();

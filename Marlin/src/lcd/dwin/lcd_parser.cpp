@@ -469,6 +469,7 @@ void lcd_parser::response_print_file(void)
           //first check the length and width
           if(Laser.is_laser_size_out_range())
           {
+            LcdFile.set_current_status(out_printing);
             dwin_process.show_confirm_cancel_page(LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH);
             return;
           }
@@ -714,6 +715,7 @@ void lcd_parser::response_set_buzzer(void)
 
   dwin_process.show_machine_set_page();
   UserExecution.cmd_M500();
+  buzzer.clear();
   UserExecution.cmd_M300(200, 500);
   UserExecution.cmd_M300(300, 500);
   UserExecution.get_remain_command();
@@ -922,7 +924,12 @@ void lcd_parser::response_print_machine_status()
           else
           {
             UserExecution.cmd_quick_stop(true);
+            lcd_stop_status = true;
             dwin_process.show_start_print_file_page(temp);
+            if(IS_HEAD_LASER())
+            {
+              LcdFile.set_current_status(prepare_printing);
+            }
           }
         }
         break;
@@ -1083,8 +1090,17 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case LASER_MACHINE_STATUS_ENGRAVE_SIZE_BIG_CH:
-        Laser.laser_walking_border();
-        dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        if(out_printing == LcdFile.get_current_status())
+        {
+          LcdFile.set_current_status(prepare_printing);
+          Laser.show_laser_prepare_engrave_second_page(temp);
+        }
+        else if(prepare_printing == LcdFile.get_current_status())
+        {
+          Laser.laser_walking_border();
+          dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+        }
         break;
 
       default:
