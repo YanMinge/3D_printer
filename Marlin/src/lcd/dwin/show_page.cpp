@@ -840,6 +840,7 @@ void lcd_process::show_load_filament_page(void)
   {
     show_sure_block_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH);
     UserExecution.cmd_now_M107();
+    UserExecution.cmd_now_M104(0);
     UserExecution.cmd_M300(VOICE_M1, VOICE_T/2);
     UserExecution.cmd_M300(VOICE_M3, VOICE_T/2);
   }
