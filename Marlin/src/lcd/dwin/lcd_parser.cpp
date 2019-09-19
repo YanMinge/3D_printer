@@ -40,6 +40,7 @@
 #include "../../module/planner.h"
 #include "../../gcode/gcode.h"
 #include "../../module/configuration_store.h"
+#include "../../libs/buzzer.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -716,8 +717,8 @@ void lcd_parser::response_set_buzzer(void)
   dwin_process.show_machine_set_page();
   UserExecution.cmd_M500();
   buzzer.clear();
-  UserExecution.cmd_M300(200, 500);
-  UserExecution.cmd_M300(300, 500);
+  UserExecution.cmd_M300(VOICE_M3, VOICE_T/2);
+  UserExecution.cmd_M300(VOICE_M1, VOICE_T/2);
   UserExecution.get_remain_command();
 }
 
@@ -756,6 +757,8 @@ void lcd_parser::response_print_set(void)
   {
     Laser.laser_focus += (receive_data - 9);
     dwin_process.show_sure_block_page(LASER_MACHINE_STATUS_FOCUS_FINISHED_CH);
+    UserExecution.cmd_M300(VOICE_M1, VOICE_T/2);
+    UserExecution.cmd_M300(VOICE_M4, VOICE_T/2);
   }
   else if(0x0C == receive_data)  //enter into machine_info_page
   {

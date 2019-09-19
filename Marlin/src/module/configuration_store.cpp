@@ -2413,7 +2413,7 @@ void MarlinSettings::reset() {
 
 #if ENABLED(TARGET_LPC1768)
 #if PIN_EXISTS(BEEPER)
-  bool buzzer_status = false;
+  bool buzzer_status = true;
   buzzer.set_buzzer_switch(buzzer_status);
 #endif
   

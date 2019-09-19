@@ -49,6 +49,7 @@
 #include "../../gcode/gcode.h"
 #include "../../module/motion.h"
 #include "../../module/temperature.h"
+#include "../../libs/buzzer.h"
 
 #if ENABLED(USB_DISK_SUPPORT)
 #include "udisk_reader.h"
@@ -169,6 +170,7 @@ void laser_class::laser_walking_border(void)
   UserExecution.cmd_now_M3(0);
   UserExecution.cmd_now_g0_xy(laser_border_xy_position.upper_left_x_position + 0.01,laser_border_xy_position.upper_left_y_position, 3000);
   planner.synchronize();
+  UserExecution.cmd_M300(VOICE_H1, VOICE_T/2);
 }
 
 void laser_class::show_laser_prepare_focus_page(void)

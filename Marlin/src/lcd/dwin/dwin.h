@@ -39,11 +39,6 @@
 #ifndef _DWIN_H_
 #define _DWIN_H_
 
-#define BUZZER_FRE_ONE              500
-#define BUZZER_FRE_TWO              800
-#define BUZZER_TIM_ONE              500
-#define BUZZER_TIM_TWO              500
-
 #define IMAGE_SHOW_DELAY            300   //delay ms before show image
 #define FILE_DIRECTORY_DEPTH        5
 #define UNLOAD_TIME_SHOW_INTERVAL   200 //200MS

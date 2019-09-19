@@ -40,6 +40,7 @@
 #include "../../module/planner.h"
 #include "../../gcode/gcode.h"
 #include "../../module/temperature.h"
+#include "../../libs/buzzer.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -566,6 +567,8 @@ void lcd_process::show_bed_leveling_page(void)
   UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
   show_sure_block_page(PRINT_MACHINE_STATUS_LEVELING_OK_CH);
+  UserExecution.cmd_M300(VOICE_M3, VOICE_T/2);
+  UserExecution.cmd_M300(VOICE_M5, VOICE_T/2);
 }
 
 void lcd_process::show_save_calibration_data_page(void)
@@ -581,7 +584,8 @@ void lcd_process::show_save_calibration_data_page(void)
   UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
   show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
-  SERIAL_PRINTF("show_save_calibration_data_page \r\n");
+  UserExecution.cmd_M300(VOICE_M4, VOICE_T/2);
+  UserExecution.cmd_M300(VOICE_M6, VOICE_T/2);
 }
 
 void lcd_process::show_restore_factory_page(void)
@@ -592,6 +596,8 @@ void lcd_process::show_restore_factory_page(void)
   UserExecution.cmd_user_synchronize();
   safe_delay(1000);
   show_sure_block_page(PRINT_MACHINE_STATUS_RESTORE_FACOTORY_CH);
+  UserExecution.cmd_M300(VOICE_H1, VOICE_T/2);
+  UserExecution.cmd_M300(VOICE_H3, VOICE_T/2);
 }
 
 void lcd_process::show_xyz_prepare_home_page(void)
@@ -600,6 +606,9 @@ void lcd_process::show_xyz_prepare_home_page(void)
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_M300(VOICE_M5, VOICE_T/2);
+  UserExecution.cmd_M300(VOICE_M7, VOICE_T/2);
+  UserExecution.get_remain_command();
   show_sure_block_page(PRINT_MACHINE_STATUS_XYZ_HOME_OK_CH);
 }
 
@@ -831,8 +840,8 @@ void lcd_process::show_load_filament_page(void)
   {
     show_sure_block_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH);
     UserExecution.cmd_now_M107();
-    UserExecution.cmd_M300(300,500);
-    UserExecution.cmd_M300(500,1000);
+    UserExecution.cmd_M300(VOICE_M1, VOICE_T/2);
+    UserExecution.cmd_M300(VOICE_M3, VOICE_T/2);
   }
 }
 
@@ -867,8 +876,8 @@ void lcd_process::show_unload_filament_page(void)
     show_sure_block_page(PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH);
     UserExecution.cmd_now_M107();
     UserExecution.cmd_now_M104(0);
-    UserExecution.cmd_M300(300,500);
-    UserExecution.cmd_M300(500,1000);
+    UserExecution.cmd_M300(VOICE_M2, VOICE_T/2);
+    UserExecution.cmd_M300(VOICE_M4, VOICE_T/2);
   }
 }
 

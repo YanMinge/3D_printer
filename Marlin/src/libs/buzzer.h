@@ -23,6 +23,32 @@
 
 #include "../inc/MarlinConfig.h"
 
+#define VOICE_L1    262 // c
+#define VOICE_L2    294 // d
+#define VOICE_L3    330 // e
+#define VOICE_L4    349 // f
+#define VOICE_L5    392 // g
+#define VOICE_L6    440 // a1
+#define VOICE_L7    494 // b1
+
+#define VOICE_M1    523 // c1
+#define VOICE_M2    587 // d1
+#define VOICE_M3    659 // e1
+#define VOICE_M4    698 // f1
+#define VOICE_M5    784 // g1
+#define VOICE_M6    880 // a2
+#define VOICE_M7    988 // b2
+
+#define VOICE_H1    1047 // c2
+#define VOICE_H2    1175 // d2
+#define VOICE_H3    1319 // e2
+#define VOICE_H4    1397 // f2
+#define VOICE_H5    1568 // g2
+#define VOICE_H6    1760 // a3
+#define VOICE_H7    1976 // b3
+#define VOICE_T     2000
+#define VOICE_TT    1600
+
 #if ENABLED(LCD_USE_I2C_BUZZER)
 
   #define BUZZ(d,f) ui.buzz(d,f)
