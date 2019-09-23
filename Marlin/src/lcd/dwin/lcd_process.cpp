@@ -626,6 +626,7 @@ void lcd_process::send_limage(void)
       if(!udisk.job_recover_file_exists())
       {
         lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
+        safe_delay(IMAGE_SHOW_DELAY); //avoid show picture in other page;
       }
 
       file_info.image_current_send_count = 0;

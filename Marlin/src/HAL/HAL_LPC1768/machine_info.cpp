@@ -385,16 +385,6 @@ void machine_info::lcd_material_info_update(void)
         }
       }
     }
-
-    if(((run_status == true) && (filamen_runout_status == false)))
-    {
-      //LCD Pop-ups
-      //udisk.pause_udisk_print();
-      //dwin_process.show_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-      //dwin_process.change_lcd_page(PRINT_EXCEPTION_SURE_PAGE_EN, PRINT_EXCEPTION_SURE_PAGE_CH);
-      //dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-      //lcd_exception_stop();
-    }
   }
 
   static long previous_material_info_update_time = 0;

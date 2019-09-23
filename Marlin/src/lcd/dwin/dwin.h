@@ -39,7 +39,7 @@
 #ifndef _DWIN_H_
 #define _DWIN_H_
 
-#define IMAGE_SHOW_DELAY            300   //delay ms before show image
+#define IMAGE_SHOW_DELAY            100   //delay ms before show image
 #define FILE_DIRECTORY_DEPTH        5
 #define UNLOAD_TIME_SHOW_INTERVAL   200 //200MS
 #define UNLOAD_TIME_SHOW_PERCENTAGE (100 - FILAMENT_UNLOAD_DELAY/UNLOAD_TIME_SHOW_INTERVAL)
