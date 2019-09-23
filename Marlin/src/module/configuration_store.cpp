@@ -2403,8 +2403,9 @@ void MarlinSettings::reset() {
   postprocess();
 
 #if ENABLED(USE_DWIN_LCD)
-  //language_type language_current_type = LAN_NULL;
-  //dwin_process.set_language_type(language_current_type);
+  language_type language_current_type = LAN_NULL;
+  language_current_type = dwin_process.get_language_type();
+  dwin_process.set_language_type(language_current_type);
 #endif
 
 #if ENABLED(FACTORY_MACHINE_INFO)

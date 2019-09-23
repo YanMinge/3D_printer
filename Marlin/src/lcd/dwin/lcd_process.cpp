@@ -706,12 +706,16 @@ void lcd_process::lcd_loop(void)
 
 language_type lcd_process::get_language_type(void)
 {
-  return ui_language;
+  if(LAN_CHINESE == ui_language)return LAN_CHINESE;
+  else if(LAN_ENGLISH == ui_language)return LAN_ENGLISH;
+  else return LAN_NULL;
 }
 
 void lcd_process::set_language_type(language_type type)
 {
-  ui_language = type;
+  if(LAN_CHINESE == type)ui_language = LAN_CHINESE;
+  else if(LAN_ENGLISH == type)ui_language = LAN_ENGLISH;
+  else ui_language = LAN_NULL;
 }
 
 void lcd_process::reset_image_parameters(void)

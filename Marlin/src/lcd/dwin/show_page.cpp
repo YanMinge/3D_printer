@@ -256,27 +256,13 @@ void lcd_process::send_given_page_data(void)
 void lcd_process::show_print_set_page(void)
 {
 #if PIN_EXISTS(BEEPER)
-  if(LAN_CHINESE == ui_language)
+  if(buzzer.get_buzzer_switch())
   {
-    if(buzzer.get_buzzer_switch())
-    {
-      lcd_send_data(PAGE_BASE + PRINT_BEEP_ON_SET_PAGE_CH, PAGE_ADDR);
-    }
-    else
-    {
-      lcd_send_data(PAGE_BASE + PRINT_BEEP_OFF_SET_PAGE_CH, PAGE_ADDR);
-    }
+    change_lcd_page(PRINT_BEEP_ON_SET_PAGE_EN, PRINT_BEEP_ON_SET_PAGE_CH);
   }
-  else if(LAN_ENGLISH == ui_language)
+  else
   {
-    if(buzzer.get_buzzer_switch())
-    {
-      lcd_send_data(PAGE_BASE + PRINT_BEEP_ON_SET_PAGE_EN, PAGE_ADDR);
-    }
-    else
-    {
-      lcd_send_data(PAGE_BASE + PRINT_BEEP_OFF_SET_PAGE_EN, PAGE_ADDR);
-    }
+    change_lcd_page(PRINT_BEEP_OFF_SET_PAGE_EN, PRINT_BEEP_OFF_SET_PAGE_CH);
   }
 #endif
 }
@@ -284,27 +270,13 @@ void lcd_process::show_print_set_page(void)
 void lcd_process::show_laser_set_page(void)
 {
 #if PIN_EXISTS(BEEPER)
-  if(LAN_CHINESE == ui_language)
+  if(buzzer.get_buzzer_switch())
   {
-    if(buzzer.get_buzzer_switch())
-    {
-      lcd_send_data(PAGE_BASE + LASER_BEEP_ON_SET_PAGE_CH, PAGE_ADDR);
-    }
-    else
-    {
-      lcd_send_data(PAGE_BASE + LASER_BEEP_OFF_SET_PAGE_CH, PAGE_ADDR);
-    }
+    change_lcd_page(LASER_BEEP_ON_SET_PAGE_EN, LASER_BEEP_ON_SET_PAGE_CH);
   }
-  else if(LAN_ENGLISH == ui_language)
+  else
   {
-    if(buzzer.get_buzzer_switch())
-    {
-      lcd_send_data(PAGE_BASE + LASER_BEEP_ON_SET_PAGE_EN, PAGE_ADDR);
-    }
-    else
-    {
-      lcd_send_data(PAGE_BASE + LASER_BEEP_OFF_SET_PAGE_EN, PAGE_ADDR);
-    }
+    change_lcd_page(LASER_BEEP_OFF_SET_PAGE_EN, LASER_BEEP_OFF_SET_PAGE_CH);
   }
 #endif
 }
