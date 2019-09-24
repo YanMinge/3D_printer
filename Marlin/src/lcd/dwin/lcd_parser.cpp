@@ -331,6 +331,7 @@ void lcd_parser::response_upate_firmware_button(void)
   if(!udisk.is_usb_detected())
   {
     dwin_process.show_usb_pull_out_page();
+    dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_UPDATE);
     return;
   }
   if(!udisk.firmware_upate_file_exists())
@@ -1046,6 +1047,10 @@ void lcd_parser::response_print_machine_status()
         dwin_process.show_start_print_file_page(temp);
         LcdFile.set_current_status(out_printing);
         break;
+
+      case PRINT_MACHINE_STATUS_NO_USB_DISK_UPDATE:
+        CHANGE_PAGE(PRINT, LASER, _INFO_PAGE_, EN, CH);
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
 
       default:
         break;
