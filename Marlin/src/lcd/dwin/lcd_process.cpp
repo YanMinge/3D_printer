@@ -665,11 +665,11 @@ void lcd_process::send_print_time(uint32_t time)
 
 void lcd_process::send_temperature_percentage(uint16_t percentage)
 {
-  char str[8];
+  char str[12];
   char str1[4] = {0x25,0xff,0xff,0x0};
   if(pre_percentage <= percentage)
   {
-    itoa(percentage,str,10);
+    sprintf_P(str, PSTR("%2d"), percentage);
     strcat(str,str1);
     lcd_send_data(str,PRINT_PREPARE_PERCENTAGE_ADDR);
     lcd_send_data(percentage/5 > 19 ? 19 : percentage/5, PRINT_PREPARE_PROGRESS_ICON_ADDR);
