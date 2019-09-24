@@ -175,6 +175,7 @@ void laser_class::laser_walking_border(void)
 
 void laser_class::show_laser_prepare_focus_page(void)
 {
+  uint16_t i = 0;
   dwin_process.pre_percentage = 0;
   dwin_process.send_temperature_percentage(0);
   dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH);
@@ -198,71 +199,30 @@ void laser_class::show_laser_prepare_focus_page(void)
   UserExecution.cmd_user_synchronize();
   if(dwin_parser.lcd_stop_status)return;
 
-  //line1 and num1
-  UserExecution.cmd_now_M3(1000);
-  UserExecution.cmd_now_g0_z(laser_focus - 2, 600);
-  UserExecution.cmd_now_g0_xy(80, 150, 1000);
-  UserExecution.cmd_now_g1_xy(80, 130, 1000);
-  UserExecution.cmd_now_g0_xy(80, 100, 1000);
-  UserExecution.cmd_now_g1_xy(80, 80, 1000);
-  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_g92_xy(60,60);
   if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(60);
 
-  //line2 and num2
-  UserExecution.cmd_now_g0_z(laser_focus - 1, 600);
-  UserExecution.cmd_now_g0_xy(95, 150, 1000);
-  UserExecution.cmd_now_g1_xy(95, 130, 1000);
-  UserExecution.cmd_now_g0_xy(90, 100, 1000);
-  UserExecution.cmd_now_g1_xy(100, 100, 1000);
-  UserExecution.cmd_now_g1_xy(90, 80, 1000);
-  UserExecution.cmd_now_g1_xy(100, 80, 1000);
-  UserExecution.cmd_user_synchronize();
+  //add_laser_path hear
+  int t_count = -2;
+  for(i = 0; (i < sizeof(laser_path)/sizeof(laser_path[0])) && !dwin_parser.lcd_stop_status; i++)
+  {
+    if(NULL != strstr_P((const char *)laser_path[i], PSTR("G0 X")))
+    {
+      if(dwin_parser.lcd_stop_status)return;
+      while((commands_in_queue >= BUFSIZE) && !dwin_parser.lcd_stop_status)idle();
+      if(dwin_parser.lcd_stop_status)return;
+      UserExecution.cmd_now_g0_z(laser_focus + LASER_FOCUS_STEP*t_count, 600);
+      dwin_process.send_temperature_percentage(70 + 10*t_count);
+      t_count ++;
+    }
+    if(dwin_parser.lcd_stop_status)return;
+    while((commands_in_queue >= BUFSIZE) && !dwin_parser.lcd_stop_status)idle();
+    if(dwin_parser.lcd_stop_status)return;
+    UserExecution.cmd_now_cmd((char*)laser_path[i]);
+  }
   if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(70);
 
-  //line3 and num3
-  UserExecution.cmd_now_g0_z(laser_focus, 600);
-  UserExecution.cmd_now_g0_xy(110, 150, 1000);
-  UserExecution.cmd_now_g1_xy(110, 130, 1000);
-  UserExecution.cmd_now_g0_xy(105, 100, 1000);
-  UserExecution.cmd_now_g1_xy(115, 100, 1000);
-  UserExecution.cmd_now_g1_xy(115, 80, 1000);
-  UserExecution.cmd_now_g1_xy(105, 80, 1000);
-  UserExecution.cmd_now_g0_xy(105, 90, 1000);
-  UserExecution.cmd_now_g1_xy(115, 90, 1000);
-  UserExecution.cmd_user_synchronize();
-  if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(80);
-
-  //line4 and num4
-  UserExecution.cmd_now_g0_z(laser_focus + 1, 600);
-  UserExecution.cmd_now_g0_xy(125, 150, 1000);
-  UserExecution.cmd_now_g1_xy(125, 130, 1000);
-  UserExecution.cmd_now_g0_xy(120, 100, 1000);
-  UserExecution.cmd_now_g1_xy(120, 93, 1000);
-  UserExecution.cmd_now_g1_xy(130, 93, 1000);
-  UserExecution.cmd_now_g0_xy(125, 100, 1000);
-  UserExecution.cmd_now_g1_xy(125, 80, 1000);
-  UserExecution.cmd_user_synchronize();
-  if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(90);
-
-  //line5 and num5
-  UserExecution.cmd_now_g0_z(laser_focus + 2, 600);
-  UserExecution.cmd_now_g0_xy(140, 150, 1000);
-  UserExecution.cmd_now_g1_xy(140, 130, 1000);
-  UserExecution.cmd_now_g0_xy(150, 100, 1000);
-  UserExecution.cmd_now_g1_xy(140, 100, 1000);
-  UserExecution.cmd_now_g1_xy(140, 90, 1000);
-  UserExecution.cmd_now_g1_xy(150, 90, 1000);
-  UserExecution.cmd_now_g1_xy(150, 80, 1000);
-  UserExecution.cmd_now_g1_xy(140, 80, 1000);
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_now_M3(0);
-  if(dwin_parser.lcd_stop_status)return;
-  dwin_process.send_temperature_percentage(100);
-
+  //change the laser_focus_confirm_page
   dwin_process.change_lcd_page(LASER_LINE_CHOICE_PAGE_EN,LASER_LINE_CHOICE_PAGE_CH);
 }
 

@@ -756,7 +756,7 @@ void lcd_parser::response_print_set(void)
   }
   else if(0x07 <= receive_data && receive_data <= 0X0B) //enter into laser_focus confirm set page
   {
-    Laser.laser_focus += (receive_data - 9);
+    Laser.laser_focus += (receive_data - 9)*LASER_FOCUS_STEP;
     dwin_process.show_sure_block_page(LASER_MACHINE_STATUS_FOCUS_FINISHED_CH);
     UserExecution.cmd_M300(VOICE_M1, VOICE_T/2);
     UserExecution.cmd_M300(VOICE_M4, VOICE_T/2);

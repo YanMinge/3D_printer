@@ -134,6 +134,7 @@ public:
   void cmd_now_g0_z(float z, float feedrate);
   void stop_udisk_print(void);
   void cmd_g92_xy(float x, float y);
+  void cmd_now_cmd(char* cmd);
 
   bool lcd_immediate_execution;
 };

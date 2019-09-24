@@ -541,5 +541,10 @@ void user_execution::cmd_g92_xy(float x, float y)
   enqueue_and_echo_command(cmd);
 }
 
+void user_execution::cmd_now_cmd(char* cmd)
+{
+  cmd_now_g_m(cmd);
+}
+
 #endif // USE_DWIN_LCD
 #endif // TARGET_LPC1768
