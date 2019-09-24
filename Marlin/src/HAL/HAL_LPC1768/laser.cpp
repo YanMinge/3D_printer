@@ -87,6 +87,7 @@ laser_class::laser_class(void)
   laser_border_xy_position.buttom_right_y_position = 0;
   laser_border_xy_position.upper_left_x_position = 0;
   laser_border_xy_position.upper_left_y_position = 0;
+  is_laser_focused = false;
 }
 
 uint16_t laser_class::get_laser_power(void)
@@ -233,6 +234,14 @@ void laser_class::show_laser_prepare_engrave_first_page(void)
 
   dwin_parser.lcd_stop_status = false;
 
+  //if already have focused, don't need to show prepare engrave page
+  if(is_laser_focused)
+  {
+    dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
+    LcdFile.set_current_status(prepare_printing);
+    return;
+  }
+
   dwin_process.pre_percentage = 0;
   dwin_process.send_temperature_percentage(0);
   dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_ENGRAVE_CH);
@@ -267,6 +276,7 @@ void laser_class::show_laser_prepare_engrave_first_page(void)
   if(dwin_parser.lcd_stop_status)return;
   dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
   LcdFile.set_current_status(prepare_printing);
+  is_laser_focused = true;
 }
 
 bool laser_class::is_laser_size_out_range(void)

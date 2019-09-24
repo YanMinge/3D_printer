@@ -397,6 +397,7 @@ void lcd_parser::response_select_file(void)
     dwin_process.set_select_file_num(receive_data);
   }
   temp = LcdFile.file_list_index((current_page_index));
+  Laser.is_laser_focused = false;
   if(temp->file_type == TYPE_FOLDER)
   {
     LcdFile.file_list_clear();

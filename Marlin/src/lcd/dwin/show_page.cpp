@@ -888,6 +888,7 @@ void lcd_process::show_confirm_stop_print_page(void)
   if(IS_HEAD_LASER())
   {
     UserExecution.cmd_now_M3(0);
+    Laser.is_laser_focused = false;
   }
   LcdFile.set_current_status(out_printing);
 

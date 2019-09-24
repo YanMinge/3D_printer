@@ -1258,6 +1258,7 @@ public:
   float laser_focus;
   bool synchronize_status;
   uint16_t spindle_pwm;
+  bool is_laser_focused;
 private:
   uint16_t laser_power;
 };
