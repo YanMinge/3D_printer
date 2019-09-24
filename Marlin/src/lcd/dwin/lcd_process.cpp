@@ -444,8 +444,8 @@ void lcd_process::send_file_list_page_num(int current_page, int page_num)
   char str[10];
   char str1[4];
   char str2[3]={0xff,0xff,0};
-  itoa(page_num,str1,10);
-  itoa(current_page,str,10);
+  sprintf_P(str1, PSTR("%d"), page_num);
+  sprintf_P(str, PSTR("%2d"), current_page);
   strcat(str,"/");
   strcat(str,str1);
   strcat(str,str2);
