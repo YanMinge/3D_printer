@@ -455,5 +455,16 @@ void machine_info::send_print_work_time(void)
 #endif
 
 #endif // USE_DWIN_LCD
+
+float machine_info::get_z_axis_height(void)
+{
+  return z_axis_height;
+}
+
+void machine_info::set_z_axis_height(float height)
+{
+  z_axis_height = height;
+}
+
 #endif // FACTORY_MACHINE_INFO
 #endif // TARGET_LPC1768

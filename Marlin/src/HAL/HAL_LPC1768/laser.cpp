@@ -81,7 +81,7 @@ laser_class Laser;
 laser_class::laser_class(void)
 {
   laser_power = 0;
-  laser_focus = 30;
+  laser_focus = 20;
   synchronize_status = true;
   laser_border_xy_position.buttom_right_x_position = 0;
   laser_border_xy_position.buttom_right_y_position = 0;

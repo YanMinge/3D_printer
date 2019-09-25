@@ -710,10 +710,19 @@ void power_loss_detect(void){
 
     uint32_t woking_time = MachineInfo.get_total_working_time() + millis()/1000;
     MachineInfo.set_total_working_time(woking_time);
+
+    //Don't allow z axis height save without homing first
+    if((MachineInfo.get_z_axis_height() <= -100) && !axis_unhomed_error()){
+      MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
+    }
+    else if(MachineInfo.get_z_axis_height() > -100)
+    {
+      MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
+    }
     settings.save();
     power_loss_status = false;
 
-    if(IS_UDISK_PRINTING())recovery.save(true);
+    if(IS_UDISK_PRINTING()) recovery.save(true);
   }
 }
 
@@ -1219,6 +1228,9 @@ void setup() {
     MachineInfo.send_version_string();
     MachineInfo.send_work_time();
     MachineInfo.send_print_work_time();
+    if(MachineInfo.get_z_axis_height() > -100){
+      current_position[Z_AXIS] = MachineInfo.get_z_axis_height();
+    }
   #endif
 
   #if ENABLED(USE_DWIN_LCD)

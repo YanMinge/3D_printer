@@ -319,6 +319,11 @@ typedef struct SettingsDataStruct {
 #if ENABLED(SPINDLE_LASER_ENABLE)
   float focus;
 #endif
+
+#if ENABLED(FACTORY_MACHINE_INFO)
+  float z_axis_height;
+#endif
+
 #endif
 } SettingsData;
 
@@ -1168,6 +1173,12 @@ void MarlinSettings::postprocess() {
     #endif
     #endif
 
+    #if ENABLED(FACTORY_MACHINE_INFO)
+      float z_axis_height = MachineInfo.get_z_axis_height();
+      _FIELD_TEST(z_axis_height);
+      EEPROM_WRITE(z_axis_height);
+    #endif
+
     //
     // Validate CRC and Data Size
     //
@@ -1926,6 +1937,13 @@ void MarlinSettings::postprocess() {
       #endif
       #endif
 
+      #if ENABLED(FACTORY_MACHINE_INFO)
+        float z_axis_height = -Z_MAX_POS;
+        _FIELD_TEST(z_axis_height);
+        EEPROM_READ_ALWAYS(z_axis_height);
+        MachineInfo.set_z_axis_height(z_axis_height);
+      #endif
+
       eeprom_error = size_error(eeprom_index - (EEPROM_OFFSET));
       if (eeprom_error) {
         DEBUG_ECHO_START();
@@ -2403,9 +2421,8 @@ void MarlinSettings::reset() {
   postprocess();
 
 #if ENABLED(USE_DWIN_LCD)
-  language_type language_current_type = LAN_NULL;
-  language_current_type = dwin_process.get_language_type();
-  dwin_process.set_language_type(language_current_type);
+  //language_type language_current_type = LAN_NULL;
+  //dwin_process.set_language_type(language_current_type);
 #endif
 
 #if ENABLED(FACTORY_MACHINE_INFO)
@@ -2419,9 +2436,13 @@ void MarlinSettings::reset() {
 #endif
   
 #if ENABLED(SPINDLE_LASER_ENABLE)
-  float laser_focus = 30;
+  float laser_focus = 20;
   Laser.laser_focus = laser_focus;
 #endif
+#endif
+
+#if ENABLED(FACTORY_MACHINE_INFO)
+  MachineInfo.set_z_axis_height(-Z_MAX_POS);
 #endif
 
   DEBUG_ECHO_START();
@@ -3275,6 +3296,11 @@ void MarlinSettings::reset() {
     #if ENABLED(TARGET_LPC1768)
     #if PIN_EXISTS(BEEPER)
       SERIAL_ECHOPAIR("  M2033 S", buzzer.get_buzzer_switch());
+      SERIAL_EOL();
+    #endif
+
+    #if ENABLED(FACTORY_MACHINE_INFO)
+      SERIAL_ECHOPAIR("  M2036 S", MachineInfo.get_z_axis_height());
       SERIAL_EOL();
     #endif
     #endif

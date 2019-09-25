@@ -41,21 +41,26 @@
 #endif
 
 bool check_heater_status(void){
+  const bool was_enabled = TEMPERATURE_ISR_ENABLED();
+  if (was_enabled) DISABLE_TEMPERATURE_INTERRUPT();
 #if PIN_EXISTS(HEATER_0_ENABLE)
   WRITE(HEATER_0_ENABLE_PIN, LOW);
   WRITE(HEATER_0_PIN, (LOW) ^ HEATER_0_INVERTING);
-  delayMicroseconds(100);
+  safe_delay(5);
   if(!READ(HEATER_CHECK_PIN)){
+    SERIAL_ECHOLNPGM("step1 check error");
     return false;
   }
   WRITE(HEATER_0_ENABLE_PIN, HIGH);
   WRITE(HEATER_0_PIN, (LOW) ^ HEATER_0_INVERTING);
-  delayMicroseconds(100);
+  safe_delay(5);
   if(READ(HEATER_CHECK_PIN)){
+    SERIAL_ECHOLNPGM("step2 check error");
     WRITE(HEATER_0_ENABLE_PIN, LOW);
     return false;
   }
   WRITE(HEATER_0_ENABLE_PIN, HIGH);
+  if (was_enabled) ENABLE_TEMPERATURE_INTERRUPT();
 #endif
   return true;
 }

@@ -859,7 +859,27 @@ inline void get_udisk_commands(void) {
     if (udisk_eof || n == -1 || n == -USB_NOT_DETECTED
         || udsik_char == '\n' || udsik_char == '\r'
         || ((udsik_char == '#' || udsik_char == ':') && !udisk_comment_mode)) {
-        if (n == -1){
+      if (udisk_eof) {
+        udisk.printing_has_finished();
+        if (IS_UDISK_PRINTING())
+           udsik_count = 0; // If a sub-file was printing, continue from call point
+        else {
+          SERIAL_ECHOLNPGM(MSG_FILE_PRINTED);
+          #if ENABLED(PRINTER_EVENT_LEDS)
+            printerEventLEDs.onPrintCompleted();
+              #if HAS_RESUME_CONTINUE
+              enqueue_and_echo_commands_P(PSTR("M0 S"
+                #if HAS_LCD_MENU
+                  "1800"
+                #else
+                  "60"
+                #endif
+              ));
+            #endif
+          #endif // PRINTER_EVENT_LEDS
+        }
+      }
+      else if (n == -1){
         udsik_error_count++;
         SERIAL_ERROR_MSG(MSG_UDISK_ERR_READ);
 		if(udsik_error_count > 20){
@@ -920,28 +940,6 @@ inline void get_udisk_commands(void) {
       }
       #endif
       _commit_command(false);
-
-      if (udisk_eof) {
-        //card.printingHasFinished();
-        udisk.printing_has_finished();
-        if (IS_UDISK_PRINTING())
-           udsik_count = 0; // If a sub-file was printing, continue from call point
-        else {
-          SERIAL_ECHOLNPGM(MSG_FILE_PRINTED);
-          #if ENABLED(PRINTER_EVENT_LEDS)
-            printerEventLEDs.onPrintCompleted();
-              #if HAS_RESUME_CONTINUE
-              enqueue_and_echo_commands_P(PSTR("M0 S"
-                #if HAS_LCD_MENU
-                  "1800"
-                #else
-                  "60"
-                #endif
-              ));
-            #endif
-          #endif // PRINTER_EVENT_LEDS
-        }
-      }
     }
     else if (udsik_count >= MAX_CMD_SIZE - 1) {
       /**

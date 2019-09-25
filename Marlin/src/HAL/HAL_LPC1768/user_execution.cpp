@@ -522,10 +522,10 @@ void user_execution::cmd_now_g0_z(float z, float feedrate)
 void user_execution::stop_udisk_print(void)
 {
 #if ENABLED(USB_DISK_SUPPORT)
-  if(IS_UDISK_PRINTING())
+  if(IS_UDISK_PRINTING() || print_job_timer.isPaused())
   {
-    udisk.stop_udisk_print();
     print_job_timer.stop();
+    udisk.stop_udisk_print();
     clear_command_queue();
     quickstop_stepper();
   }

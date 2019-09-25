@@ -167,8 +167,8 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
 
     // Machine state
     //COPY(info.current_position, current_position);
-    info.current_position[X_AXIS] = planner.get_axis_position_mm(X_AXIS);
-    info.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
+    info.current_position[X_AXIS] = LOGICAL_X_POSITION(planner.get_axis_position_mm(X_AXIS));
+    info.current_position[Y_AXIS] = LOGICAL_Y_POSITION(planner.get_axis_position_mm(Y_AXIS));
     info.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
     info.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
 

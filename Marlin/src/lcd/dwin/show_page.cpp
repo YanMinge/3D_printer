@@ -511,12 +511,7 @@ void lcd_process::show_calibration_page(void)
   UserExecution.cmd_now_M109(200);
   UserExecution.cmd_g92_e(0);
   safe_delay(20);
-  UserExecution.cmd_g1_e(40, 300);
-  UserExecution.get_remain_command();
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_g92_e(0);
-  UserExecution.get_remain_command();
-  UserExecution.cmd_g1_e(-2.0, 300);
+  UserExecution.cmd_g1_e(-10.0, 300);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
   safe_delay(20);
@@ -532,6 +527,9 @@ void lcd_process::show_bed_leveling_page(void)
   UserExecution.cmd_now_M104(200);
   UserExecution.cmd_now_g28();
   UserExecution.cmd_now_M109(200);
+  UserExecution.cmd_g92_e(0);
+  safe_delay(20);
+  UserExecution.cmd_g1_e(-10.0, 300);
   UserExecution.cmd_now_g29();
   UserExecution.cmd_now_M500();
   UserExecution.cmd_user_synchronize();
@@ -631,8 +629,8 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_STOP_TASK_CH);
 
   //save current position, fan speed, temperature hotended bed,
-  pause_print_data.current_position[X_AXIS] = planner.get_axis_position_mm(X_AXIS);
-  pause_print_data.current_position[Y_AXIS] = planner.get_axis_position_mm(Y_AXIS);
+  pause_print_data.current_position[X_AXIS] = LOGICAL_X_POSITION(planner.get_axis_position_mm(X_AXIS));
+  pause_print_data.current_position[Y_AXIS] = LOGICAL_Y_POSITION(planner.get_axis_position_mm(Y_AXIS));
   pause_print_data.current_position[Z_AXIS] = LOGICAL_Z_POSITION(planner.get_axis_position_mm(Z_AXIS));
   pause_print_data.current_position[E_AXIS] = planner.get_axis_position_mm(E_AXIS);
 

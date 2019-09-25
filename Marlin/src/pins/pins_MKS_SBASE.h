@@ -99,7 +99,7 @@
 // Heaters / Fans
 //
 #define HEATER_BED_PIN         P1_20
-//#define HEATER_0_ENABLE_PIN    P1_09
+#define HEATER_0_ENABLE_PIN    P1_09
 #define HEATER_CHECK_PIN       P1_23
 #define HEATER_0_PIN           P1_18
 //#define HEATER_1_PIN       P2_06

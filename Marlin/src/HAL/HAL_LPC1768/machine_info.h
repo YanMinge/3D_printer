@@ -107,13 +107,16 @@ public:
 #endif
   void set_exception_status(bool status){ exception_status = status;}
   head_t get_command_type(void);
+  float get_z_axis_height(void);
+  void set_z_axis_height(float height);
 private:
   uint8_t factory_uuid[12];
   head_t head_type;
   head_t command_type;
-  uint32_t total_working_time;
   bool usb_cable_connect;
   bool exception_status;
+  uint32_t total_working_time;
+  float z_axis_height;
 };
 
 extern machine_info MachineInfo;

@@ -137,6 +137,12 @@
 #if ANY_THERMISTOR_IS(999) // User-defined table 2
   #include "thermistor_999.h"
 #endif
+#if ANY_THERMISTOR_IS(2011) // User-defined table 3
+  #include "thermistor_2011.h"
+#endif
+#if ANY_THERMISTOR_IS(2012) // User-defined table 4
+  #include "thermistor_2012.h"
+#endif
 
 #define _TT_NAME(_N) temptable_ ## _N
 #define TT_NAME(_N) _TT_NAME(_N)
