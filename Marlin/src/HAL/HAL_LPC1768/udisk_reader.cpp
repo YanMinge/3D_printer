@@ -67,6 +67,8 @@
 #include "../../module/planner.h"
 #include "../../module/printcounter.h"
 #include "../../module/configuration_store.h"
+#include "../../module/temperature.h"
+
 #include "lcd_process.h"
 #include "lcd_parser.h"
 #include "../../gcode/queue.h"
