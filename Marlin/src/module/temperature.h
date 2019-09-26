@@ -406,7 +406,7 @@ class Temperature {
     Temperature();
 
     void init();
-
+    bool check_heater_status(void);
     /**
      * Static (class) methods
      */

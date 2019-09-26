@@ -405,6 +405,13 @@ temp_range_t Temperature::temp_range[HOTENDS] = ARRAY_BY_HOTENDS(sensor_heater_0
       LEDColor color = ONHEATINGSTART();
     #endif
 
+    #if HAS_PID_FOR_BOTH || ENABLED(PIDTEMP)
+	if((heater >= 0) && (thermalManager.check_heater_status() == false)){
+		SERIAL_ECHOLNPGM("Hardware damage detected in the extruder");
+		return;
+    }
+    #endif
+
     #if ENABLED(NO_FAN_SLOWING_IN_PID_TUNING)
       adaptive_fan_slowing = false;
     #endif
@@ -1552,6 +1559,30 @@ void Temperature::init() {
   #endif
 }
 
+bool Temperature::check_heater_status(void){
+  const bool was_enabled = TEMPERATURE_ISR_ENABLED();
+  if (was_enabled) DISABLE_TEMPERATURE_INTERRUPT();
+#if PIN_EXISTS(HEATER_0_ENABLE)
+  WRITE(HEATER_0_ENABLE_PIN, LOW);
+  WRITE(HEATER_0_PIN, (LOW) ^ HEATER_0_INVERTING);
+  safe_delay(5);
+  if(!READ(HEATER_CHECK_PIN)){
+    SERIAL_ECHOLNPGM("step1 check error");
+    return false;
+  }
+  WRITE(HEATER_0_ENABLE_PIN, HIGH);
+  WRITE(HEATER_0_PIN, (LOW) ^ HEATER_0_INVERTING);
+  safe_delay(5);
+  if(READ(HEATER_CHECK_PIN)){
+    SERIAL_ECHOLNPGM("step2 check error");
+    WRITE(HEATER_0_ENABLE_PIN, LOW);
+    return false;
+  }
+  WRITE(HEATER_0_ENABLE_PIN, HIGH);
+  if (was_enabled) ENABLE_TEMPERATURE_INTERRUPT();
+#endif
+  return true;
+}
 
 #if ENABLED(FAST_PWM_FAN)
   Temperature::Timer Temperature::get_pwm_timer(pin_t pin) {
