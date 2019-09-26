@@ -445,7 +445,7 @@ void PrintJobRecovery::resume() {
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;
     }
-    dwin_process.show_start_print_file_page(dwin_process.current_file);
+    dwin_process.show_stop_print_file_page(dwin_process.current_file);
     LcdFile.set_current_status(on_printing);
   #endif
 

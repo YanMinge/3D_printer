@@ -324,6 +324,7 @@ void machine_info::lcd_usb_status_update(void)
     else
     {
       dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_USB_ICON_ADDR);
+      dwin_parser.machine_error_status = ERROR_UDISK_NO_INSERT;
     }
     pre_usb_status = usb_status;
   }

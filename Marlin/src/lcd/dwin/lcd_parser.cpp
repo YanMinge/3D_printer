@@ -113,11 +113,6 @@ void lcd_parser::lcd_update(void)
     }
   }
 
-  if((file_list_open_status == true) && (file_read_status == false))
-  {
-    dwin_process.show_usb_pull_out_page();
-  }
-
   dwin_parser.parser_lcd_command();
   dwin_process.lcd_loop();
 }
@@ -809,6 +804,8 @@ void lcd_parser::response_print_machine_status()
     switch(dwin_process.get_machine_status())
     {
       case PRINT_MACHINE_STATUS_NO_USB_DISK_CH:
+        lcd_stop_status = false;
+        immediately_pause_flag = false;
       case PRINT_MACHINE_STATUS_UNLOAD_SUCCESS_CH:
         CHANGE_PAGE(PRINT, LASER, _HOME_PAGE_, EN, CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
@@ -1248,6 +1245,79 @@ void lcd_parser::machine_exceptional_error_process(void)
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
         dwin_process.show_prepare_print_page(temp);
         is_error_processing = false;
+      }
+      break;
+
+    case ERROR_UDISK_NO_INSERT:
+      machine_error_status = ERROR_NULL;
+      print_status mstatus;
+      mstatus = LcdFile.get_current_status();
+      if((file_list_open_status == true) && (file_read_status == false))
+      {
+        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+        UserExecution.user_stop();
+        lcd_exception_stop();
+
+        //stop from when print is paused or prepare print from pause
+        if((stop_printing == mstatus)  && (IS_HEAD_PRINT()))
+        {
+          UserExecution.cmd_quick_stop(true);
+        }
+
+        //stop from when print is prepare print
+        else if((prepare_printing == mstatus) && (IS_HEAD_PRINT()))
+        {
+          if(!udisk.job_recover_file_exists())
+          {
+            lcd_stop_status = true;
+            filament_show.set_print_after_heat_status(false);
+            UserExecution.cmd_now_M2524();
+            UserExecution.cmd_quick_stop(true);
+          }
+          else
+          {
+            UserExecution.cmd_quick_stop(true);
+            lcd_stop_status = true;
+          }
+        }
+
+        //stop from when print is printing  or print is pausing
+        //stop from when laser is engraving or laser is pausing
+        else if((on_printing == mstatus))
+        {
+          print_filament_status = false;
+          dwin_process.reset_image_send_parameters();
+          UserExecution.cmd_quick_stop(true);
+          UserExecution.lcd_immediate_execution = true;
+          UserExecution.stop_udisk_print();
+          UserExecution.lcd_immediate_execution = false;
+          if(IS_HEAD_LASER())
+          {
+            Laser.reset();
+            UserExecution.cmd_now_M3(0);
+          }
+          immediately_pause_flag = true;
+          lcd_stop_status = true;
+        }
+
+        //stop from laser first_prepare_engrave page or stop from laser start engrave pae
+        else if((out_printing == mstatus)  && (IS_HEAD_LASER()))
+        {
+          dwin_parser.lcd_stop_status = true;
+          UserExecution.cmd_quick_stop(true);
+        }
+
+        //stop from laser second_prepare_engrave_page or axis_adjust page or stop_engrave page
+        // or laser_prepare_from_pause page
+        else if((prepare_printing == mstatus || stop_printing == mstatus)  && (IS_HEAD_LASER()))
+        {
+          Laser.reset();
+          UserExecution.cmd_quick_stop(true);
+          dwin_parser.lcd_stop_status = true;
+        }
+        LcdFile.set_current_status(out_printing);
+        dwin_process.show_usb_pull_out_page();
+        Laser.is_laser_focused = false;
       }
       break;
 

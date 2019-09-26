@@ -422,6 +422,7 @@ void lcd_process::show_stop_print_file_page(pfile_list_t temp)
   else
   {
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_STOP_PAGE_, EN, CH)
+    safe_delay(50);
     lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
 }
@@ -433,9 +434,7 @@ void lcd_process::show_usb_pull_out_page(void)
   LcdFile.directory_stack_init();
 
   reset_image_send_parameters();
-  show_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-  set_machine_status(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
-  CHANGE_PAGE(PRINT, LASER, _EXCEPTION_SURE_PAGE_, EN, CH)
+  show_sure_block_page(PRINT_MACHINE_STATUS_NO_USB_DISK_CH);
 }
 
 void lcd_process::show_sure_block_page(machine_status_type ch_type)
@@ -659,6 +658,7 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
 
   //go home
   UserExecution.cmd_now_g28();
+  if(dwin_parser.lcd_stop_status) return;
 
   //if filament is not over ,go to start page, else go to no filament page
   if(!dwin_parser.print_filament_status)

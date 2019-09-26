@@ -35,13 +35,23 @@
 #if ENABLED(SPINDLE_LASER_ENABLE)
 #include "laser.h"
 #include "../gcode.h"
+#include "user_execution.h"
+#include "../../gcode/queue.h"
 
 /**
  * M2038: Laser height adjustment;
  */
 void GcodeSuite::M2038()
 {
-  //
+  char cmd[32];
+  gcode.process_subcommands_now_P(PSTR("G28"));
+  sprintf_P(cmd, PSTR("G0 X%d Y%d F%d"), X_BED_SIZE/2, Y_BED_SIZE/2, 3000);
+  gcode.process_subcommands_now_P(cmd);
+  gcode.process_subcommands_now_P(PSTR("G38.2 Z-20 F600"));
+  UserExecution.cmd_user_synchronize();
+  gcode.process_subcommands_now_P(PSTR("G92 X0 Y0 Z0"));
+  sprintf_P(cmd, PSTR("G0 Z%4.1f F%d"), Laser.laser_focus, 600);
+  gcode.process_subcommands_now_P(cmd);
 }
 
 #endif // SPINDLE_LASER_ENABLE

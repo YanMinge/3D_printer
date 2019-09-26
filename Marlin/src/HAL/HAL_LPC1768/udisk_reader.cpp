@@ -524,7 +524,6 @@ void udisk_reader::printing_has_finished()
   if(!IS_XYZ_HOME)
   {
     UserExecution.cmd_now_g28();
-    planner.synchronize();
   }
   if(dwin_parser.lcd_stop_status)return;
 #if ENABLED(POWER_LOSS_RECOVERY)
