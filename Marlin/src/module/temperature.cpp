@@ -1919,6 +1919,7 @@ void Temperature::init() {
         sm.state = TRRunaway;
 
       case TRRunaway:
+		//Temperature cannot be heated to set temperature error
         _temp_error(heater_id, PSTR(MSG_T_THERMAL_RUNAWAY), TEMP_ERR_PSTR(MSG_THERMAL_RUNAWAY, heater_id));
     }
   }
@@ -3025,7 +3026,13 @@ void Temperature::isr() {
       bool wants_to_cool = false, first_loop = true;
       wait_for_heatup = true;
       millis_t now, next_temp_ms = 0, next_cool_check_ms = 0;
+      millis_t current_time = print_job_timer.duration();
       do {
+        millis_t duration = print_job_timer.duration() - current_time;
+		//Temperature cannot be heated to set temperature error
+        if(duration > 15 * 60){
+          break;
+        }
         // Target temperature might be changed during the loop
         if (target_temp != degTargetHotend(target_extruder)) {
           wants_to_cool = isCoolingHotend(target_extruder);
@@ -3152,8 +3159,13 @@ void Temperature::isr() {
         const float start_temp = degBed();
         printerEventLEDs.onBedHeatingStart();
       #endif
-
+      millis_t current_time = print_job_timer.duration();
       do {
+        millis_t duration = print_job_timer.duration() - current_time;
+		//Temperature cannot be heated to set temperature error
+        if(duration > 15 * 60){
+          break;
+        }
         // Target temperature might be changed during the loop
         if (target_temp != degTargetBed()) {
           wants_to_cool = isCoolingBed();
