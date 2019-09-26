@@ -66,6 +66,9 @@ void GcodeSuite::M3_M4(const bool is_M4) {
 
     if (parser.seen('S')) {
       uint16_t spindle_laser_power = parser.value_ushort();
+      #if PIN_EXISTS(HEATER_0_ENABLE)
+        WRITE(HEATER_0_ENABLE_PIN, HIGH);
+      #endif
       Laser.set_laser_power(spindle_laser_power);
       Laser.update_laser_power();
     }
@@ -88,6 +91,9 @@ void GcodeSuite::M5() {
     }
 	return;
   }
+  #if PIN_EXISTS(HEATER_0_ENABLE)
+    WRITE(HEATER_0_ENABLE_PIN, LOW);
+  #endif
   Laser.set_laser_power(0);
 }
 
