@@ -1576,6 +1576,12 @@
 // M206 sets the home offset for Cartesian machines
 #define HAS_M206_COMMAND (HAS_HOME_OFFSET && !IS_SCARA)
 
+#if HAS_HOME_OFFSET
+  #define DEFAULT_XAXIS_OFFSET -16
+  #define DEFAULT_YAXIS_OFFSET -10
+  #define DEFAULT_ZAXIS_OFFSET -4.5
+#endif
+
 // LCD timeout to status screen default is 15s
 #ifndef LCD_TIMEOUT_TO_STATUS
   #define LCD_TIMEOUT_TO_STATUS 15000

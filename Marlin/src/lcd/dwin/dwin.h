@@ -43,7 +43,7 @@
 #define FILE_DIRECTORY_DEPTH        5
 #define UNLOAD_TIME_SHOW_INTERVAL   200 //200MS
 #define UNLOAD_TIME_SHOW_PERCENTAGE (100 - FILAMENT_UNLOAD_DELAY/UNLOAD_TIME_SHOW_INTERVAL)
-#define MATERIAL_CHECK_TIME_PERIOD  100
+#define MATERIAL_CHECK_TIME_PERIOD  1000
 
 typedef struct file_directory_stack{
     int page_num[FILE_DIRECTORY_DEPTH];
@@ -292,6 +292,8 @@ typedef struct
 #define HOST_COMPUTER_PRINT_PAGE_CH                 43
 #define PRINT_UNLOAD_FIILMENT_PAGE_CH               44
 #define PRINT_EXCEPTION_SURE_RETURN_PAGE_CH         69
+#define PRINT_FILE_PRINT_STANDARD_CONTINUE_PAGE_CH   70
+#define PRINT_FILE_PRINT_NOSTANDARD_CONTINUE_PAGE_CH 71
 
 //print page english
 #define PRINT_HOME_PAGE_EN                          60
@@ -317,6 +319,8 @@ typedef struct
 #define PRINT_EXCEPTION_COMPLETE_HINT_PAGE_EN       60
 #define HOST_COMPUTER_PRINT_PAGE_EN                 60
 #define PRINT_EXCEPTION_SURE_RETURN_PAGE_EN         69
+#define PRINT_FILE_PRINT_STANDARD_CONTINUE_PAGE_EN   70
+#define PRINT_FILE_PRINT_NOSTANDARD_CONTINUE_PAGE_EN 71
 
 //laser page chinese
 #define LASER_HOME_PAGE_CH                          46
@@ -339,6 +343,8 @@ typedef struct
 #define LASER_PREPARE_BLOCK_PAGE_CH                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_CH           67
 #define LASER_EXCEPTION_COMPLETE_HINT_PAGE_CH       1000
+#define LASER_FILE_PRINT_STANDARD_CONTINUE_PAGE_CH   73
+#define LASER_FILE_PRINT_NOSTANDARD_CONTINUE_PAGE_CH 73
 
 //laser page english
 #define LASER_HOME_PAGE_EN                          46
@@ -357,6 +363,8 @@ typedef struct
 #define LASER_PREPARE_BLOCK_PAGE_EN                 65
 #define LASER_CONFIRM_CANCEL_HINT_PAGE_EN           67
 #define LASER_EXCEPTION_COMPLETE_HINT_PAGE_EN       1000
+#define LASER_FILE_PRINT_STANDARD_CONTINUE_PAGE_EN   73
+#define LASER_FILE_PRINT_NOSTANDARD_CONTINUE_PAGE_EN 73
 
 //print icon_addr
 #define PRINT_STATUS_BAR_USB_ICON_ADDR              0X1000
@@ -385,6 +393,7 @@ typedef struct
 #define PRINT_MACHINE_INFO_UPTIME_ADDR              0X1192
 #define PRINT_MACHINE_INFO_PRINT_TIME_ADDR          0X1199
 #define PRINT_MACHINE_INFO_LASER_TIME_ADDR          0X11A1
+#define PRINT_MACHINE_HOME_OFFSET_ADDR              0X11C0
 
 //print button addr
 #define PRINT_FILE_LIST_BUTTONS                     0x1200

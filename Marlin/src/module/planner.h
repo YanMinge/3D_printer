@@ -164,7 +164,7 @@ typedef struct block_t {
 #endif
 
 #if ENABLED(USB_DISK_SUPPORT)
-    uint16_t udisk_block_pos;
+    uint32_t udisk_block_pos;
 #endif
 
   uint32_t segment_time_us;

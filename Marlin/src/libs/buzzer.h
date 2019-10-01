@@ -46,7 +46,7 @@
 #define VOICE_H5    1568 // g2
 #define VOICE_H6    1760 // a3
 #define VOICE_H7    1976 // b3
-#define VOICE_T     2000
+#define VOICE_T     1000
 #define VOICE_TT    1600
 
 #if ENABLED(LCD_USE_I2C_BUZZER)

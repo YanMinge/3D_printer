@@ -663,6 +663,24 @@ void lcd_process::send_print_time(uint32_t time)
   }
 }
 
+void lcd_process::send_print_time(bool is_standard_file, uint32_t time)
+{
+  char str[12];
+  memset(str, ' ', sizeof(str));
+  if(!is_standard_file)
+  {
+    sprintf_P(str,"%.1f%%     ", (float)time);
+    lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
+  }
+  else
+  {
+    uint16_t hour = time/3600;
+    int8_t min = (time % 3600) / 60;
+    sprintf_P(str,"%.2d:%02d   ", hour, min);
+    lcd_send_data(str,PRINT_FILE_PRINT_TIME_ADDR);
+  }
+}
+
 void lcd_process::send_temperature_percentage(uint16_t percentage)
 {
   char str[12];

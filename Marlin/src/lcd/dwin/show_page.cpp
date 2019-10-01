@@ -400,11 +400,13 @@ void lcd_process::show_start_print_file_page(pfile_list_t temp)
 {
   if( TYPE_DEFAULT_FILE == temp->file_type)
   {
+    send_print_time(false, 0);
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_START_PAGE_, EN, CH)
   }
   else
   {
-    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH)
+    send_print_time(true, dwin_parser.file_initial_time);
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_START_PAGE_, EN, CH);
     lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
 }
@@ -422,6 +424,20 @@ void lcd_process::show_stop_print_file_page(pfile_list_t temp)
   else
   {
     CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_STOP_PAGE_, EN, CH)
+    safe_delay(50);
+    lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
+  }
+}
+
+void lcd_process::show_continue_print_file_page(pfile_list_t temp)
+{
+  if( TYPE_DEFAULT_FILE == temp->file_type)
+  {
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_NOSTANDARD_CONTINUE_PAGE_, EN, CH)
+  }
+  else
+  {
+    CHANGE_PAGE(PRINT, LASER, _FILE_PRINT_STANDARD_CONTINUE_PAGE_, EN, CH)
     safe_delay(50);
     lcd_show_picture(PRINT_LIMAGE_X_POSITION,PRINT_LIMAGE_Y_POSITION,PICTURE_ADDR,0X82);
   }
@@ -501,20 +517,55 @@ void lcd_process::show_firmware_upate_page(void)
 void lcd_process::show_calibration_page(void)
 {
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_CALIBRATION_CH);
+
+  //send the offset to lcd and set pre_z_home_offset
+  dwin_parser.pre_z_home_offset = home_offset[Z_AXIS];
+  lcd_send_home_offset(-home_offset[Z_AXIS]);
+
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_M104(200);
   UserExecution.cmd_now_M206(0);
   UserExecution.cmd_now_M420(false); //turn off bed leveling
   UserExecution.cmd_now_g28();
-  UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
+
+  //go to the positon and heat
+  UserExecution.cmd_now_g1_xy(5,10,3000);
+  UserExecution.cmd_now_g0_z(20,3000);
   UserExecution.cmd_now_M109(200);
   UserExecution.cmd_g92_e(0);
   safe_delay(20);
-  UserExecution.cmd_g1_e(-10.0, 300);
+
+  //load_filament and retract
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_g1_e(-13.0, 400);
+  UserExecution.cmd_g1_e(10.0, 400);
+  UserExecution.cmd_g1_e(-10.0, 400);
+
+  UserExecution.get_remain_command();
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_g92_e(0);
   safe_delay(20);
-  UserExecution.cmd_now_g38_z(6.5);
+
+  //clean the nozzle
+  UserExecution.cmd_now_g1_xy(5,170,3000);
+  UserExecution.cmd_user_synchronize();
+  UserExecution.cmd_now_g12();
+  UserExecution.cmd_user_synchronize();
+  safe_delay(20);
+
+  //move to center and deploy
+  UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
+  UserExecution.cmd_now_g38_z(-dwin_parser.pre_z_home_offset);
+
+  //ensure a protect
+  if(READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING)
+  {
+    UserExecution.cmd_g1_z(current_position[Z_AXIS] + Z_PROBE_LIFT_HEIGHT, 400);
+    UserExecution.get_remain_command();
+    UserExecution.cmd_user_synchronize();
+    lcd_send_home_offset(current_position[Z_AXIS]);
+  }
   UserExecution.cmd_user_synchronize();
   change_lcd_page(PRINT_CALIBRATION_PAGE_EN, PRINT_CALIBRATION_PAGE_CH);
 }
@@ -552,7 +603,8 @@ void lcd_process::show_save_calibration_data_page(void)
   UserExecution.cmd_now_M104(0);
   UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
-  show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
+  //show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
+  show_machine_set_page();
   UserExecution.cmd_M300(VOICE_M4, VOICE_T/2);
   UserExecution.cmd_M300(VOICE_M6, VOICE_T/2);
 }
@@ -663,7 +715,7 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   //if filament is not over ,go to start page, else go to no filament page
   if(!dwin_parser.print_filament_status)
   {
-    show_start_print_file_page(temp);
+    show_continue_print_file_page(temp);
   }
   LcdFile.set_current_status(stop_printing);
 
@@ -862,7 +914,7 @@ void lcd_process::show_cancel_stop_print_page(pfile_list_t temp)
   status = LcdFile.get_current_status();
   if(stop_printing == status)
   {
-    show_start_print_file_page(temp);
+    show_continue_print_file_page(temp);
   }
   else if(on_printing == status)
   {

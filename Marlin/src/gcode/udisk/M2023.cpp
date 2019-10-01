@@ -37,6 +37,7 @@
 
 #if ENABLED(USE_DWIN_LCD)
 #include "lcd_process.h"
+#include "lcd_parser.h"
 #endif
 
 #if ENABLED(POWER_LOSS_RECOVERY)
@@ -55,6 +56,7 @@ void GcodeSuite::M2023()
     if(udisk.check_gm_file(udisk.get_file_name()))
     {
       uint32_t initial_time = udisk.get_print_time(udisk.get_file_name());
+      dwin_parser.file_initial_time = initial_time;
 	  uint32_t index = 0;
 #if ENABLED(POWER_LOSS_RECOVERY)
       if(udisk.job_recover_file_exists())

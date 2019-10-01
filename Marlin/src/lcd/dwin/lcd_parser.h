@@ -97,6 +97,8 @@ public:
   bool lcd_stop_status;
   bool print_filament_status;   //if filament run out ,the status is true, accord to the status, change to different page when call show_confirm_cancel_page().
   machine_error_type machine_error_status;
+  float pre_z_home_offset;
+  uint32_t file_initial_time;
 private:
   lcd_cmd_type type;
   unsigned short receive_data;

@@ -90,7 +90,7 @@ public:
   void lcd_loop(void);
   void send_temperature_percentage(uint16_t percentage);
   void send_progress_percentage(uint16_t percentage);
-
+  void lcd_send_home_offset(float height);
   void set_limage_count(void);
   void set_simage_count(void);
   void set_simage_status(bool status){ image_status.simage_status = status;}
@@ -108,6 +108,7 @@ public:
   void reset_image_parameters(void);
   void reset_image_send_parameters(void);
   void send_print_time(uint32_t time);
+  void send_print_time(bool is_standard_file, uint32_t time);
 
   language_type get_language_type(void);
   void set_language_type(language_type type);
@@ -143,6 +144,7 @@ public:
   void show_machine_status_page(machine_status_type status, int page_en, int page_ch);
   void show_start_print_file_page(pfile_list_t temp);
   void show_stop_print_file_page(pfile_list_t temp);
+  void show_continue_print_file_page(pfile_list_t temp);
   void show_usb_pull_out_page(void);
   void show_sure_block_page(machine_status_type ch_type);
   void show_sure_no_block_page(machine_status_type ch_type);

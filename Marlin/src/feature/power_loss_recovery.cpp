@@ -262,6 +262,7 @@ void PrintJobRecovery::resume() {
 
   #define RECOVERY_ZRAISE 2
 
+  dwin_parser.file_initial_time = recovery.info.print_job_elapsed;
   #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(10);
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){

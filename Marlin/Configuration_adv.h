@@ -2325,5 +2325,8 @@
  */
 #define PINS_DEBUGGING
 
+#if ENABLED(USE_DWIN_LCD)
+  #define Z_PROBE_LIFT_HEIGHT  0.3
+#endif
 // Enable Marlin dev mode which adds some special commands
 //#define MARLIN_DEV_MODE

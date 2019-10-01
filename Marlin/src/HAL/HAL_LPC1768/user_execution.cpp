@@ -331,8 +331,8 @@ void user_execution::pause_udisk_print(void)
     else if(IS_HEAD_LASER())
     {
       //turn off laser
-      cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) + 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 300);
-      cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) - 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 300);
+      cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) + 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 4000);
+      cmd_now_g0_xy(NATIVE_TO_LOGICAL(current_position[X_AXIS], X_AXIS) - 0.1, NATIVE_TO_LOGICAL(current_position[Y_AXIS],Y_AXIS), 4000);
     }
 #endif
     wait_for_heatup = false;
@@ -544,6 +544,11 @@ void user_execution::cmd_g92_xy(float x, float y)
 void user_execution::cmd_now_cmd(char* cmd)
 {
   cmd_now_g_m(cmd);
+}
+
+void user_execution::cmd_now_g12(void)
+{
+  cmd_now_g_m(PSTR("G12"));
 }
 
 #endif // USE_DWIN_LCD

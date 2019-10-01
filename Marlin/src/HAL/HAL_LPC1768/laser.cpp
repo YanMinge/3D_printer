@@ -177,6 +177,9 @@ void laser_class::laser_walking_border(void)
 void laser_class::show_laser_prepare_focus_page(void)
 {
   uint16_t i = 0;
+  #if ENABLED(ADVANCED_PAUSE_FEATURE)
+    immediately_pause_flag = false;
+  #endif
   dwin_process.pre_percentage = 0;
   dwin_process.send_temperature_percentage(0);
   dwin_process.show_prepare_no_block_page(LASER_MACHINE_STATUS_PREPARE_FOCUS_CH);
@@ -200,7 +203,7 @@ void laser_class::show_laser_prepare_focus_page(void)
   UserExecution.cmd_user_synchronize();
   if(dwin_parser.lcd_stop_status)return;
 
-  UserExecution.cmd_g92_xy(60,60);
+  UserExecution.cmd_g92_xy(60,30);
   if(dwin_parser.lcd_stop_status)return;
 
   //add_laser_path hear
@@ -212,7 +215,7 @@ void laser_class::show_laser_prepare_focus_page(void)
       if(dwin_parser.lcd_stop_status)return;
       while((commands_in_queue >= BUFSIZE) && !dwin_parser.lcd_stop_status)idle();
       if(dwin_parser.lcd_stop_status)return;
-      UserExecution.cmd_now_g0_z(laser_focus + LASER_FOCUS_STEP*t_count, 600);
+  UserExecution.cmd_now_g0_z(laser_focus - LASER_FOCUS_STEP*t_count, 4000);
       dwin_process.send_temperature_percentage(70 + 10*t_count);
       t_count ++;
     }
@@ -268,7 +271,7 @@ void laser_class::show_laser_prepare_engrave_first_page(void)
   UserExecution.cmd_user_synchronize();
   if(dwin_parser.lcd_stop_status)return;
 
-  UserExecution.cmd_now_g0_z(laser_focus, 600);
+  UserExecution.cmd_now_g0_z(laser_focus, 4000);
   UserExecution.cmd_user_synchronize();
   if(dwin_parser.lcd_stop_status)return;
   dwin_process.send_temperature_percentage(90);
@@ -384,7 +387,7 @@ void laser_class::show_laser_pause_engrave_page(pfile_list_t temp)
   UserExecution.cmd_now_M106(0, 0);
 
   //if filament is not over ,go to start page, else go to no filament page
-  dwin_process.show_start_print_file_page(temp);
+  dwin_process.show_continue_print_file_page(temp);
   LcdFile.set_current_status(stop_printing);
 
   dwin_parser.lcd_stop_status = true;

@@ -2163,7 +2163,9 @@ void MarlinSettings::reset() {
   #if HAS_SCARA_OFFSET
     ZERO(scara_home_offset);
   #elif HAS_HOME_OFFSET
-    ZERO(home_offset);
+    home_offset[X_AXIS] = DEFAULT_XAXIS_OFFSET;
+    home_offset[Y_AXIS] = DEFAULT_YAXIS_OFFSET;
+    home_offset[Z_AXIS] = DEFAULT_ZAXIS_OFFSET;
   #endif
 
   #if HAS_HOTEND_OFFSET
@@ -2421,6 +2423,8 @@ void MarlinSettings::reset() {
   postprocess();
 
 #if ENABLED(USE_DWIN_LCD)
+  //language_type language_current_type = LAN_NULL;
+  //dwin_process.set_language_type(language_current_type);
   //language_type language_current_type = LAN_NULL;
   //dwin_process.set_language_type(language_current_type);
 #endif

@@ -30,6 +30,10 @@
 #include "../module/motion.h"
 #include "point_t.h"
 
+#if ENABLED(NEWPANEL)
+  #include "lcd_parser.h"
+#endif
+
 #if ENABLED(NOZZLE_CLEAN_FEATURE)
 
   /**
@@ -46,16 +50,22 @@
     #endif
 
     // Move to the starting point
+    if(dwin_parser.lcd_stop_status) return;
     do_blocking_move_to(start.x, start.y, start.z);
+    if(dwin_parser.lcd_stop_status) return;
 
     // Start the stroke pattern
     for (uint8_t i = 0; i < (strokes >> 1); i++) {
+      if(dwin_parser.lcd_stop_status) return;
       do_blocking_move_to_xy(end.x, end.y);
+      if(dwin_parser.lcd_stop_status) return;
       do_blocking_move_to_xy(start.x, start.y);
     }
 
     #if ENABLED(NOZZLE_CLEAN_GOBACK)
+      if(dwin_parser.lcd_stop_status) return;
       do_blocking_move_to(ix, iy, iz);
+      if(dwin_parser.lcd_stop_status) return;
     #endif
   }
 
