@@ -583,7 +583,7 @@ void lcd_parser::response_print_move_axis(void)
   {
     pressed_flag |= 0x20;
 	pressed_time = millis();
-    UserExecution.cmd_g38_z(2 * Z_MAX_POS);
+    UserExecution.cmd_g38_z(2.5 * Z_MAX_POS);
   }
   else if(!(pressed_flag & 0x40) && (PRINT_SET_PAGE_XYZ_AXIS_BTN_RELEASE == receive_addr))
   {

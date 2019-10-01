@@ -215,7 +215,7 @@ void laser_class::show_laser_prepare_focus_page(void)
       if(dwin_parser.lcd_stop_status)return;
       while((commands_in_queue >= BUFSIZE) && !dwin_parser.lcd_stop_status)idle();
       if(dwin_parser.lcd_stop_status)return;
-  UserExecution.cmd_now_g0_z(laser_focus - LASER_FOCUS_STEP*t_count, 4000);
+      UserExecution.cmd_now_g0_z(laser_focus + LASER_FOCUS_STEP*t_count, 600);
       dwin_process.send_temperature_percentage(70 + 10*t_count);
       t_count ++;
     }
