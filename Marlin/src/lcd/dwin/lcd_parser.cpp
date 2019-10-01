@@ -553,7 +553,7 @@ void lcd_parser::response_print_move_axis(void)
   {
     pressed_flag |= 0x01;
 	pressed_time = millis();
-    UserExecution.cmd_g38_x(-2 * X_MAX_POS);
+    UserExecution.cmd_g38_x(-2.5 * X_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_X_AXIS_MOVE_ADD_BTN == receive_addr))
   {
@@ -565,7 +565,7 @@ void lcd_parser::response_print_move_axis(void)
   {
     pressed_flag |= 0x04;
 	pressed_time = millis();
-    UserExecution.cmd_g38_y(-2 * Y_MAX_POS);
+    UserExecution.cmd_g38_y(-2.5 * Y_MAX_POS);
   }
   else if((pressed_flag == 0) && (PRINT_SET_PAGE_Y_AXIS_MOVE_ADD_BTN == receive_addr))
   {

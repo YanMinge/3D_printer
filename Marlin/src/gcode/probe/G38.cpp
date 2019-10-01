@@ -88,7 +88,7 @@ inline bool G38_run_probe() {
     if(parser.seen('Y')){
       current_position[Y_AXIS] = Y_MIN_POS;
     }
-    if(parser.seen('Z') && (destination[Z_AXIS] -  current_position[Z_AXIS]) > 0){
+    if(parser.seen('Z') && (destination[Z_AXIS] >= 2 * Z_MAX_POS)){
       current_position[Z_AXIS] = Z_MAX_POS;
     }
 
