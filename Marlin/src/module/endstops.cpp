@@ -684,23 +684,25 @@ void Endstops::update() {
       G38_did_trigger = true;
     }
 
-    if (G38_move && (stepper.axis_is_moving(X_AXIS)) && (stepper.motor_direction(X_AXIS_HEAD)) && (TEST_ENDSTOP(_ENDSTOP(X, MIN)))) {
+    if (G38_move && (stepper.axis_is_moving(X_AXIS)) && (stepper.motor_direction(X_AXIS_HEAD)) && (destination[X_AXIS] <= -2 * X_MAX_POS) && (TEST_ENDSTOP(_ENDSTOP(X, MIN)))) {
       _ENDSTOP_HIT(X, MIN);
 	  planner.endstop_triggered(X_AXIS);
       G38_did_trigger = true;
     }
 
-    if (G38_move && (stepper.axis_is_moving(Y_AXIS)) && (stepper.motor_direction(Y_AXIS_HEAD)) && (TEST_ENDSTOP(_ENDSTOP(Y, MIN)))) {
+    if (G38_move && (stepper.axis_is_moving(Y_AXIS)) && (stepper.motor_direction(Y_AXIS_HEAD)) && (destination[Y_AXIS] <= -2 * Y_MAX_POS) && (TEST_ENDSTOP(_ENDSTOP(Y, MIN)))) {
       _ENDSTOP_HIT(Y, MIN);
       planner.endstop_triggered(Y_AXIS);
       G38_did_trigger = true;
     }
 
-    if (G38_move && (stepper.axis_is_moving(Z_AXIS)) && (stepper.motor_direction(Z_AXIS_HEAD)) && ((destination[Z_AXIS] -  current_position[Z_AXIS]) > 0) && (TEST_ENDSTOP(_ENDSTOP(Z, MAX)))) {
+    if (G38_move && (stepper.axis_is_moving(Z_AXIS)) && (!stepper.motor_direction(Z_AXIS_HEAD)) && (destination[Z_AXIS] >= 2 * Z_MAX_POS) && (TEST_ENDSTOP(_ENDSTOP(Z, MAX)))) {
       _ENDSTOP_HIT(Z, MAX);
       planner.endstop_triggered(Z_AXIS);
       G38_did_trigger = true;
     }
+
+	if(G38_move) return;
   #endif
 
   // Now, we must signal, after validation, if an endstop limit is pressed or not
