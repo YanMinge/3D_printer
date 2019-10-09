@@ -1230,6 +1230,8 @@ void setup() {
     MachineInfo.send_print_work_time();
     if(MachineInfo.get_z_axis_height() > -100){
       current_position[Z_AXIS] = MachineInfo.get_z_axis_height();
+      destination[Z_AXIS] = current_position[Z_AXIS];
+      stepper.set_position(Z_AXIS, current_position[Z_AXIS]/planner.steps_to_mm[Z_AXIS]);
     }
   #endif
 
