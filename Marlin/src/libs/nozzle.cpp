@@ -62,6 +62,9 @@
       do_blocking_move_to_xy(start.x, start.y);
     }
 
+    if(dwin_parser.lcd_stop_status) return;
+    do_blocking_move_to_xy(end.x, end.y);
+
     #if ENABLED(NOZZLE_CLEAN_GOBACK)
       if(dwin_parser.lcd_stop_status) return;
       do_blocking_move_to(ix, iy, iz);
