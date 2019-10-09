@@ -524,7 +524,6 @@ void lcd_process::show_calibration_page(void)
 
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_M104(200);
-  UserExecution.cmd_now_M206(0);
   UserExecution.cmd_now_M420(false); //turn off bed leveling
   UserExecution.cmd_now_g28();
 
@@ -538,8 +537,6 @@ void lcd_process::show_calibration_page(void)
   //load_filament and retract
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_g1_e(-13.0, 400);
-  UserExecution.cmd_g1_e(10.0, 400);
   UserExecution.cmd_g1_e(-10.0, 400);
 
   UserExecution.get_remain_command();
@@ -548,23 +545,24 @@ void lcd_process::show_calibration_page(void)
   safe_delay(20);
 
   //clean the nozzle
-  UserExecution.cmd_now_g1_xy(5,170,3000);
+  UserExecution.cmd_now_g1_xy(5,100,3000);
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_g12();
   UserExecution.cmd_user_synchronize();
   safe_delay(20);
 
-  //move to center and deploy
-  UserExecution.cmd_now_g1_xy(X_BED_SIZE/2, Y_BED_SIZE/2,3000);
-  UserExecution.cmd_now_g38_z(-dwin_parser.pre_z_home_offset);
+  //move to calibrate point and deploy
+  UserExecution.cmd_now_g1_xy(NATIVE_TO_LOGICAL(PROBE_PT_1_X,X_AXIS), NATIVE_TO_LOGICAL(PROBE_PT_1_Y,Y_AXIS), 3000);
+  UserExecution.cmd_now_g38_z(0);
+  UserExecution.cmd_user_synchronize();
 
   //ensure a protect
   if(READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING)
   {
-    UserExecution.cmd_g1_z(current_position[Z_AXIS] + Z_PROBE_LIFT_HEIGHT, 400);
+    UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) + Z_PROBE_LIFT_HEIGHT, 400);
     UserExecution.get_remain_command();
     UserExecution.cmd_user_synchronize();
-    lcd_send_home_offset(current_position[Z_AXIS]);
+    lcd_send_home_offset(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS));
   }
   UserExecution.cmd_user_synchronize();
   change_lcd_page(PRINT_CALIBRATION_PAGE_EN, PRINT_CALIBRATION_PAGE_CH);
@@ -594,13 +592,13 @@ void lcd_process::show_bed_leveling_page(void)
 void lcd_process::show_save_calibration_data_page(void)
 {
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_SAVE_OFFSET_CH);
+  UserExecution.cmd_now_M104(0);
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_M206(-current_position[Z_AXIS]);
   UserExecution.cmd_now_M500();
   UserExecution.cmd_now_M420(true); //turn on bed leveling
   UserExecution.cmd_g1_e(0.0, 3000);
   safe_delay(20);
-  UserExecution.cmd_now_M104(0);
   UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
   //show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
@@ -795,12 +793,21 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
 
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   //Protective movement
-  UserExecution.cmd_now_g1_xy(pause_print_data.current_position[X_AXIS], pause_print_data.current_position[Y_AXIS], 3000);
+  float position_xyz[XYZ];
+  position_xyz[X_AXIS] = LOGICAL_TO_NATIVE(pause_print_data.current_position[X_AXIS], X_AXIS);
+  position_xyz[Y_AXIS] = LOGICAL_TO_NATIVE(pause_print_data.current_position[Y_AXIS], Y_AXIS);
+  position_xyz[Z_AXIS] = LOGICAL_TO_NATIVE(pause_print_data.current_position[Z_AXIS], Z_AXIS);
+  planner.unapply_leveling(position_xyz);
+  position_xyz[X_AXIS] = LOGICAL_X_POSITION(position_xyz[X_AXIS]);
+  position_xyz[Y_AXIS] = LOGICAL_Y_POSITION(position_xyz[Y_AXIS]);
+  position_xyz[Z_AXIS] = LOGICAL_Z_POSITION(position_xyz[Z_AXIS]);
+
+  UserExecution.cmd_now_g1_xy(position_xyz[X_AXIS],position_xyz[Y_AXIS], 3000);
   UserExecution.cmd_user_synchronize();
   if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
   dwin_process.send_temperature_percentage(60);
 
-  UserExecution.cmd_g1_z(pause_print_data.current_position[Z_AXIS] + 10, 600);
+  UserExecution.cmd_g1_z(position_xyz[Z_AXIS] + 10, 600);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
   if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
@@ -817,7 +824,7 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
 
   //Set the printed position
   UserExecution.cmd_M2026(pause_print_data.udisk_pos);
-  UserExecution.cmd_g1_z(pause_print_data.current_position[Z_AXIS], 600);
+  UserExecution.cmd_g1_z(position_xyz[Z_AXIS], 600);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
   if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
@@ -846,7 +853,7 @@ void lcd_process::show_load_filament_page(void)
 
     show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
     UserExecution.user_start();
-    UserExecution.cmd_now_M106(150);
+    UserExecution.cmd_now_M106(200);
     UserExecution.cmd_now_M109(230);
   }
 
@@ -880,7 +887,7 @@ void lcd_process::show_unload_filament_page(void)
 
     show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
     UserExecution.user_start();
-    UserExecution.cmd_now_M106(150);
+    UserExecution.cmd_now_M106(200);
     UserExecution.cmd_now_M109(230);
   }
 

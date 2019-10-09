@@ -304,6 +304,11 @@ void PrintJobRecovery::resume() {
     }
   }
 
+  float position_xyz[XYZ];
+  position_xyz[X_AXIS] = LOGICAL_TO_NATIVE(info.current_position[X_AXIS], X_AXIS);
+  position_xyz[Y_AXIS] = LOGICAL_TO_NATIVE(info.current_position[Y_AXIS], Y_AXIS);
+  position_xyz[Z_AXIS] = LOGICAL_TO_NATIVE(info.current_position[Z_AXIS], Z_AXIS);
+
   #if HAS_LEVELING
     // Restore leveling state before 'G92 Z' to ensure
     // the Z stepper count corresponds to the native Z.
@@ -315,7 +320,13 @@ void PrintJobRecovery::resume() {
     if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
       return;
     }
+
+    planner.unapply_leveling(position_xyz);
   #endif
+
+  position_xyz[X_AXIS] = LOGICAL_X_POSITION(position_xyz[X_AXIS]);
+  position_xyz[Y_AXIS] = LOGICAL_Y_POSITION(position_xyz[Y_AXIS]);
+  position_xyz[Z_AXIS] = LOGICAL_Z_POSITION(position_xyz[Z_AXIS]);
 
   if(IS_HEAD_PRINT())
   {
@@ -376,13 +387,13 @@ void PrintJobRecovery::resume() {
     #endif
 
     // Move back to the saved XY
-    dtostrf(info.current_position[X_AXIS], 1, 3, str_1);
-    dtostrf(info.current_position[Y_AXIS], 1, 3, str_2);
+    dtostrf(position_xyz[X_AXIS], 1, 3, str_1);
+    dtostrf(position_xyz[Y_AXIS], 1, 3, str_2);
     sprintf_P(cmd, PSTR("G1 X%s Y%s F3000"), str_1, str_2);
     gcode.process_subcommands_now(cmd);
 
     // Move back to the saved Z
-    dtostrf(info.current_position[Z_AXIS], 1, 3, str_1);
+    dtostrf(position_xyz[Z_AXIS], 1, 3, str_1);
     sprintf_P(cmd, PSTR("G1 Z%s F500"), str_1);
     gcode.process_subcommands_now(cmd);
 

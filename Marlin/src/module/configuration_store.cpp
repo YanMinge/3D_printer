@@ -1427,6 +1427,7 @@ void MarlinSettings::postprocess() {
           EEPROM_READ(ubl.storage_slot);
         #elif ABL_PLANAR
           EEPROM_READ(planner.leveling_active);
+          planner.leveling_active = true;
           uint8_t ubl_storage_slot;
           EEPROM_READ(ubl_storage_slot);
         #else

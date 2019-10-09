@@ -687,7 +687,8 @@ inline void get_serial_commands() {
         #endif
 
 #if ENABLED(USE_DWIN_LCD)
-        if ((strstr_P(command, "M104") != NULL) || (strstr_P(command, "M109") != NULL))
+        if ((strstr_P(command, "M104") != NULL) || (strstr_P(command, "M109") != NULL) || \
+            (strstr_P(command, "M140") != NULL) || (strstr_P(command, "M190") != NULL))
           dwin_process.set_computer_print_status(true);
 #endif
 
@@ -922,6 +923,10 @@ inline void get_udisk_commands(void) {
           parser.parse(command_queue[cmd_queue_index_w]);
           if(parser.seen('S'))
           {
+            if(thermalManager.check_heater_status() == false){
+              SERIAL_ECHOLNPGM("Hardware damage detected in the extruder");
+              return;
+            }
             temp_celsius = parser.value_int();
             thermalManager.setTargetHotend(temp_celsius, target_extruder);
           }

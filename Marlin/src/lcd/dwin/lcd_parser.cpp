@@ -630,18 +630,18 @@ void lcd_parser::response_print_move_axis(void)
     {
       if(current_position[Z_AXIS] >= 9.9) return;
       dwin_process.lcd_send_home_offset(current_position[Z_AXIS] + 0.1);
-      UserExecution.cmd_g1_z(current_position[Z_AXIS] + 0.1);
+      UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) + 0.1);
     }
     else if(0x02 == receive_data) // mins home offset
     {
-      if(current_position[Z_AXIS] < 0.1) return;
+      if(current_position[Z_AXIS] < 1.0) return;
       dwin_process.lcd_send_home_offset(current_position[Z_AXIS] - 0.1);
-      UserExecution.cmd_g1_z(current_position[Z_AXIS] - 0.1, 400);
+      UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) - 0.1, 400);
       UserExecution.cmd_user_synchronize();
       if(READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING)
       {
         dwin_process.lcd_send_home_offset(current_position[Z_AXIS] + Z_PROBE_LIFT_HEIGHT);
-        UserExecution.cmd_g1_z(current_position[Z_AXIS] + Z_PROBE_LIFT_HEIGHT, 400);
+        UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) + Z_PROBE_LIFT_HEIGHT, 400);
         UserExecution.get_remain_command();
         return;
       }
@@ -793,10 +793,9 @@ void lcd_parser::response_print_set(void)
   else if(0x12 == receive_data) //return from laser focus choice to  print_set_page
   {
     dwin_process.show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_HOMEING_CH);
-    UserExecution.cmd_now_M206(dwin_parser.pre_z_home_offset);
+    UserExecution.cmd_user_synchronize();
     UserExecution.cmd_now_M420(true); //turn on bed leveling
     UserExecution.cmd_now_M104(0);
-    UserExecution.cmd_user_synchronize();
     UserExecution.cmd_now_g28();
     UserExecution.cmd_user_synchronize();
     dwin_process.show_machine_set_page();
@@ -1055,7 +1054,7 @@ void lcd_parser::response_print_machine_status()
           dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
         }
         else if(stop_printing == mstatus)
-        { 
+        {
 		  UserExecution.user_stop();
           UserExecution.cmd_quick_stop(true);
           lcd_exception_stop();

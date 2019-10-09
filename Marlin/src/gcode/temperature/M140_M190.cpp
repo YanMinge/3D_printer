@@ -37,6 +37,11 @@
   #include "../../feature/leds/leds.h"
 #endif
 
+#if ENABLED(NEWPANEL)
+  #include "filament_ui.h"
+  #include "lcd_process.h"
+#endif
+
 #include "../../Marlin.h" // for wait_for_heatup and idle()
 
 /**
@@ -45,6 +50,20 @@
 void GcodeSuite::M140() {
   if (DEBUGGING(DRYRUN)) return;
   if (parser.seenval('S')) thermalManager.setTargetBed(parser.value_celsius());
+
+  #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
+  if (parser.value_celsius() < BED_MINTEMP){
+    if(dwin_process.is_computer_print()){
+      dwin_process.show_start_up_page();
+      dwin_process.set_computer_print_status(false);
+    }
+  }
+  else{
+    if(dwin_process.is_computer_print()){
+      dwin_process.change_lcd_page(HOST_COMPUTER_PRINT_PAGE_EN, HOST_COMPUTER_PRINT_PAGE_CH);
+    }
+  }
+  #endif
 }
 
 /**
@@ -58,8 +77,18 @@ void GcodeSuite::M190() {
   if (no_wait_for_cooling || parser.seenval('R')) {
     thermalManager.setTargetBed(parser.value_celsius());
     #if ENABLED(PRINTJOB_TIMER_AUTOSTART)
-      if (parser.value_celsius() > BED_MINTEMP)
+      if (parser.value_celsius() < BED_MINTEMP){
+        if(dwin_process.is_computer_print()){
+          dwin_process.show_start_up_page();
+          dwin_process.set_computer_print_status(false);
+        }
+      }
+      else{
         print_job_timer.start();
+        if(dwin_process.is_computer_print()){
+          dwin_process.change_lcd_page(HOST_COMPUTER_PRINT_PAGE_EN, HOST_COMPUTER_PRINT_PAGE_CH);
+        }
+      }
     #endif
   }
   else return;
