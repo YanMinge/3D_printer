@@ -854,7 +854,7 @@ void lcd_process::show_load_filament_page(void)
     show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
     UserExecution.user_start();
     UserExecution.cmd_now_M106(200);
-    UserExecution.cmd_now_M109(230);
+    UserExecution.cmd_now_M109(210);
   }
 
   if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
@@ -888,7 +888,7 @@ void lcd_process::show_unload_filament_page(void)
     show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
     UserExecution.user_start();
     UserExecution.cmd_now_M106(200);
-    UserExecution.cmd_now_M109(230);
+    UserExecution.cmd_now_M109(210);
   }
 
   if(HEAT_UNLOAD_STATUS == filament_show.get_heating_status_type()) //unloading filament page

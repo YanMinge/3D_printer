@@ -1124,6 +1124,32 @@ void Temperature::manage_heater() {
  * Bisect search for the range of the 'raw' value, then interpolate
  * proportionally between the under and over values.
  */
+#ifdef HOTEND_TEMP_CORRECTION
+#define SCAN_THERMISTOR_TABLE(TBL,LEN) do{                             \
+  uint8_t l = 0, r = LEN, m;                                           \
+    short c_temp  = 0;                                                 \
+    float calibration  = 0;                                            \
+  for (;;) {                                                           \
+    m = (l + r) >> 1;                                                  \
+    if (m == l || m == r){                                             \
+      c_temp = (short)pgm_read_word(&TBL[LEN-1][1]);                   \
+	  calibration = (-2.6409 * c_temp * c_temp) / 10000.0 + 0.1540 * c_temp - 3.5914;  \
+	  return c_temp + calibration;                                     \
+    }                                                                  \
+    short v00 = pgm_read_word(&TBL[m-1][0]),                           \
+          v10 = pgm_read_word(&TBL[m-0][0]);                           \
+         if (raw < v00) r = m;                                         \
+    else if (raw > v10) l = m;                                         \
+    else {                                                             \
+      const short v01 = (short)pgm_read_word(&TBL[m-1][1]),            \
+                  v11 = (short)pgm_read_word(&TBL[m-0][1]);            \
+  	  c_temp = v01 + (raw - v00) * float(v11 - v01) / float(v10 - v00);\
+  	  calibration = (-2.6409 * c_temp * c_temp) / 10000.0 + 0.1540 * c_temp - 3.5914;  \
+  	  return c_temp + calibration;                                     \
+    }                                                                  \
+  }                                                                    \
+}while(0)
+#else
 #define SCAN_THERMISTOR_TABLE(TBL,LEN) do{                             \
   uint8_t l = 0, r = LEN, m;                                           \
   for (;;) {                                                           \
@@ -1140,6 +1166,7 @@ void Temperature::manage_heater() {
     }                                                                  \
   }                                                                    \
 }while(0)
+#endif
 
 // Derived from RepRap FiveD extruder::getTemperature()
 // For hot end temperature measurement.

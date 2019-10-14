@@ -712,12 +712,16 @@ void power_loss_detect(void){
     MachineInfo.set_total_working_time(woking_time);
 
     //Don't allow z axis height save without homing first
-    if((MachineInfo.get_z_axis_height() <= -100) && !axis_unhomed_error()){
+    if((MachineInfo.get_z_axis_height() <= -Z_MAX_POS / 2) && !axis_unhomed_error()){
       MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
     }
-    else if(MachineInfo.get_z_axis_height() > -100)
-    {
-      MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
+    else if(MachineInfo.get_z_axis_height() > -Z_MAX_POS / 2){
+      if(planner.get_axis_position_mm(Z_AXIS) > Z_MAX_POS){
+         MachineInfo.set_z_axis_height(Z_MAX_POS);
+	  }
+	  else{
+         MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
+      }
     }
     settings.save();
     power_loss_status = false;
@@ -729,8 +733,7 @@ void power_loss_detect(void){
 void lcd_exception_stop(void){
   clear_command_queue();
   disable_all_steppers();
-  if(print_job_timer.isRunning())
-  {
+  if(print_job_timer.isRunning()){
     print_job_timer.stop();
   }
   thermalManager.disable_all_heaters();
@@ -1228,10 +1231,11 @@ void setup() {
     MachineInfo.send_version_string();
     MachineInfo.send_work_time();
     MachineInfo.send_print_work_time();
-    if(MachineInfo.get_z_axis_height() > -100){
+    if(MachineInfo.get_z_axis_height() > -Z_MAX_POS / 2){
       current_position[Z_AXIS] = MachineInfo.get_z_axis_height();
       destination[Z_AXIS] = current_position[Z_AXIS];
-      stepper.set_position(Z_AXIS, current_position[Z_AXIS]/planner.steps_to_mm[Z_AXIS]);
+      sync_plan_position();
+      //stepper.set_position(Z_AXIS, current_position[Z_AXIS]/planner.steps_to_mm[Z_AXIS]);
     }
   #endif
 

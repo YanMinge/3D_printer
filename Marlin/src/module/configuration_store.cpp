@@ -1942,6 +1942,12 @@ void MarlinSettings::postprocess() {
         float z_axis_height = -Z_MAX_POS;
         _FIELD_TEST(z_axis_height);
         EEPROM_READ_ALWAYS(z_axis_height);
+        if(z_axis_height > Z_MAX_POS){
+          z_axis_height = Z_MAX_POS;
+		}
+		else if(z_axis_height < -Z_MAX_POS){
+          z_axis_height = -Z_MAX_POS;
+		}
         MachineInfo.set_z_axis_height(z_axis_height);
       #endif
 
