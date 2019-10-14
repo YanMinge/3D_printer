@@ -1133,8 +1133,8 @@ void Temperature::manage_heater() {
     m = (l + r) >> 1;                                                  \
     if (m == l || m == r){                                             \
       c_temp = (short)pgm_read_word(&TBL[LEN-1][1]);                   \
-	  calibration = (-2.6409 * c_temp * c_temp) / 10000.0 + 0.1540 * c_temp - 3.5914;  \
-	  return c_temp + calibration;                                     \
+      calibration = (-2.6409 * c_temp * c_temp) / 10000.0 + 0.1540 * c_temp - 3.5914;  \
+      return c_temp + calibration;                                     \
     }                                                                  \
     short v00 = pgm_read_word(&TBL[m-1][0]),                           \
           v10 = pgm_read_word(&TBL[m-0][0]);                           \
@@ -1143,9 +1143,9 @@ void Temperature::manage_heater() {
     else {                                                             \
       const short v01 = (short)pgm_read_word(&TBL[m-1][1]),            \
                   v11 = (short)pgm_read_word(&TBL[m-0][1]);            \
-  	  c_temp = v01 + (raw - v00) * float(v11 - v01) / float(v10 - v00);\
-  	  calibration = (-2.6409 * c_temp * c_temp) / 10000.0 + 0.1540 * c_temp - 3.5914;  \
-  	  return c_temp + calibration;                                     \
+      c_temp = v01 + (raw - v00) * float(v11 - v01) / float(v10 - v00);\
+      calibration = (-2.6409 * c_temp * c_temp) / 10000.0 + 0.1540 * c_temp - 3.5914;  \
+      return c_temp + calibration;                                     \
     }                                                                  \
   }                                                                    \
 }while(0)
