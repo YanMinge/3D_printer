@@ -43,6 +43,11 @@
  *    16.  void     machine_info::lcd_print_information_update(void);
  *    17.  void     machine_info::lcd_usb_status_update(void);
  *    18.  void     machine_info::lcd_material_info_update(void);
+ *    19.  void     machine_info::set_exception_status(bool status);
+ *    20.  head_t   machine_info::get_command_type(void);
+ *    21.  float    machine_info::get_z_axis_height(void);
+ *    22.  void     machine_info::set_z_axis_height(float height);
+ *    23.  void     machine_info::save_info_to_eeprom(void);
  *
  * \par History:
  * <pre>
@@ -109,6 +114,7 @@ public:
   head_t get_command_type(void);
   float get_z_axis_height(void);
   void set_z_axis_height(float height);
+  void save_info_to_eeprom(void);
 private:
   uint8_t factory_uuid[12];
   head_t head_type;

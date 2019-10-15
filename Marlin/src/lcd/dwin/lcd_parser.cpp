@@ -341,6 +341,7 @@ void lcd_parser::response_upate_firmware_button(void)
     dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_SAME_FIRMWARE_FILE_CH);
     return;
   }
+  MachineInfo.save_info_to_eeprom();
   resetFunc();                // Jump to address 0
 }
 

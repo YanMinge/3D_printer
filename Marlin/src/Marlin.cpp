@@ -707,23 +707,8 @@ void power_loss_detect(void){
     UserExecution.lcd_immediate_execution = true;
     planner.quick_stop();
     thermalManager.zero_fan_speeds();
+    MachineInfo.save_info_to_eeprom();
 
-    uint32_t woking_time = MachineInfo.get_total_working_time() + millis()/1000;
-    MachineInfo.set_total_working_time(woking_time);
-
-    //Don't allow z axis height save without homing first
-    if((MachineInfo.get_z_axis_height() <= -Z_MAX_POS / 2) && !axis_unhomed_error()){
-      MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
-    }
-    else if(MachineInfo.get_z_axis_height() > -Z_MAX_POS / 2){
-      if(planner.get_axis_position_mm(Z_AXIS) > Z_MAX_POS){
-         MachineInfo.set_z_axis_height(Z_MAX_POS);
-	  }
-	  else{
-         MachineInfo.set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
-      }
-    }
-    settings.save();
     power_loss_status = false;
 
     if(IS_UDISK_PRINTING()) recovery.save(true);
@@ -882,7 +867,7 @@ void minkill() {
         watchdog_reset();
       #endif
     }
-
+    MachineInfo.save_info_to_eeprom();
     void(*resetFunc)(void) = 0; // Declare resetFunc() at address 0
     resetFunc();                // Jump to address 0
 

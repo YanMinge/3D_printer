@@ -43,6 +43,11 @@
  *    16.  void     machine_info::lcd_print_information_update(void);
  *    17.  void     machine_info::lcd_usb_status_update(void);
  *    18.  void     machine_info::lcd_material_info_update(void);
+ *    19.  void     machine_info::set_exception_status(bool status);
+ *    20.  head_t   machine_info::get_command_type(void);
+ *    21.  float    machine_info::get_z_axis_height(void);
+ *    22.  void     machine_info::set_z_axis_height(float height);
+ *    23.  void     machine_info::save_info_to_eeprom(void);
  *
  * \par History:
  * <pre>
@@ -54,6 +59,8 @@
 
 #ifdef TARGET_LPC1768
 #include "../../Marlin.h"
+#include "../../module/planner.h"
+#include "../../module/configuration_store.h"
 
 #if ENABLED(FACTORY_MACHINE_INFO)
 #include "../../module/printcounter.h"
@@ -465,6 +472,30 @@ float machine_info::get_z_axis_height(void)
 void machine_info::set_z_axis_height(float height)
 {
   z_axis_height = height;
+}
+
+void machine_info::save_info_to_eeprom(void)
+{
+  uint32_t woking_time = get_total_working_time() + millis()/1000;
+  set_total_working_time(woking_time);
+
+  //Don't allow z axis height save without homing first
+  if((get_z_axis_height() <= -Z_MAX_POS / 2) && !axis_unhomed_error())
+  {
+    set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
+  }
+  else if(get_z_axis_height() > -Z_MAX_POS / 2)
+  {
+    if(planner.get_axis_position_mm(Z_AXIS) > Z_MAX_POS)
+    {
+      set_z_axis_height(Z_MAX_POS);
+    }
+    else
+    {
+      set_z_axis_height(planner.get_axis_position_mm(Z_AXIS));
+    }
+  }
+  settings.save();
 }
 
 #endif // FACTORY_MACHINE_INFO
