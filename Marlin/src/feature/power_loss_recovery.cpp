@@ -204,6 +204,7 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
     info.print_job_elapsed = udisk.get_print_time_dynamic();
 
     // udisk file position
+    memset(info.udisk_filename, 0, sizeof(info.udisk_filename));
     memcpy(info.udisk_filename, udisk.get_file_name(), strlen(udisk.get_file_name()));
     memcpy(info.file_path, dwin_parser.current_path, strlen(dwin_parser.current_path));
     info.udisk_pos = udisk.udisk_block_pos;

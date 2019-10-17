@@ -44,6 +44,7 @@
 void GcodeSuite::M2038()
 {
   char cmd[32];
+  Laser.is_laser_focused = true;
   gcode.process_subcommands_now_P(PSTR("G28"));
   sprintf_P(cmd, PSTR("G0 X%d Y%d F%d"), X_BED_SIZE/2, Y_BED_SIZE/2, 3000);
   gcode.process_subcommands_now_P(cmd);
@@ -52,6 +53,17 @@ void GcodeSuite::M2038()
   gcode.process_subcommands_now_P(PSTR("G92 X0 Y0 Z0"));
   sprintf_P(cmd, PSTR("G0 Z%4.1f F%d"), Laser.laser_focus, 600);
   gcode.process_subcommands_now_P(cmd);
+  UserExecution.cmd_user_synchronize();
+  Laser.is_laser_focused = false;
+}
+
+/**
+ * M2038: check laser focused status;
+ * this function if only for pc host;
+ */
+void GcodeSuite::M2039()
+{
+  SERIAL_PRINTF("M2039 S%d\r\n", Laser.is_laser_focused);
 }
 
 #endif // SPINDLE_LASER_ENABLE

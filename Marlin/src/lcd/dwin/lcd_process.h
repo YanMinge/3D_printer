@@ -116,7 +116,7 @@ public:
 
   void set_machine_status(machine_status_type type){machine_status = type;}
   machine_status_type get_machine_status(void){return machine_status;}
-  inline void delete_current_file(void){ delete (current_file);}
+  inline void delete_current_file(void){  (current_file = NULL);}
   inline void malloc_current_file(void){    current_file =(pfile_list_t) new char[sizeof(file_list_t)];
     memset(current_file,0,sizeof(file_list_t));}
   inline void set_computer_print_status(bool status){computer_print_status = status;}

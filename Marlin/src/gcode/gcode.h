@@ -897,6 +897,7 @@ private:
   #if ENABLED(USE_DWIN_LCD)
   #if ENABLED(SPINDLE_LASER_ENABLE)
     static void M2038();
+    static void M2039();
     static void M2040();
   #endif
     static void M2050();
