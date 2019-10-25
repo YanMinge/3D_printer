@@ -305,7 +305,10 @@ void lcd_process::show_machine_status(uint8_t ch_type)
   }
   else if(LAN_ENGLISH == ui_language)
   {
-    lcd_send_data(ch_type + MACHINE_STATUS_NUM,PRINT_MACHINE_STATUS_ICON_ADDR);
+    if(ch_type <= MACHINE_STATUS_NUM)
+      lcd_send_data(ch_type + (MACHINE_STATUS_NUM + 1)/2,PRINT_MACHINE_STATUS_ICON_ADDR);
+    else
+      lcd_send_data(ch_type - MACHINE_STATUS_NUM + MACHINE_STATUS_PREPARE_NUM,PRINT_PREPARE_TEXT_ICON_ADDR);
   }
 }
 

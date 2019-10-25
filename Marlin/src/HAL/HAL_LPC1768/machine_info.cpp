@@ -433,7 +433,7 @@ void machine_info::send_version_string(void)
 void machine_info::send_work_time(void)
 {
   char buffer[16];
-  char hour_gbk[] = {0xD0,0xA1,0xCA,0xB1,0x00};
+  char hour_gbk[] = "Hours";
   uint32_t time;
 
   time = get_total_working_time();
@@ -446,7 +446,7 @@ void machine_info::send_print_work_time(void)
 {
   char print_time[16];
   char laser_time[16];
-  char hour_gbk[] = {0xD0,0xA1,0xCA,0xB1,0x00};
+  char hour_gbk[] = "Hours";
   uint32_t time;
   int lcd_time;
 
