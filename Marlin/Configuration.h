@@ -879,7 +879,7 @@
  */
 #define X_PROBE_OFFSET_FROM_EXTRUDER 0     // X offset: -left  +right  [of the nozzle]
 #define Y_PROBE_OFFSET_FROM_EXTRUDER 0     // Y offset: -front +behind [the nozzle]
-#define Z_PROBE_OFFSET_FROM_EXTRUDER 0     // Z offset: -below +above  [the nozzle]
+#define Z_PROBE_OFFSET_FROM_EXTRUDER 2.4     // Z offset: -below +above  [the nozzle]
 
 // Certain types of probes need to stay away from edges
 #define MIN_PROBE_EDGE 1
@@ -1480,8 +1480,8 @@
   // Specify positions as { X, Y, Z }
   //#define NOZZLE_CLEAN_START_POINT { 30, 30, (Z_MIN_POS + 1)}
   //#define NOZZLE_CLEAN_END_POINT   {100, 60, (Z_MIN_POS + 1)}
-  #define NOZZLE_CLEAN_START_POINT { 5, 160, (9)}
-  #define NOZZLE_CLEAN_END_POINT   {5, 230, (9)}
+  #define NOZZLE_CLEAN_START_POINT { 5, 160, (7)}
+  #define NOZZLE_CLEAN_END_POINT   {5, 230, (7)}
 
   // Circular pattern radius
   #define NOZZLE_CLEAN_CIRCLE_RADIUS 6.5

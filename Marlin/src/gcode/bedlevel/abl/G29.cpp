@@ -745,6 +745,9 @@ G29_TYPE GcodeSuite::G29() {
           break;
         }
         points[i].z = measured_z;
+        if(!i){
+          home_offset[Z_AXIS] = -measured_z;
+        }
       }
 
       if (!dryrun && !isnan(measured_z)) {

@@ -58,7 +58,7 @@ void GcodeSuite::M2038()
 }
 
 /**
- * M2038: check laser focused status;
+ * M2039: check laser focused status;
  * this function if only for pc host;
  */
 void GcodeSuite::M2039()

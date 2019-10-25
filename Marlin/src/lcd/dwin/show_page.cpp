@@ -41,6 +41,7 @@
 #include "../../gcode/gcode.h"
 #include "../../module/temperature.h"
 #include "../../libs/buzzer.h"
+#include "../../module/probe.h"
 
 #if ENABLED(USE_DWIN_LCD)
 #include "dwin.h"
@@ -519,68 +520,32 @@ void lcd_process::show_firmware_upate_page(void)
 
 void lcd_process::show_calibration_page(void)
 {
-  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_CALIBRATION_CH);
-
-  //send the offset to lcd and set pre_z_home_offset
-  dwin_parser.pre_z_home_offset = home_offset[Z_AXIS];
-  lcd_send_home_offset(-home_offset[Z_AXIS]);
-
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_now_M104(200);
-  UserExecution.cmd_now_M420(false); //turn off bed leveling
-  UserExecution.cmd_now_g28();
-
-  //go to the positon and heat
-  UserExecution.cmd_now_g1_xy(5,10,3000);
-  UserExecution.cmd_now_g0_z(20,3000);
-  UserExecution.cmd_now_M109(200);
-  UserExecution.cmd_g92_e(0);
-  safe_delay(20);
-
-  //load_filament and retract
-  UserExecution.get_remain_command();
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_g1_e(-10.0, 400);
-
-  UserExecution.get_remain_command();
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_g92_e(0);
-  safe_delay(20);
-
-  //clean the nozzle
-  UserExecution.cmd_now_g1_xy(5,100,3000);
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_now_g12();
-  UserExecution.cmd_user_synchronize();
-  safe_delay(20);
-
-  //move to calibrate point and deploy
-  UserExecution.cmd_now_g1_xy(NATIVE_TO_LOGICAL(PROBE_PT_1_X,X_AXIS), NATIVE_TO_LOGICAL(PROBE_PT_1_Y,Y_AXIS), 3000);
-  UserExecution.cmd_now_g38_z(0);
-  UserExecution.cmd_user_synchronize();
-
-  //ensure a protect
-  if(READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING)
-  {
-    UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) + Z_PROBE_LIFT_HEIGHT, 400);
-    UserExecution.get_remain_command();
-    UserExecution.cmd_user_synchronize();
-    lcd_send_home_offset(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS));
-  }
-  UserExecution.cmd_user_synchronize();
+  set_machine_status(PRINT_MACHINE_STATUS_PREPARE_CALIBRATION_CH);
+  dwin_parser.pre_z_home_offset = -home_offset[Z_AXIS];
+  lcd_send_home_offset(dwin_parser.pre_z_home_offset);
   change_lcd_page(PRINT_CALIBRATION_PAGE_EN, PRINT_CALIBRATION_PAGE_CH);
 }
 
 void lcd_process::show_bed_leveling_page(void)
 {
+  //make sure the filament if run out
+  bool filamen_runout_status = MaterialCheck.is_filamen_runout();
+  if(filamen_runout_status)
+  {
+    show_sure_block_page(PRINT_MACHINE_STATUS_UNLOAD_BEFORE_LEVELING_CH);
+    return;
+  }
+
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_LEVELING_CH);
   UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_now_M104(200);
+  UserExecution.cmd_now_M104(180);
   UserExecution.cmd_now_g28();
-  UserExecution.cmd_now_M109(200);
-  UserExecution.cmd_g92_e(0);
+
+  do_blocking_move_to(30, 160, 30);
+  UserExecution.cmd_now_M109(180);
+  UserExecution.cmd_now_g12();
   safe_delay(20);
-  UserExecution.cmd_g1_e(-10.0, 300);
+
   UserExecution.cmd_now_g29();
   UserExecution.cmd_now_M500();
   UserExecution.cmd_user_synchronize();
@@ -594,18 +559,14 @@ void lcd_process::show_bed_leveling_page(void)
 
 void lcd_process::show_save_calibration_data_page(void)
 {
-  show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_SAVE_OFFSET_CH);
-  UserExecution.cmd_now_M104(0);
-  UserExecution.cmd_user_synchronize();
-  UserExecution.cmd_now_M206(-current_position[Z_AXIS]);
+  float diff_value;
+  diff_value = dwin_parser.pre_z_home_offset + home_offset[Z_AXIS];
+  zprobe_zoffset += diff_value;
+  home_offset[Z_AXIS] = -dwin_parser.pre_z_home_offset;
   UserExecution.cmd_now_M500();
-  UserExecution.cmd_now_M420(true); //turn on bed leveling
-  UserExecution.cmd_g1_e(0.0, 3000);
-  safe_delay(20);
-  UserExecution.cmd_now_g28();
-  UserExecution.cmd_user_synchronize();
+
   //show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
-  show_machine_set_page();
+  show_sure_block_page(PRINT_MACHINE_STATUS_CALIBRATION_OK_CH);
   UserExecution.cmd_M300(VOICE_M4, VOICE_T/2);
   UserExecution.cmd_M300(VOICE_M6, VOICE_T/2);
 }

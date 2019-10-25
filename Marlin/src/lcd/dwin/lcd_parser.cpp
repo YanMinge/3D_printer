@@ -629,23 +629,15 @@ void lcd_parser::response_print_move_axis(void)
   {
     if(0x01 == receive_data) //add home offset
     {
-      if(current_position[Z_AXIS] >= 9.9) return;
-      dwin_process.lcd_send_home_offset(current_position[Z_AXIS] + 0.1);
-      UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) + 0.1);
+      //send the offset to lcd and set pre_z_home_offset
+      dwin_parser.pre_z_home_offset += 0.05;
+      dwin_process.lcd_send_home_offset(dwin_parser.pre_z_home_offset);
     }
     else if(0x02 == receive_data) // mins home offset
     {
-      if(current_position[Z_AXIS] < 1.0) return;
-      dwin_process.lcd_send_home_offset(current_position[Z_AXIS] - 0.1);
-      UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) - 0.1, 400);
-      UserExecution.cmd_user_synchronize();
-      if(READ(Z_MIN_PROBE_PIN) != Z_MIN_PROBE_ENDSTOP_INVERTING)
-      {
-        dwin_process.lcd_send_home_offset(current_position[Z_AXIS] + Z_PROBE_LIFT_HEIGHT);
-        UserExecution.cmd_g1_z(NATIVE_TO_LOGICAL(current_position[Z_AXIS],Z_AXIS) + Z_PROBE_LIFT_HEIGHT, 400);
-        UserExecution.get_remain_command();
-        return;
-      }
+      if((dwin_parser.pre_z_home_offset - 0.05) < 1.5) return;
+      dwin_parser.pre_z_home_offset -= 0.05;
+      dwin_process.lcd_send_home_offset(dwin_parser.pre_z_home_offset);
     }
   }
 }
@@ -793,12 +785,6 @@ void lcd_parser::response_print_set(void)
   }
   else if(0x12 == receive_data) //return from laser focus choice to  print_set_page
   {
-    dwin_process.show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_HOMEING_CH);
-    UserExecution.cmd_user_synchronize();
-    UserExecution.cmd_now_M420(true); //turn on bed leveling
-    UserExecution.cmd_now_M104(0);
-    UserExecution.cmd_now_g28();
-    UserExecution.cmd_user_synchronize();
     dwin_process.show_machine_set_page();
   }
 }
@@ -1031,6 +1017,7 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case PRINT_MACHINE_STATUS_RESTORE_FACTORY_HINT_CH:  //cancel restore factory mode
+      case PRINT_MACHINE_STATUS_CALIBRATION_OK_CH:        //calibration finished
         dwin_process.show_machine_set_page();
         break;
 
@@ -1085,6 +1072,10 @@ void lcd_parser::response_print_machine_status()
       case PRINT_MACHINE_STATUS_NO_USB_DISK_UPDATE:
         CHANGE_PAGE(PRINT, LASER, _INFO_PAGE_, EN, CH);
         dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
+
+      case PRINT_MACHINE_STATUS_UNLOAD_BEFORE_LEVELING_CH:
+        CHANGE_PAGE(PRINT, LASER, _HOME_PAGE_, EN, CH);
+        break;
 
       default:
         break;

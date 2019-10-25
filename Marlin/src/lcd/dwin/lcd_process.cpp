@@ -707,7 +707,7 @@ void lcd_process::send_progress_percentage(uint16_t percentage)
 void lcd_process::lcd_send_home_offset(float height)
 {
   char str[8];
-  sprintf_P(str,"%2.1f  ", height);
+  sprintf_P(str,"%2.2f  ", height);
   lcd_send_data(str,PRINT_MACHINE_HOME_OFFSET_ADDR);
 }
 
