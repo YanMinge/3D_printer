@@ -120,7 +120,7 @@ static bool ensure_safe_temperature(const PauseMode mode=PAUSE_MODE_SAME) {
     UNUSED(mode);
   #endif
 
-  return thermalManager.wait_for_hotend(active_extruder);
+  return true;
 }
 
 void do_pause_e_move(const float &length, const float &fr_mm_s) {
@@ -242,12 +242,7 @@ bool load_filament(const float &slow_load_length/*=0*/, const float &fast_load_l
       host_prompt_do(PROMPT_USER_CONTINUE, PSTR("Continuous Purge Running..."), PSTR("Continue"));
     #endif
 
-    for (float purge_count = purge_length; purge_count > 0 && wait_for_user; --purge_count){
-      do_pause_e_move(1, ADVANCED_PAUSE_PURGE_FEEDRATE);
-	  if(int(purge_count) % 4 == 0){
-        idle();
-      }
-    }
+    do_pause_e_move(purge_length, ADVANCED_PAUSE_PURGE_FEEDRATE);
     wait_for_user = false;
 
   #else
