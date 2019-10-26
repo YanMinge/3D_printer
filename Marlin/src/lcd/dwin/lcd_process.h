@@ -161,7 +161,7 @@ public:
   void show_prepare_print_page(pfile_list_t temp);
   void show_pause_print_page(pfile_list_t temp);
   void show_prepare_from_pause_page(pfile_list_t temp);
-  void show_load_filament_page(void);
+  void show_load_filament_page(bool step_status);
   void show_unload_filament_page(void);
   void show_cancel_stop_print_page(pfile_list_t temp);
   void show_confirm_stop_print_page(void);

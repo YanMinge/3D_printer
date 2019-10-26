@@ -800,31 +800,44 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   UserExecution.cmd_M2024();
 }
 
-void lcd_process::show_load_filament_page(void)
+void lcd_process::show_load_filament_page(bool step_status)
 {
-  filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
-
-  if(MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout())
+  if(step_status)
   {
-    dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
-    return;
-  }
-  if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type()) //heating page before loading filament
-  {
-    dwin_process.set_lcd_temp_show_status(true);
-    dwin_process.pre_percentage = 0;
-    dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+    filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
 
-    show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
-    UserExecution.user_start();
-    UserExecution.cmd_now_M106(200);
-    UserExecution.cmd_now_M109(210);
+    if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type()) //heating page before loading filament
+    {
+      dwin_process.set_lcd_temp_show_status(true);
+      dwin_process.pre_percentage = 0;
+      dwin_process.send_temperature_percentage(dwin_process.pre_percentage);
+
+      show_prepare_no_block_page(PRINT_MACHINE_STATUS_PREPARE_LOAD_CH);
+      UserExecution.user_start();
+      UserExecution.cmd_now_M106(200);
+      UserExecution.cmd_now_M109(210);
+    }
+
+
+    if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
+      (MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout()))
+    {
+      dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
+      return;
+    }
+
+    if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type())
+    {
+      set_machine_status(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH);
+    }
+
   }
+
 
   if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
-    PRINT_MACHINE_STATUS_PREPARE_LOAD_CH == dwin_process.get_machine_status()) //loading filament page
+   PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()) //loading filament page
   {
-    show_complete_hint_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH,true);
+    show_complete_hint_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH,false);
     UserExecution.cmd_now_M701();
   }
 
@@ -832,6 +845,7 @@ void lcd_process::show_load_filament_page(void)
     PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()) //loading filament success page
   {
     show_sure_block_page(PRINT_MACHINE_STATUS_LOAD_FILAMENT_SUCCESS_CH);
+    filament_show.set_heating_status_type(HEAT_NULL_STATUS);
     UserExecution.cmd_now_M107();
     UserExecution.cmd_now_M104(0);
     UserExecution.cmd_M300(VOICE_M1, VOICE_T/2);

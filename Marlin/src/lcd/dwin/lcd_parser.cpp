@@ -797,7 +797,7 @@ void lcd_parser::response_filament(void)
   }
   else if(0x03 == receive_data)
   {
-    dwin_process.show_load_filament_page();
+    dwin_process.show_load_filament_page(true);
   }
   else if(0x05 == receive_data)
   {
@@ -847,6 +847,8 @@ void lcd_parser::response_print_machine_status()
         break;
 
       case PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH:
+        lcd_exception_stop();
+        UserExecution.cmd_quick_stop(true);
         UserExecution.user_stop();
         UserExecution.user_hardware_stop();
         break;
@@ -867,6 +869,7 @@ void lcd_parser::response_print_machine_status()
           dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
           dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
           filament_show.set_heating_status_type(HEAT_NULL_STATUS);
+          lcd_exception_stop();
         }
         else if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type())
         {
@@ -1085,14 +1088,6 @@ void lcd_parser::response_print_machine_status()
   {
     switch(dwin_process.get_machine_status())
     {
-      case PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH:
-        UserExecution.user_stop();
-        UserExecution.user_hardware_stop();
-        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
-        dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
-        lcd_exception_stop();
-        break;
-
       case PRINT_MACHINE_STATUS_CANCEL_PRINT_CH:          //confirm stop print file
         print_filament_status = false;
         dwin_process.show_confirm_stop_print_page();
@@ -1231,14 +1226,13 @@ void lcd_parser::machine_exceptional_error_process(void)
       machine_error_status = ERROR_NULL;
       if(!IS_HEAD_PRINT())return;
       if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
-        (PRINT_MACHINE_STATUS_PREPARE_LOAD_CH == dwin_process.get_machine_status() || \
-         PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()))
+        (PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH == dwin_process.get_machine_status()))
       {
         filament_show.set_heating_status_type(HEAT_NULL_STATUS);
         dwin_process.show_sure_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);
         filament_show.set_heating_status_type(HEAT_LOAD_STATUS);
         UserExecution.user_stop();
-        lcd_exception_stop();
+        UserExecution.cmd_quick_stop(true);
         dwin_process.set_lcd_temp_show_status(false);
       }
 
@@ -1259,10 +1253,11 @@ void lcd_parser::machine_exceptional_error_process(void)
       if(!IS_HEAD_PRINT())return;
       machine_error_status = ERROR_NULL;
       // change from no filament page to prepare load heat page
-      if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type())
+      if(HEAT_LOAD_STATUS == filament_show.get_heating_status_type() && \
+         PRINT_MACHINE_STATUS_NO_FILAMENT_CH == dwin_process.get_machine_status())
       {
-        filament_show.set_heating_status_type(HEAT_NULL_STATUS);
-        dwin_process.show_load_filament_page();
+        dwin_process.set_machine_status(PRINT_MACHINE_STATUS_LOAD_FILAMENT_CH);
+        dwin_process.show_load_filament_page(false);
       }
       // change to prepare page when filament inserted
       else if(HEAT_PRINT_STATUS == filament_show.get_heating_status_type() && (prepare_printing == LcdFile.get_current_status()))
