@@ -287,9 +287,7 @@ void PrintJobRecovery::resume() {
 
   #if ENABLED(USE_DWIN_LCD)
     dwin_process.temperature_progress_update(30);
-    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
-      return;
-    }
+    if(dwin_parser.lcd_stop_status) return;
   #endif
 
   // Pretend that all axes are homed
@@ -304,6 +302,16 @@ void PrintJobRecovery::resume() {
       sprintf_P(cmd, PSTR("M106 P%i S%i"), i, f);
       gcode.process_subcommands_now(cmd);
     }
+  }
+
+  if(IS_HEAD_LASER())
+  {
+    //set postion_shift
+    COPY(position_shift, info.position_shift);
+    position_shift[Y_AXIS] = info.position_shift[Y_AXIS];
+    update_workspace_offset(X_AXIS);
+    update_workspace_offset(Y_AXIS);
+    update_workspace_offset(Z_AXIS);
   }
 
   float position_xyz[XYZ];
@@ -402,21 +410,18 @@ void PrintJobRecovery::resume() {
     // Now all extrusion positions are resumed and ready to be confirmed
     // Set extruder to saved position
     planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = info.current_position[E_AXIS]));
-
-    // Restore the feedrate
-    sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
-    gcode.process_subcommands_now(cmd);
   }
   else if(IS_HEAD_LASER())
   {
-    //move to postion_shift
-    dtostrf(-info.position_shift[X_AXIS], 1, 3, str_1);
-    dtostrf(-info.position_shift[Y_AXIS], 1, 3, str_2);
-    sprintf_P(cmd, PSTR("G1 X%s Y%s F3000"), str_1, str_2);
-    gcode.process_subcommands_now(cmd);
-
-    //set current xy position to zero
-    gcode.process_subcommands_now_P(PSTR("G92 X0 Y0"));
+    //go to power_loss break point
+    dtostrf(position_xyz[X_AXIS], 1, 3, str_1);
+    dtostrf(position_xyz[Y_AXIS], 1, 3, str_2);
+    sprintf_P(cmd, PSTR("G0 X%s Y%s F3000"), str_1, str_2);
+    gcode.process_subcommands_now_P(cmd);
+    UserExecution.cmd_user_synchronize();
+    if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+      return;
+    }
 
     //deploy the board
     gcode.process_subcommands_now_P(PSTR("G38.2 Z-20 F600"));
@@ -432,19 +437,18 @@ void PrintJobRecovery::resume() {
     sprintf_P(cmd, PSTR("G1 Z%s F600"), str_1);
     gcode.process_subcommands_now(cmd);
 
-    //go to power_loss break point
-    dtostrf(LOGICAL_X_POSITION(info.current_position[X_AXIS]), 1, 3, str_1);
-    dtostrf(LOGICAL_Y_POSITION(info.current_position[Y_AXIS]), 1, 3, str_2);
-    sprintf_P(cmd, PSTR("G0 X%s Y%s F3000"), str_1, str_2);
-    gcode.process_subcommands_now_P(cmd);
-    UserExecution.cmd_user_synchronize();
-
     //turn on laser_power
     dtostrf(info.laser_power, 1, 3, str_1);
     sprintf_P(cmd, PSTR("M3 S%s"), str_1);
     gcode.process_subcommands_now(cmd);
-
   }
+
+  if(HEAT_NULL_STATUS == filament_show.get_heating_status_type()){
+    return;
+  }
+  // Restore the feedrate
+  sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
+  gcode.process_subcommands_now(cmd);
 
   #if ENABLED(USE_DWIN_LCD)
     UserExecution.cmd_user_synchronize();
