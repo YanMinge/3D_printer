@@ -164,13 +164,16 @@ void laser_class::laser_walking_border(void)
   dwin_process.show_prepare_block_page(LASER_MACHINE_STATUS_PREPARE_WALKING_BORDER_CH);
   UserExecution.cmd_now_g0_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.upper_left_y_position, 3000);
   UserExecution.cmd_now_M3(2);
+  if(dwin_parser.lcd_stop_status)return;
   UserExecution.cmd_now_g1_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.buttom_right_y_position, 3000);
   UserExecution.cmd_now_g1_xy(laser_border_xy_position.buttom_right_x_position,laser_border_xy_position.buttom_right_y_position, 3000);
   UserExecution.cmd_now_g1_xy(laser_border_xy_position.buttom_right_x_position,laser_border_xy_position.upper_left_y_position, 3000);
   UserExecution.cmd_now_g1_xy(laser_border_xy_position.upper_left_x_position,laser_border_xy_position.upper_left_y_position, 3000);
   UserExecution.cmd_now_M3(0);
+  if(dwin_parser.lcd_stop_status)return;
   UserExecution.cmd_now_g0_xy(laser_border_xy_position.upper_left_x_position + 0.01,laser_border_xy_position.upper_left_y_position, 3000);
   planner.synchronize();
+  if(dwin_parser.lcd_stop_status)return;
   UserExecution.cmd_M300(VOICE_H1, VOICE_T/2);
 }
 

@@ -40,9 +40,6 @@ inline void G38_single_probe(const uint8_t move_value) {
   G38_move = move_value;
   prepare_move_to_destination();
   planner.synchronize();
-  #if ENABLED(USE_DWIN_LCD)
-    if(dwin_parser.lcd_stop_status)return;
-  #endif
   G38_move = 0;
   endstops.hit_on_purpose();
   set_current_from_steppers_for_axis(ALL_AXES);
