@@ -363,36 +363,48 @@ void machine_info::lcd_material_info_update(void)
 {
   bool run_status = print_job_timer.isRunning();
 
-  static bool pre_filamen_runout_status;
-  if(MaterialCheck.get_filamen_runout_report_status())
+  static uint8_t count = 0;
+  static millis_t check_times = 0;
+  static bool pre_filamen_runout_status = 0;
+  if(MaterialCheck.get_filamen_runout_report_status() && ((millis() - check_times) > MATERIAL_CHECK_TIME_PERIOD))
   {
     bool filamen_runout_status = MaterialCheck.is_filamen_runout();
-    if(filamen_runout_status != pre_filamen_runout_status)
+    if(filamen_runout_status)
     {
-      static uint8_t count = 0;
-      static millis_t check_times = 0;
-      if(!count)
+      if(pre_filamen_runout_status != filamen_runout_status)
       {
-        ++count;
-        check_times = millis();
-      }
-      if(count &&(millis() - check_times) > MATERIAL_CHECK_TIME_PERIOD)
-      {
-        SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
-        pre_filamen_runout_status = filamen_runout_status;
         count = 0;
-        if(filamen_runout_status)
+      }
+      else
+      {
+        if(count++ > 10)
         {
+          count = 0;
           dwin_process.lcd_send_data(FILAMENT_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
           dwin_parser.machine_error_status = ERROR_FILAMENT_INSERT;
-        }
-        else
-        {
-          dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
-          dwin_parser.machine_error_status = ERROR_FILAMENT_NO_INSERT;
+          //SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
         }
       }
     }
+    else
+    {
+      if(pre_filamen_runout_status != filamen_runout_status)
+      {
+        count = 0;
+      }
+      else
+      {
+        if(count++ > 10)
+        {
+          count = 0;
+          dwin_process.lcd_send_data(NULL_INSERT, PRINT_STATUS_BAR_FILAMENT_ICON_ADDR);
+          dwin_parser.machine_error_status = ERROR_FILAMENT_NO_INSERT;
+          //SERIAL_PRINTF("M2034 E%d\r\n", filamen_runout_status);
+        }
+      }
+    }
+    pre_filamen_runout_status = filamen_runout_status;
+    check_times = millis();
   }
 
   static long previous_material_info_update_time = 0;
