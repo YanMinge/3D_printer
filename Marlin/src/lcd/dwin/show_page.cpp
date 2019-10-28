@@ -316,6 +316,7 @@ void lcd_process::show_machine_status(uint8_t ch_type)
 void lcd_process::show_machine_continue_print_page(void)
 {
   show_confirm_cancel_page(PRINT_MACHINE_STATUS_PRINT_CONTINUE_CH);
+  dwin_parser.set_file_list_open_status(true);
 }
 
 void lcd_process::show_recovery_print_check_page(void)
@@ -640,6 +641,7 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   immediately_pause_flag = false;
 #endif
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_STOP_TASK_CH);
+  LcdFile.set_current_status(stop_printing);
 
   //save current position, fan speed, temperature hotended bed,
   pause_print_data.current_position[X_AXIS] = LOGICAL_X_POSITION(planner.get_axis_position_mm(X_AXIS));
@@ -679,8 +681,8 @@ void lcd_process::show_pause_print_page(pfile_list_t temp)
   {
     show_continue_print_file_page(temp);
   }
-  LcdFile.set_current_status(stop_printing);
 
+  dwin_parser.lcd_stop_status = true;
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   immediately_pause_flag = true;
 #endif
@@ -706,11 +708,11 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   immediately_pause_flag = false;
 #endif
 
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+ if(dwin_parser.lcd_stop_status) return;
 
   //go home
   UserExecution.cmd_now_g28();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
 
   //turn on the peripheral fan temperature.
 #if FAN_COUNT
@@ -725,7 +727,7 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
     }
   }
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
 #endif
 
 #if HOTENDS > 1
@@ -738,19 +740,19 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   UserExecution.cmd_now_M140(pause_print_data.target_temperature_bed);
 #endif
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
 
 #if HAS_TEMP_HOTEND
   UserExecution.cmd_now_M109(pause_print_data.target_temperature[HOTEND_INDEX]);
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
   dwin_process.send_temperature_percentage(20);
 #endif
 
 #if HAS_HEATED_BED
   UserExecution.cmd_now_M190(pause_print_data.target_temperature_bed);
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
   dwin_process.send_temperature_percentage(40);
 #endif
 #endif
@@ -768,18 +770,18 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
 
   UserExecution.cmd_now_g1_xy(position_xyz[X_AXIS],position_xyz[Y_AXIS], 3000);
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
   dwin_process.send_temperature_percentage(60);
 
   UserExecution.cmd_g1_z(position_xyz[Z_AXIS] + 10, 600);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
   dwin_process.send_temperature_percentage(80);
 
   //load filament
   do_pause_e_move(FILAMENT_UNLOAD_RETRACT_LENGTH, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
   dwin_process.send_temperature_percentage(90);
 
   // Now all extrusion positions are resumed and ready to be confirmed
@@ -791,7 +793,7 @@ void lcd_process::show_prepare_from_pause_page(pfile_list_t temp)
   UserExecution.cmd_g1_z(position_xyz[Z_AXIS], 600);
   UserExecution.get_remain_command();
   UserExecution.cmd_user_synchronize();
-  if(HEAT_PRINT_STATUS != filament_show.get_heating_status_type()) return;
+  if(dwin_parser.lcd_stop_status) return;
 
   dwin_process.show_stop_print_file_page(temp);
   //change to start print page
@@ -913,6 +915,7 @@ void lcd_process::show_confirm_stop_print_page(void)
   immediately_pause_flag = false;
 #endif
   dwin_parser.lcd_stop_status = false;
+  LcdFile.set_current_status(out_printing);
 
   show_prepare_block_page(PRINT_MACHINE_STATUS_PREPARE_QUIT_TASK_CH);
   dwin_process.reset_image_send_parameters();
@@ -925,9 +928,10 @@ void lcd_process::show_confirm_stop_print_page(void)
     UserExecution.cmd_now_M3(0);
     Laser.is_laser_focused = false;
   }
-  LcdFile.set_current_status(out_printing);
 
   UserExecution.cmd_now_g28();
+  if(dwin_parser.lcd_stop_status) return;
+
   show_sure_block_page(PRINT_MACHINE_STATUS_TASK_CANCEL_CH);
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   immediately_pause_flag = true;
@@ -943,6 +947,7 @@ void lcd_process::show_print_load_filament_page(void)
 
   show_complete_hint_page(PIRNT_MACHINE_STATUS_PRINT_LOAD_FILAMENT_CH,false);
   do_pause_e_move(110, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+  if(dwin_parser.lcd_stop_status) return;
   if(MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout())
   {
     show_sure_no_block_page(PRINT_MACHINE_STATUS_NO_FILAMENT_CH);

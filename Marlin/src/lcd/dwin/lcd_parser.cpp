@@ -178,6 +178,10 @@ void lcd_parser::parser_lcd_command(void)
 
   if(dwin_process.is_have_command())
   {
+    lcd_stop_status = false;
+    #if ENABLED(ADVANCED_PAUSE_FEATURE)
+      immediately_pause_flag = false;
+    #endif
     dwin_process.reset_command();
     get_command_type();
 
@@ -622,6 +626,7 @@ void lcd_parser::response_print_move_axis(void)
         return;
       }
       Laser.laser_walking_border();
+      if(dwin_parser.lcd_stop_status)return;
       dwin_process.change_lcd_page(LASER_AXIS_MOVE_AJUST_PAGE_EN,LASER_AXIS_MOVE_AJUST_PAGE_CH);
     }
   }
@@ -666,35 +671,9 @@ void lcd_parser::response_set_language_ch(void)
 
 void lcd_parser::response_set_language_en(void)
 {
-  dwin_process.set_language_type(LAN_ENGLISH);
-  if(PRINT_MACHINE_STATUS_NO_SET_LAN_NO_HEAD == dwin_process.get_machine_status())
-  {
-    dwin_process.change_lcd_page(EXCEPTION_NO_HEAD_PAGE_EN, EXCEPTION_NO_HEAD_PAGE_CH);
-    MachineInfo.set_exception_status(true);
-  }
-  else if(PRINT_MACHINE_STATUS_NO_SET_LANGUAGE == dwin_process.get_machine_status())
-  {
-    if(HEAD_PRINT == MachineInfo.get_head_type())
-    {
-      dwin_process.lcd_send_data(PAGE_BASE + PRINT_HOME_PAGE_EN, PAGE_ADDR);
-    }
-    else
-    {
-      dwin_process.lcd_send_data(PAGE_BASE + LASER_HOME_PAGE_EN, PAGE_ADDR);
-    }
-  }
-  else
-  {
-    if(HEAD_PRINT == MachineInfo.get_head_type())
-    {
-      dwin_process.show_print_set_page();
-    }
-    else
-    {
-      dwin_process.show_laser_set_page();
-    }
-    return;
-  }
+  UserExecution.cmd_M2050(LAN_ENGLISH);
+  UserExecution.get_remain_command();
+  dwin_process.show_start_up_page();
   dwin_process.set_machine_status(PRINT_MACHINE_STATUS_NULL);
   UserExecution.cmd_M500();
 }
@@ -903,6 +882,7 @@ void lcd_parser::response_print_machine_status()
         udisk.remove_job_recovery_file();
         dwin_process.delete_current_file();
         dwin_process.show_start_up_page();
+        dwin_parser.set_file_list_open_status(false);
         break;
 
       //cancel laser_focus set,goto to set page
@@ -926,6 +906,7 @@ void lcd_parser::response_print_machine_status()
         lcd_exception_stop();
         if(stop_printing == LcdFile.get_current_status())
         {
+          lcd_stop_status = true;
           UserExecution.cmd_quick_stop(true);
           dwin_process.show_continue_print_file_page(temp);
         }
@@ -962,6 +943,9 @@ void lcd_parser::response_print_machine_status()
           filament_show.set_heating_status_type(HEAT_NULL_STATUS);
           dwin_process.change_lcd_page(PRINT_HOME_PAGE_EN,PRINT_HOME_PAGE_CH);
           lcd_exception_stop();
+
+          lcd_stop_status = true;
+          UserExecution.cmd_quick_stop(true);
         }
         break;
 
@@ -977,13 +961,12 @@ void lcd_parser::response_print_machine_status()
           immediately_pause_flag = false;
         #endif
         UserExecution.user_stop();
-        UserExecution.cmd_quick_stop(true);
         lcd_exception_stop();
+        UserExecution.cmd_quick_stop(true);
         dwin_parser.lcd_stop_status = true;
         safe_delay(20);
         UserExecution.cmd_now_M3(0);
-        dwin_process.show_machine_status_page(LASER_MACHINE_STATUS_FOCUS_CONFIRM_CH,\
-        LASER_EXCEPTION_SURE_RETURN_PAGE_EN,LASER_EXCEPTION_SURE_RETURN_PAGE_CH);
+        dwin_process.show_machine_set_page();
         #if ENABLED(ADVANCED_PAUSE_FEATURE)
           immediately_pause_flag = true;
         #endif
@@ -1030,11 +1013,11 @@ void lcd_parser::response_print_machine_status()
         temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
         if(out_printing == mstatus)
         {
-          dwin_parser.lcd_stop_status = true;
           dwin_process.show_start_print_file_page(temp);
           UserExecution.user_stop();
-          UserExecution.cmd_quick_stop(true);
           lcd_exception_stop();
+          UserExecution.cmd_quick_stop(true);
+          dwin_parser.lcd_stop_status = true;
         }
         else if(prepare_printing == mstatus)
         {
@@ -1264,8 +1247,8 @@ void lcd_parser::machine_exceptional_error_process(void)
       {
         if(is_error_processing)return;
         is_error_processing = true;
-        temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
-        dwin_process.show_prepare_print_page(temp);
+        //temp = LcdFile.file_list_index(dwin_parser.get_current_page_index());
+        //dwin_process.show_prepare_print_page(temp);
         is_error_processing = false;
       }
       break;
