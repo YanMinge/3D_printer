@@ -48,7 +48,12 @@
 
 #if ENABLED(NEWPANEL)
   #include "lcd_process.h"
+  #include "lcd_parser.h"
   #include "filament_ui.h"
+#endif
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+#include "../../feature/pause.h"
 #endif
 
 /**
@@ -689,7 +694,11 @@ inline void get_serial_commands() {
 #if ENABLED(USE_DWIN_LCD)
         if ((strstr_P(command, "M104") != NULL) || (strstr_P(command, "M109") != NULL) || \
             (strstr_P(command, "M140") != NULL) || (strstr_P(command, "M190") != NULL))
+        {
           dwin_process.set_computer_print_status(true);
+        }
+          dwin_parser.lcd_stop_status = false;
+          immediately_pause_flag = false;
         if (strcmp(command, "M2039") == 0)
         {
           SERIAL_PRINTF("M2039 S%d\r\n", Laser.is_laser_focused);
