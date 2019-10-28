@@ -710,6 +710,7 @@ void power_loss_detect(void){
     MachineInfo.save_info_to_eeprom();
 
     power_loss_status = false;
+    dwin_parser.lcd_stop_status = true;
 
     if(IS_UDISK_PRINTING()) recovery.save(true);
   }

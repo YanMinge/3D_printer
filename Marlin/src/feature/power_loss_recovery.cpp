@@ -213,6 +213,7 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
 
     #if PIN_EXISTS(POWER_LOSS)
     if (READ(POWER_LOSS_PIN) == POWER_LOSS_STATE){
+      dwin_parser.lcd_stop_status = false;
       enable_Z();
       setup_for_endstop_or_probe_move();
       endstops.enable(true); // Enable endstops for next homing move
