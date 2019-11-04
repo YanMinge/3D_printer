@@ -1261,6 +1261,8 @@ void lcd_parser::machine_exceptional_error_process(void)
         filament_show.set_print_after_heat_status(false);
         dwin_process.set_lcd_temp_show_status(false);
 
+        immediately_pause_flag = true;
+        lcd_stop_status = true;
         UserExecution.user_stop();
         lcd_exception_stop();
         UserExecution.cmd_quick_stop(true);
@@ -1275,8 +1277,6 @@ void lcd_parser::machine_exceptional_error_process(void)
         LcdFile.set_current_status(out_printing);
         dwin_process.show_usb_pull_out_page();
         file_read_status = false;
-        immediately_pause_flag = true;
-        lcd_stop_status = true;
         print_filament_status = false;
       }
       break;

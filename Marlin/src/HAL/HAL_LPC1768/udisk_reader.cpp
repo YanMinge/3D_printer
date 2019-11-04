@@ -521,11 +521,11 @@ void udisk_reader::printing_has_finished()
   if(dwin_parser.lcd_stop_status)return;
   planner.synchronize();
   if(dwin_parser.lcd_stop_status)return;
-  if(!IS_XYZ_HOME)
+  if(!IS_XYZ_HOME && IS_HEAD_LASER())
   {
     UserExecution.cmd_now_g28();
+    if(dwin_parser.lcd_stop_status)return;
   }
-  if(dwin_parser.lcd_stop_status)return;
 #if ENABLED(POWER_LOSS_RECOVERY)
   remove_job_recovery_file();
 #endif

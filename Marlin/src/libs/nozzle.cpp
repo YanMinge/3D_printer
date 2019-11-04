@@ -51,7 +51,7 @@
 
     // Move to the starting point
     if(dwin_parser.lcd_stop_status) return;
-    do_blocking_move_to(start.x, start.y, start.z, 3000);
+    do_blocking_move_to(start.x, start.y, start.z, 80);
     if(dwin_parser.lcd_stop_status) return;
 
     // Start the stroke pattern
@@ -67,7 +67,7 @@
 
     #if ENABLED(NOZZLE_CLEAN_GOBACK)
       if(dwin_parser.lcd_stop_status) return;
-      do_blocking_move_to(ix, iy, iz, 3000);
+      do_blocking_move_to(ix, iy, iz, 80);
       if(dwin_parser.lcd_stop_status) return;
     #endif
   }

@@ -527,7 +527,7 @@ void user_execution::stop_udisk_print(void)
     print_job_timer.stop();
     udisk.stop_udisk_print();
     clear_command_queue();
-    quickstop_stepper();
+    cmd_quick_stop(true);
   }
   thermalManager.disable_all_heaters();
   thermalManager.zero_fan_speeds();

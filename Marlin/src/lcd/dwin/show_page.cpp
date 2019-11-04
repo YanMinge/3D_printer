@@ -590,6 +590,7 @@ void lcd_process::show_xyz_prepare_home_page(void)
   UserExecution.cmd_user_synchronize();
   UserExecution.cmd_now_g28();
   UserExecution.cmd_user_synchronize();
+  if(dwin_parser.lcd_stop_status) return;
   UserExecution.cmd_M300(VOICE_M5, VOICE_T/2);
   UserExecution.cmd_M300(VOICE_M7, VOICE_T/2);
   UserExecution.get_remain_command();
@@ -946,7 +947,7 @@ void lcd_process::show_print_load_filament_page(void)
 #endif
 
   show_complete_hint_page(PIRNT_MACHINE_STATUS_PRINT_LOAD_FILAMENT_CH,false);
-  do_pause_e_move(110, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
+  do_pause_e_move(220, FILAMENT_CHANGE_FAST_LOAD_FEEDRATE);
   if(dwin_parser.lcd_stop_status) return;
   if(MaterialCheck.get_filamen_runout_report_status() && !MaterialCheck.is_filamen_runout())
   {
