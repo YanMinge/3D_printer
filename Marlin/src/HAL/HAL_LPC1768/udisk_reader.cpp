@@ -770,11 +770,14 @@ void udisk_reader::print_time_countdown(void)
       print_time_dynamic--;
       print_time_count = 0;
     }
+#ifdef AUTO_TURN_ON_COOLING_FAN
     //When the print time is greater than 5 minutes, Turn on the fan
-    if((print_job_timer.duration() > 300) && (thermalManager.fan_speed[0] == 0))
+    if((print_job_timer.duration() > TIME_FOR_AUTO_TURN_ON_COOLING_FAN) && (thermalManager.fan_speed[0] == 0))
     {
       thermalManager.set_fan_speed(0, 255);
 	}
+#endif
+
     print_time_count++;
   }
 }

@@ -1025,7 +1025,7 @@ void MarlinSettings::postprocess() {
     {
       _FIELD_TEST(tmc_stealth_enabled);
 
-      tmc_stealth_enabled_t tmc_stealth_enabled = { false, false, false, false, false, false, false, false, false, false, false, false, false };
+      tmc_stealth_enabled_t tmc_stealth_enabled = { true, true, true, false, false, false, false, true, false, false, false, false, false };
 
       #if HAS_STEALTHCHOP
         #if AXIS_HAS_STEALTHCHOP(X)

@@ -354,7 +354,7 @@
   #include <HardwareSerial.h>
   #include "planner.h"
 
-  #define _TMC2208_DEFINE_HARDWARE(ST, L) TMCMarlin<TMC2208Stepper, L> stepper##ST(&ST##_HARDWARE_SERIAL, ST##_RSENSE)
+  #define _TMC2208_DEFINE_HARDWARE(ST, L) TMCMarlin<TMC2208Stepper, L> stepper##ST(&ST##_HARDWARE_SERIAL, ST##_RSENSE, ST##_UART_INVERTING, ST##_UART_ENABLE_PIN)
   #define TMC2208_DEFINE_HARDWARE(ST) _TMC2208_DEFINE_HARDWARE(ST, TMC_##ST##_LABEL)
 
   #define _TMC2208_DEFINE_SOFTWARE(ST, L) TMCMarlin<TMC2208Stepper, L> stepper##ST(ST##_SERIAL_RX_PIN, ST##_SERIAL_TX_PIN, ST##_RSENSE, ST##_SERIAL_RX_PIN > -1)
@@ -569,6 +569,8 @@
     st.microsteps(microsteps);
     st.iholddelay(10);
     st.TPOWERDOWN(128); // ~2s until driver lowers to hold current
+    st.diss2g(false);
+	st.diss2vs(false);
 
     TMC2208_n::PWMCONF_t pwmconf{0};
     pwmconf.pwm_lim = 12;
@@ -583,6 +585,7 @@
     #if ENABLED(HYBRID_THRESHOLD)
       st.TPWMTHRS(12650000UL*microsteps/(256*thrs*spmm));
     #else
+      st.TPWMTHRS(0);
       UNUSED(thrs);
       UNUSED(spmm);
     #endif

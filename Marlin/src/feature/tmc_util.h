@@ -146,8 +146,8 @@ class TMCMarlin : public TMC, public TMCStorage<AXIS_LETTER, DRIVER_ID> {
 template<char AXIS_LETTER, char DRIVER_ID>
 class TMCMarlin<TMC2208Stepper, AXIS_LETTER, DRIVER_ID> : public TMC2208Stepper, public TMCStorage<AXIS_LETTER, DRIVER_ID> {
   public:
-    TMCMarlin(Stream * SerialPort, float RS, bool has_rx=true) :
-      TMC2208Stepper(SerialPort, RS, has_rx=true)
+    TMCMarlin(Stream * SerialPort, float RS, uint8_t addr, uint16_t mul_pin, bool has_rx=true) :
+      TMC2208Stepper(SerialPort, RS, addr, mul_pin, has_rx=true)
       {}
     TMCMarlin(uint16_t RX, uint16_t TX, float RS, bool has_rx=true) :
       TMC2208Stepper(RX, TX, RS, has_rx=true)
